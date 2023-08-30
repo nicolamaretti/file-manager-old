@@ -449,6 +449,10 @@ class FileManagerController extends Controller
             return redirect()->back()->withErrors([
                 'missingEmail' => true,
             ]);
+        } else if ($email == $currentUser->email) {
+            return redirect()->back()->withErrors([
+                'invalidEmail' => true,
+            ]);
         }
 
         $folder = Folder::findOrFail($folderId);
@@ -461,11 +465,12 @@ class FileManagerController extends Controller
         if ($userId) {
             // controllo se l'utente ha già condiviso la stessa cartella con lo stesso utente
             $sharedFolderAlreadyExists = DB::table('folder_shares')
-                ->where('folder_id', $folderId)
-                ->where('user_id', $user->id)
-                ->get();
+                ->where([
+                    'folder_id' => $folderId,
+                    'user_id'   => $userId
+                ])->get();
 
-            if ($sharedFolderAlreadyExists) {
+            if ($sharedFolderAlreadyExists->isNotEmpty()) {
                 return redirect()->back()->dangerBanner('You already shared this folder with this user');
             }
 
@@ -481,6 +486,11 @@ class FileManagerController extends Controller
         }
     }
 
+    /** Condivisione di un file con un utente, specificandone la mail che viene passata tramite la $request
+     * @param int $fileId
+     * @param Request $request
+     * @return RedirectResponse
+     */
     public function shareFile(int $fileId, Request $request): RedirectResponse
     {
         $currentUser = $request->user();
@@ -492,13 +502,27 @@ class FileManagerController extends Controller
             return redirect()->back()->withErrors([
                 'missingEmail' => true,
             ]);
+        } else if ($email == $currentUser->email) {
+            return redirect()->back()->withErrors([
+                'invalidEmail' => true,
+            ]);
         }
 
-//        $file = Media::findOrFail($fileId);
         $user = User::where('email', $email)->first();
         $userId = data_get($user, 'id');
 
         if ($userId) {
+            // controllo se l'utente ha già condiviso la stessa cartella con lo stesso utente
+            $sharedFileAlreadyExists = DB::table('file_shares')
+                ->where([
+                    'file_id' => $fileId,
+                    'user_id'   => $userId
+                ])->get();
+
+            if ($sharedFileAlreadyExists->isNotEmpty()) {
+                return redirect()->back()->dangerBanner('You already shared this file with this user');
+            }
+
             $newSharedFile = new FileShare();
             $newSharedFile->file_id = $fileId;
             $newSharedFile->user_id = $user->id;

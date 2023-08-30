@@ -1,325 +1,3 @@
-<script setup>
-import AppLayout from '@/Layouts/AppLayout.vue';
-import {router, useForm, usePage} from "@inertiajs/vue3";
-import {computed, ref} from 'vue';
-import JetConfirmationModal from '@/Components/ConfirmationModal.vue';
-import JetButton from '@/Components/PrimaryButton.vue';
-import ActionIconDelete from '@/Components/Icons/ActionIconDelete.vue';
-import IconFolder from '@/Components/Icons/FolderIcon.vue';
-import FileIcon from '@/Components/Icons/FileIcon.vue';
-import ActionIconZip from '@/Components/Icons/ActionIconZip.vue';
-import ManageFileIcon from '@/Components/Icons/ManageFileIcon.vue';
-import DownloadIcon from '@/Components/Icons/DownloadIcon.vue';
-import ActionIconEdit from '@/Components/Icons/ActionIconEdit.vue';
-import ChevronLeftIcon from '@/Components/Icons/ChevronLeftIcon.vue';
-import ManageFolderIcon from "@/Components/Icons/ManageFolderIcon.vue";
-import RenameFolderModal from '@/Components/RenameFolderModal.vue';
-import RenameFileModal from '@/Components/RenameFileModal.vue';
-import ShareFolderModal from "@/Components/ShareFolderModal.vue";
-import ShareFileModal from "@/Components/ShareFileModal.vue";
-// import DialogModal from "@/Components/DialogModal.vue";
-// import Checkbox from "@/Components/Checkbox.vue";
-import ActionIconShare from "@/Components/Icons/ActionIconShare.vue";
-
-// Shared props
-const userFolderPermission = computed(() => usePage().props.folderPermission);
-// console.log(userFolderPermission);
-
-const props = defineProps({
-    currentUserName: String,
-    currentFolderId: Number,
-    currentFolderName: String,
-    currentFolderFullPath: String,
-    rootFolderId: Number,
-    isUserAdmin: Boolean,
-    parent: Object,
-    folders: Object,
-    folder: Object,
-    files: Object,
-    folderIsRoot: Boolean,
-    //userOrganizationAdmin: Boolean,
-    //userDepartment: Boolean,
-});
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-// AZIONI CARTELLE
-const openFolder = (folderId = null) => {
-    if (folderId != null) {
-        // ritorna la cartella selezionata
-        router.get(route('dashboard'), {
-            folderId: folderId
-        });
-    } else {
-        // ritorna le cartelle di root
-        router.get(route('dashboard'));
-    }
-}
-
-const deleteFolder = () => {
-    console.log('Folder to delete: ' + folderToDelete.value);
-
-    router.delete(route('backend.file-manager.delete-folder', folderToDelete.value.id), {
-        onSuccess: () => {
-            closeDeleteFolderModal();
-        },
-        onError: (error) => {
-            console.log(error);
-
-            if (error.folderDeletionError) {
-                openFolderDeletionErrorModal();
-            }
-        }
-    });
-}
-
-/* condividi cartella */
-const shareFolder = (folderId) => {
-    router.post(route('backend.file-manager.share-folder', folderId));
-}
-
-/* copia/spostamento cartella */
-const manageFolder = (folder) => {
-    router.get(route('backend.file-system.manage-folder'), {
-        originalFolderId: folder.id,
-        originalFolderPath: folder.fullPath
-    });
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-// AZIONI FILE
-const deleteFile = () => {
-    router.delete(route('backend.file-manager.delete-file', fileToDelete.value.id), {
-        onSuccess: () => {
-            closeDeleteFileModal();
-        },
-        onError: (error) => {
-            console.log(error);
-
-            if (error.fileDeletionError) {
-                openFileDeletionErrorModal();
-            }
-        }
-    });
-}
-
-// copia/spostamento file
-const manageFile = (file) => {
-    // props.folder esiste? Se sì prendi il full path, altrimenti stringa vuota
-    let fileFullPath = props.folder ? props.folder.data.fullPath + '/' + file.file_name : '';
-    console.log('manageFile: ', props.folder);
-
-    router.get(route('backend.file-system.manage-file'), {
-        originalFileId: file.id,
-        originalFileFullPath: fileFullPath,
-        originalFolderId: props.folder.data.id,
-        originalFolderFullPath: props.folder.data.fullPath,
-    });
-}
-
-const openFile = (fileId) => {
-    router.get(route('backend.file-manager.open-file', fileId));
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-// AZIONI FORM
-/* 1) new root folder form */
-const rootFolderForm = useForm({
-    _method: 'POST',
-    newRootFolderName: '',
-});
-
-const submitRootFolderForm = () => {
-    rootFolderForm.post(route('backend.file-manager.create-root-folder'), {
-        onError: (error) => {
-            rootFolderForm.reset('newRootFolderName');
-
-            if (error.folderExistsError) {
-                openFolderCreationErrorModal();
-            }
-        },
-        onSuccess: (data) => {
-            rootFolderForm.reset('newRootFolderName');
-
-            console.log(data);
-        }
-    });
-}
-
-/* 2) new folder form */
-const folderForm = useForm({
-    _method: 'POST',
-    newFolderName: '',
-    currentFolderId: props.currentFolderId
-})
-
-const submitFolderForm = () => {
-    folderForm.post(route('backend.file-manager.create-folder'), {
-        onError: (error) => {
-            console.log(error);
-
-            folderForm.reset('newFolderName');
-
-            if (error.folderExistsError) {
-                openFolderCreationErrorModal();
-            }
-        },
-        onSuccess: (data) => {
-            folderForm.reset('newFolderName');
-
-            console.log(data);
-        }
-    })
-}
-
-/* 3) file upload form */
-const fileUploadForm = useForm({
-    _method: 'POST',
-    file: null,
-    currentFolderId: props.currentFolderId
-});
-
-const submitFileUploadForm = () => {
-    fileUploadForm.post(route('backend.file-manager.upload-file'));
-}
-
-const uploadFile = (event) => {
-    console.log('event', event.target.files[0]);
-    // aggiornamento della variabile che contiene il file (dentro al form) con il file caricato
-    fileUploadForm.file = event.target.files[0];
-
-    console.log("uploadFile: ", fileUploadForm.file);
-}
-
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-// HELPER MODALI
-/* 1) modale errore creazione cartella */
-let folderCreationErrorModal = ref(false);
-
-const openFolderCreationErrorModal = () => {
-    folderCreationErrorModal.value = true;
-}
-
-const closeFolderCreationErrorModal = () => {
-    folderCreationErrorModal.value = false;
-}
-
-/* 2) modale cancellazione cartella */
-let deleteFolderConfirmModal = ref(false);
-let folderToDelete = ref(null);
-
-function openDeleteFolderModal(folder) {
-    deleteFolderConfirmModal.value = true;
-    folderToDelete.value = folder;
-}
-
-function closeDeleteFolderModal() {
-    deleteFolderConfirmModal.value = false;
-    folderToDelete.value = null;
-}
-
-/* 3) modale errore cancellazione cartella */
-let folderDeletionErrorModal = ref(false);
-
-const openFolderDeletionErrorModal = () => {
-    folderDeletionErrorModal.value = true;
-}
-
-const closeFolderDeletionErrorModal = () => {
-    closeDeleteFolderModal();
-    folderDeletionErrorModal.value = false;
-}
-
-/* 4) modale cancellazione file */
-let deleteFileConfirmModal = ref(false);
-let fileToDelete = ref(null);
-
-function openDeleteFileModal(file) {
-    deleteFileConfirmModal.value = true;
-    fileToDelete.value = file;
-}
-
-function closeDeleteFileModal() {
-    deleteFileConfirmModal.value = false;
-    fileToDelete.value = null;
-}
-
-/* 5) modale errore cancellazione file */
-let fileDeletionErrorModal = ref(false);
-
-const openFileDeletionErrorModal = () => {
-    fileDeletionErrorModal.value = true;
-}
-
-const closeFileDeletionErrorModal = () => {
-    deleteFileConfirmModal.value = false;
-    fileDeletionErrorModal.value = false;
-}
-
-/* 6) modale rinomina cartella */
-let renameFolderModal = ref(false);
-let renameFolderId = ref(null);
-
-const openRenameFolderModal = (folderId) => {
-    renameFolderModal.value = true;
-    renameFolderId.value = folderId;
-}
-
-const closeRenameFolderModal = () => {
-    renameFolderModal.value = false;
-    renameFolderId.value = null;
-}
-
-/* 6) modale rinomina file */
-let renameFileModal = ref(false);
-let renameFileId = ref(null);
-
-const openRenameFileModal = (fileId) => {
-    console.log(renameFileModal.value);
-
-    renameFileModal.value = true;
-    renameFileId.value = fileId;
-
-    console.log(renameFileModal.value);
-}
-
-const closeRenameFileModal = () => {
-    renameFileModal.value = false;
-    renameFileId.value = null;
-}
-
-/* 7) modale share folder */
-let shareFolderModal = ref(false);
-let shareFolderId = ref(null);
-
-const openShareFolderModal = (folderId) => {
-    shareFolderModal.value = true;
-    shareFolderId.value = folderId;
-}
-
-const closeShareFolderModal = () => {
-    shareFolderModal.value = false;
-    shareFolderId.value = null;
-}
-
-/* 7) modale share file */
-let shareFileModal = ref(false);
-let shareFileId = ref(null);
-const openShareFileModal = (fileId) => {
-    shareFileModal.value = true;
-    shareFileId.value = fileId;
-}
-
-const closeShareFileModal = () => {
-    shareFileModal.value = false;
-    shareFileId.value = null;
-}
-
-console.log(props);
-
-</script>
-
 <template>
     <AppLayout title="My files">
         <template #header>
@@ -333,7 +11,7 @@ console.log(props);
             <!-- 1.1) Creazione nuova cartella root (se Admin) -->
             <div v-if="rootFolderId == null && folderIsRoot" class="px-4 py-5 sm:p-6">
                 <div class="sm:basis-1/2 px-4">
-                    <h3 class="text-base font-semibold leading-6 text-gray-900">Create new root folder</h3>
+                    <h3 class="text-base font-semibold leading-6 text-gray-900">Create root folder</h3>
 
                     <form @submit.prevent="submitRootFolderForm" class="mt-5 sm:flex sm:items-center">
                         <div class="w-full sm:max-w-xs">
@@ -354,7 +32,7 @@ console.log(props);
             <div v-else class="px-4 py-5 sm:p-6">
                 <div v-if="userFolderPermission.write" class="grid grid-cols-2 sm:flex">
                     <div class="sm:basis-1/2 px-4">
-                        <h3 class="text-base font-semibold leading-6 text-gray-900">Create new folder</h3>
+                        <h3 class="text-base font-semibold leading-6 text-gray-900">Create folder</h3>
 
                         <form @submit.prevent="submitFolderForm" class="mt-5 sm:flex sm:items-center">
                             <div class="w-full sm:max-w-xs">
@@ -677,7 +355,7 @@ console.log(props);
 
         <!-- modale cancellazione file -->
         <JetConfirmationModal :show="deleteFileConfirmModal"
-                              @close="closeDeleteFileModal">
+                              @close="closeDeleteFileModal()">
             <template #title>
                 <span class="text-center">
                     DELETE FILE
@@ -690,11 +368,11 @@ console.log(props);
                 <div class="mt-4 font-bold break-all text-red-400">Warning, the action is irreversible.</div>
             </template>
             <template #footer>
-                <JetButton @click="closeDeleteFileModal"
+                <JetButton @click="closeDeleteFileModal()"
                            class="bg-asred-200 text-white cursor-pointer mb-3 mr-2 px-6 py-2 rounded-sm hover:bg-gray-600">
                     <span>Cancel</span>
                 </JetButton>
-                <JetButton @click.prevent="deleteFile"
+                <JetButton @click.prevent="deleteFile()"
                            class="bg-asgreen-200 text-white rounded-sm mb-3  cursor-pointer  px-6 py-2 hover:bg-gray-600">
                     <span>Delete</span>
                 </JetButton>
@@ -703,7 +381,7 @@ console.log(props);
 
         <!-- modale errore cancellazione file -->
         <JetConfirmationModal :show="fileDeletionErrorModal"
-                              @close="closeFileDeletionErrorModal">
+                              @close="closeFileDeletionErrorModal()">
             <template #title>
             <span class="text-center">
                 FILE DELETION ERROR
@@ -713,7 +391,7 @@ console.log(props);
                 <span class="text-center">An error occurred during the file deletion.</span>
             </template>
             <template #footer>
-                <JetButton @click="openFolderDeletionErrorModal"
+                <JetButton @click="openFolderDeletionErrorModal()"
                            class="bg-asred-200 text-white cursor-pointer mb-3 mr-2 px-6 py-2 rounded-sm hover:bg-gray-600">
                     <span>Ok</span>
                 </JetButton>
@@ -745,3 +423,324 @@ console.log(props);
         />
     </AppLayout>
 </template>
+
+<script setup>
+// Imports
+import {router, useForm, usePage} from "@inertiajs/vue3";
+import {computed, ref} from 'vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import JetConfirmationModal from '@/Components/ConfirmationModal.vue';
+import JetButton from '@/Components/PrimaryButton.vue';
+import ActionIconDelete from '@/Components/Icons/ActionIconDelete.vue';
+import IconFolder from '@/Components/Icons/FolderIcon.vue';
+import FileIcon from '@/Components/Icons/FileIcon.vue';
+import ActionIconZip from '@/Components/Icons/ActionIconZip.vue';
+import ManageFileIcon from '@/Components/Icons/ManageFileIcon.vue';
+import DownloadIcon from '@/Components/Icons/DownloadIcon.vue';
+import ActionIconEdit from '@/Components/Icons/ActionIconEdit.vue';
+import ChevronLeftIcon from '@/Components/Icons/ChevronLeftIcon.vue';
+import ManageFolderIcon from "@/Components/Icons/ManageFolderIcon.vue";
+import RenameFolderModal from '@/Components/RenameFolderModal.vue';
+import RenameFileModal from '@/Components/RenameFileModal.vue';
+import ShareFolderModal from "@/Components/ShareFolderModal.vue";
+import ShareFileModal from "@/Components/ShareFileModal.vue";
+import ActionIconShare from "@/Components/Icons/ActionIconShare.vue";
+
+// Shared props
+const userFolderPermission = computed(() => usePage().props.folderPermission);
+// console.log(userFolderPermission);
+
+const props = defineProps({
+    currentUserName: String,
+    currentFolderId: Number,
+    currentFolderName: String,
+    currentFolderFullPath: String,
+    rootFolderId: Number,
+    isUserAdmin: Boolean,
+    parent: Object,
+    folders: Object,
+    folder: Object,
+    files: Object,
+    folderIsRoot: Boolean,
+    //userOrganizationAdmin: Boolean,
+    //userDepartment: Boolean,
+});
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// AZIONI CARTELLE
+const openFolder = (folderId = null) => {
+    if (folderId != null) {
+        // ritorna la cartella selezionata
+        router.get(route('dashboard'), {
+            folderId: folderId
+        });
+    } else {
+        // ritorna le cartelle di root
+        router.get(route('dashboard'));
+    }
+}
+
+const deleteFolder = () => {
+    console.log('Folder to delete: ' + folderToDelete.value);
+
+    router.delete(route('backend.file-manager.delete-folder', folderToDelete.value.id), {
+        onSuccess: () => {
+            closeDeleteFolderModal();
+        },
+        onError: (error) => {
+            console.log(error);
+
+            if (error.folderDeletionError) {
+                openFolderDeletionErrorModal();
+            }
+        }
+    });
+}
+
+/* condividi cartella */
+const shareFolder = (folderId) => {
+    router.post(route('backend.file-manager.share-folder', folderId));
+}
+
+/* copia/spostamento cartella */
+const manageFolder = (folder) => {
+    router.get(route('backend.file-system.manage-folder'), {
+        originalFolderId: folder.id,
+        originalFolderPath: folder.fullPath
+    });
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// AZIONI FILE
+const deleteFile = () => {
+    router.delete(route('backend.file-manager.delete-file', fileToDelete.value.id), {
+        onSuccess: () => {
+            closeDeleteFileModal();
+        },
+        onError: (error) => {
+            console.log(error);
+
+            if (error.fileDeletionError) {
+                openFileDeletionErrorModal();
+            }
+        }
+    });
+}
+
+// copia/spostamento file
+const manageFile = (file) => {
+    // props.folder esiste? Se sì prendi il full path, altrimenti stringa vuota
+    let fileFullPath = props.folder ? props.folder.data.fullPath + '/' + file.file_name : '';
+    console.log('manageFile: ', props.folder);
+
+    router.get(route('backend.file-system.manage-file'), {
+        originalFileId: file.id,
+        originalFileFullPath: fileFullPath,
+        originalFolderId: props.folder.data.id,
+        originalFolderFullPath: props.folder.data.fullPath,
+    });
+}
+
+const openFile = (fileId) => {
+    router.get(route('backend.file-manager.open-file', fileId));
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// AZIONI FORM
+/* 1) new root folder form */
+const rootFolderForm = useForm({
+    _method: 'POST',
+    newRootFolderName: '',
+});
+
+const submitRootFolderForm = () => {
+    rootFolderForm.post(route('backend.file-manager.create-root-folder'), {
+        onError: (error) => {
+            rootFolderForm.reset('newRootFolderName');
+
+            if (error.folderExistsError) {
+                openFolderCreationErrorModal();
+            }
+        },
+        onSuccess: (data) => {
+            rootFolderForm.reset('newRootFolderName');
+
+            console.log(data);
+        }
+    });
+}
+
+/* 2) new folder form */
+const folderForm = useForm({
+    _method: 'POST',
+    newFolderName: '',
+    currentFolderId: props.currentFolderId
+})
+
+const submitFolderForm = () => {
+    folderForm.post(route('backend.file-manager.create-folder'), {
+        onError: (error) => {
+            console.log(error);
+
+            folderForm.reset('newFolderName');
+
+            if (error.folderExistsError) {
+                openFolderCreationErrorModal();
+            }
+        },
+        onSuccess: (data) => {
+            folderForm.reset('newFolderName');
+
+            console.log(data);
+        }
+    })
+}
+
+/* 3) file upload form */
+const fileUploadForm = useForm({
+    _method: 'POST',
+    file: null,
+    currentFolderId: props.currentFolderId
+});
+
+const submitFileUploadForm = () => {
+    fileUploadForm.post(route('backend.file-manager.upload-file'));
+}
+
+const uploadFile = (event) => {
+    console.log('event', event.target.files[0]);
+    // aggiornamento della variabile che contiene il file (dentro al form) con il file caricato
+    fileUploadForm.file = event.target.files[0];
+
+    console.log("uploadFile: ", fileUploadForm.file);
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+// HELPER MODALI
+/* 1) modale errore creazione cartella */
+let folderCreationErrorModal = ref(false);
+
+const openFolderCreationErrorModal = () => {
+    folderCreationErrorModal.value = true;
+}
+
+const closeFolderCreationErrorModal = () => {
+    folderCreationErrorModal.value = false;
+}
+
+/* 2) modale cancellazione cartella */
+let deleteFolderConfirmModal = ref(false);
+let folderToDelete = ref(null);
+
+function openDeleteFolderModal(folder) {
+    deleteFolderConfirmModal.value = true;
+    folderToDelete.value = folder;
+}
+
+function closeDeleteFolderModal() {
+    deleteFolderConfirmModal.value = false;
+    folderToDelete.value = null;
+}
+
+/* 3) modale errore cancellazione cartella */
+let folderDeletionErrorModal = ref(false);
+
+const openFolderDeletionErrorModal = () => {
+    folderDeletionErrorModal.value = true;
+}
+
+const closeFolderDeletionErrorModal = () => {
+    closeDeleteFolderModal();
+    folderDeletionErrorModal.value = false;
+}
+
+/* 4) modale cancellazione file */
+let deleteFileConfirmModal = ref(false);
+let fileToDelete = ref(null);
+
+function openDeleteFileModal(file) {
+    deleteFileConfirmModal.value = true;
+    fileToDelete.value = file;
+}
+
+function closeDeleteFileModal() {
+    deleteFileConfirmModal.value = false;
+    fileToDelete.value = null;
+}
+
+/* 5) modale errore cancellazione file */
+let fileDeletionErrorModal = ref(false);
+
+const openFileDeletionErrorModal = () => {
+    fileDeletionErrorModal.value = true;
+}
+
+const closeFileDeletionErrorModal = () => {
+    deleteFileConfirmModal.value = false;
+    fileDeletionErrorModal.value = false;
+}
+
+/* 6) modale rinomina cartella */
+let renameFolderModal = ref(false);
+let renameFolderId = ref(null);
+
+const openRenameFolderModal = (folderId) => {
+    renameFolderModal.value = true;
+    renameFolderId.value = folderId;
+}
+
+const closeRenameFolderModal = () => {
+    renameFolderModal.value = false;
+    renameFolderId.value = null;
+}
+
+/* 6) modale rinomina file */
+let renameFileModal = ref(false);
+let renameFileId = ref(null);
+
+const openRenameFileModal = (fileId) => {
+    console.log(renameFileModal.value);
+
+    renameFileModal.value = true;
+    renameFileId.value = fileId;
+
+    console.log(renameFileModal.value);
+}
+
+const closeRenameFileModal = () => {
+    renameFileModal.value = false;
+    renameFileId.value = null;
+}
+
+/* 7) modale share folder */
+let shareFolderModal = ref(false);
+let shareFolderId = ref(null);
+
+const openShareFolderModal = (folderId) => {
+    shareFolderModal.value = true;
+    shareFolderId.value = folderId;
+}
+
+const closeShareFolderModal = () => {
+    shareFolderModal.value = false;
+    shareFolderId.value = null;
+}
+
+/* 8) modale share file */
+let shareFileModal = ref(false);
+let shareFileId = ref(null);
+const openShareFileModal = (fileId) => {
+    shareFileModal.value = true;
+    shareFileId.value = fileId;
+}
+
+const closeShareFileModal = () => {
+    shareFileModal.value = false;
+    shareFileId.value = null;
+}
+
+console.log(props);
+
+</script>

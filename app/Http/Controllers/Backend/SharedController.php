@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Http\Controllers\Controller;
+use App\Models\FileShare;
 use App\Models\Folder;
+use App\Models\FolderShare;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -22,18 +25,22 @@ class SharedController extends Controller
             ->join('users as users_owner', 'fs.owner_id', '=', 'users_owner.id')
             ->where('folders.user_id', '!=',  $user->id)
             ->where('fs.user_id', $user->id)
-            ->select('folders.id as id', 'folders.name as name', 'users_owner.name as owner')
-            ->get()
-            ->sortBy('folderName');
+            ->select('folders.id as folderId', 'folders.name as folderName', 'users_owner.name as folderOwner')
+            ->orderBy('folderName', 'ASC')
+            ->orderBy('folderOwner', 'ASC')
+            ->get();
+
+//        dd($sharedFolders);
 
         /* cerco i files */
         $sharedFiles = DB::table('file_shares as fs')
             ->join('media', 'fs.file_id', '=', 'media.id')
             ->join('users', 'fs.owner_id', '=', 'users.id')
             ->where('fs.user_id', $user->id)
-            ->select('media.id as id', 'media.file_name as name', 'users.name as owner')
-            ->get()
-            ->sortBy('name');
+            ->select('media.id as fileId', 'media.file_name as fileName', 'users.name as fileOwner')
+            ->orderBy('fileName', 'ASC')
+            ->orderBy('fileOwner', 'ASC')
+            ->get();
 
 //        dd($sharedFolders, $sharedFiles);
 
@@ -53,9 +60,10 @@ class SharedController extends Controller
             ->join('users', 'fs.user_id', '=', 'users.id')
             ->where('folders.user_id', $user->id)
 //            ->whereIn('fs.folder_id', $folderIds)
-            ->select('folders.name as foldername', 'users.name as username')
-            ->get()
-            ->sortBy('foldername');
+            ->select('fs.id as folderId', 'folders.name as folderName', 'users.name as userName')
+            ->orderBy('folderName', 'ASC')
+            ->orderBy('userName', 'ASC')
+            ->get();
 
 
         /* files condivisi dall'utente che fa la richiesta */
@@ -70,13 +78,54 @@ class SharedController extends Controller
             ->join('media', 'fs.file_id', '=', 'media.id')
             ->join('users', 'fs.user_id', '=', 'users.id')
             ->whereIn('media.model_id', $childrenFolderIds)
-            ->select('media.file_name as filename', 'users.name as username')
-            ->get()
-            ->sortBy('filename');
+            ->select('fs.id as fileId', 'media.file_name as fileName', 'users.name as userName')
+            ->orderBy('fileName', 'ASC')
+            ->orderBy('userName', 'ASC')
+            ->get();
 
         return Inertia::render('Backend/SharedByMe', [
             'folders' => $sharedFolders,
             'files' => $sharedFiles,
         ]);
+    }
+
+    public function stopSharingFolder(int $folderId): RedirectResponse
+    {
+//        $folder = DB::table('folder_shares as fs')
+//            ->join('folders', 'folders.id', '=', 'fs.folder_id')
+//            ->join('users', 'users.id', '=', 'fs.user_id')
+//            ->where('fs.id', $folderId)
+//            ->select('folders.name as folderName', 'users.name as userName')
+//            ->first();
+
+        $folder = FolderShare::find($folderId);
+
+        if ($folder) {
+            $folder->delete();
+
+            return redirect()->back();
+        } else {
+            return redirect()->back()->dangerBanner('An error occurred when trying to stop sharing this folder');
+        }
+    }
+
+    public function stopSharingFile(int $fileId): RedirectResponse
+    {
+//        $folder = DB::table('folder_shares as fs')
+//            ->join('folders', 'folders.id', '=', 'fs.folder_id')
+//            ->join('users', 'users.id', '=', 'fs.user_id')
+//            ->where('fs.id', $folderId)
+//            ->select('folders.name as folderName', 'users.name as userName')
+//            ->first();
+
+        $file = FileShare::find($fileId);
+
+        if ($file) {
+            $file->delete();
+
+            return redirect()->back();
+        } else {
+            return redirect()->back()->dangerBanner('An error occurred when trying to stop sharing this file');
+        }
     }
 }

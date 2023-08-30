@@ -1,5 +1,47 @@
+<template>
+    <div>
+        <DialogModal :show="show"
+                     @close="closeModal()">
+            <template #title>
+                {{ title }}
+            </template>
+
+            <template #content>
+                {{ content }}
+
+                <div>
+                    <TextInput
+                        ref="inputEmail"
+                        v-model="form.email"
+                        type="email"
+                        class="mt-4 block w-3/4"
+                        autofocus
+                    />
+
+                    <InputError :message="form.error" class="mt-2" />
+                </div>
+            </template>
+
+            <template #footer>
+                <SecondaryButton @click="closeModal()">
+                    Cancel
+                </SecondaryButton>
+
+                <PrimaryButton
+                    class="ml-3"
+                    :class="{ 'opacity-25':form.processing }"
+                    :disabled="form.processing"
+                    @click.prevent="confirmEmail()"
+                >
+                    {{ buttonName }}
+                </PrimaryButton>
+            </template>
+        </DialogModal>
+    </div>
+</template>
+
 <script setup>
-import {nextTick, onMounted, reactive, ref} from "vue";
+import {nextTick, reactive, ref} from "vue";
 import DialogModal from '@/Components/DialogModal.vue';
 import TextInput from "@/Components/TextInput.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
@@ -50,67 +92,25 @@ const closeModal = () => {
 const confirmEmail = () => {
     console.log(props.folderId, form.email);
     router.post(route('backend.file-manager.share-folder', props.folderId), { email: form.email },
-    {
-        onSuccess: () => {
-            closeModal();
-            nextTick().then(() => emit('updated'))
-        },
-        onError: (error) => {
-            if (error.missingEmail) {
-                form.error = 'Please enter an email.';
-            } else {
-                form.error = error.message;
-            }
+        {
+            onSuccess: () => {
+                closeModal();
+                nextTick().then(() => emit('updated'))
+            },
+            onError: (error) => {
+                if (error.missingEmail) {
+                    form.error = 'Please enter an email.';
+                } else if (error.invalidEmail) {
+                    form.error = 'You can\'t share a folder with yourself.';
+                }
 
-            // reset
-            form.email = '';
-            inputEmail.value.focus();
-        }
-    });
+                // reset
+                form.email = '';
+                inputEmail.value.focus();
+            }
+        });
 }
 
 // console.log(props);
 
 </script>
-
-<template>
-    <div>
-        <DialogModal :show="show"
-                     @close="closeModal()">
-            <template #title>
-                {{ title }}
-            </template>
-
-            <template #content>
-                {{ content }}
-
-                <div>
-                    <TextInput
-                        ref="inputEmail"
-                        v-model="form.email"
-                        type="email"
-                        class="mt-4 block w-3/4"
-                        autofocus
-                    />
-
-                    <InputError :message="form.error" class="mt-2" />
-                </div>
-            </template>
-
-            <template #footer>
-                <SecondaryButton @click="closeModal()">
-                    Cancel
-                </SecondaryButton>
-
-                <PrimaryButton
-                    class="ml-3"
-                    :class="{ 'opacity-25':form.processing }"
-                    :disabled="form.processing"
-                    @click.prevent="confirmEmail()"
-                >
-                    {{ buttonName }}
-                </PrimaryButton>
-            </template>
-        </DialogModal>
-    </div>
-</template>

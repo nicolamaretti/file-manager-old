@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\Backend\LoginController;
 use App\Http\Controllers\Backend\ManageFileController;
 use App\Http\Controllers\Backend\SharedController;
 use Illuminate\Foundation\Application;
@@ -36,12 +35,7 @@ Route::middleware([
     'verified',
 ])->group(function () {
 
-//    Route::get('/dashboard', function () {
-//        return Inertia::render('Dashboard');
-//    })->name('dashboard');
-
     ////// MY
-//    Route::get('/file-manager', [FileManagerController::class, 'index'])->name('backend.file-manager.index');
     Route::get('/dashboard', [FileManagerController::class, 'index'])->name('dashboard');
     Route::post('file-manager/create-root-folder', [FileManagerController::class, 'createRootFolder'])->name('backend.file-manager.create-root-folder');
     Route::post('file-manager/create-folder', [FileManagerController::class, 'createFolder'])->name('backend.file-manager.create-folder');
@@ -67,4 +61,6 @@ Route::middleware([
     /* shared */
     Route::get('/shared-with-me', [SharedController::class, 'sharedWithMe'])->name('backend.shared-with-me');
     Route::get('/shared-by-me', [SharedController::class, 'sharedByMe'])->name('backend.shared-by-me');
+    Route::delete('/shared-by-me/stop-sharing-folder/{folderId}', [SharedController::class, 'stopSharingFolder'])->name('backend.shared-by-me.stop-sharing-folder');
+    Route::delete('/shared-by-me/stop-sharing-file/{fileId}', [SharedController::class, 'stopSharingFile'])->name('backend.shared-by-me.stop-sharing-file');
 });
