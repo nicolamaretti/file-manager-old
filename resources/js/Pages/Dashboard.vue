@@ -8,9 +8,9 @@
 
         <!-- Sezione creazione cartelle e upload file -->
         <div class="bg-white shadow border-gray-300 border-t-2">
-            <!-- 1.1) Creazione nuova cartella root (se Admin) -->
-            <div v-if="rootFolderId == null && folderIsRoot" class="px-4 py-5 sm:p-6">
-                <div class="sm:basis-1/2 px-4">
+            <div class="px-4 py-5 flex">
+                <!-- 1.1) Creazione nuova cartella root (se Admin) -->
+                <div v-if="rootFolderId == null" class="basis-1/2 px-6">
                     <h3 class="text-base font-semibold leading-6 text-gray-900">Create root folder</h3>
 
                     <form @submit.prevent="submitRootFolderForm" class="mt-5 sm:flex sm:items-center">
@@ -21,50 +21,50 @@
                                    class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
                         </div>
                         <button type="submit"
-                                class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:ml-3 sm:mt-0 sm:w-auto">
+                                class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-gray-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:ml-3 sm:mt-0 sm:w-auto">
                             Create
                         </button>
                     </form>
                 </div>
-            </div>
 
-            <!-- 1.2) Creazione nuova cartella "normale" (se non Admin) -->
-            <div v-else class="px-4 py-5 sm:p-6">
-                <div v-if="userFolderPermission.write" class="grid grid-cols-2 sm:flex">
-                    <div class="sm:basis-1/2 px-4">
-                        <h3 class="text-base font-semibold leading-6 text-gray-900">Create folder</h3>
+                <!-- 1.2) Creazione nuova cartella "normale" (se non Admin) -->
+                <div v-else class="basis-1/2 px-6">
+                    <div v-if="userFolderPermission.write" class="grid grid-cols-2 sm:flex">
+                        <div class="sm:basis-1/2 px-4">
+                            <h3 class="text-base font-semibold leading-6 text-gray-900">Create folder</h3>
 
-                        <form @submit.prevent="submitFolderForm" class="mt-5 sm:flex sm:items-center">
-                            <div class="w-full sm:max-w-xs">
-                                <label for="newFolderName" class="sr-only"></label>
-                                <input type="text" name="newFolderName" id="newFolderName"
-                                       v-model="folderForm.newFolderName"
-                                       class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
-                            </div>
-                            <button type="submit"
-                                    class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-gray-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:ml-3 sm:mt-0 sm:w-auto">
-                                Create
-                            </button>
-                        </form>
+                            <form @submit.prevent="submitFolderForm" class="mt-5 sm:flex sm:items-center">
+                                <div class="w-full sm:max-w-xs">
+                                    <label for="newFolderName" class="sr-only"></label>
+                                    <input type="text" name="newFolderName" id="newFolderName"
+                                           v-model="folderForm.newFolderName"
+                                           class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                                </div>
+                                <button type="submit"
+                                        class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-gray-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:ml-3 sm:mt-0 sm:w-auto">
+                                    Create
+                                </button>
+                            </form>
+                        </div>
                     </div>
+                </div>
 
-                    <!-- 2) Upload file -->
-                    <div class="sm:basis-1/2 px-4">
-                        <h3 class="text-base font-semibold leading-6 text-gray-900">Upload file</h3>
+                <!-- 1.3) Upload file -->
+                <div class="basis-1/2 px-6">
+                    <h3 class="text-base font-semibold leading-6 text-gray-900">Upload file</h3>
 
-                        <form @submit.prevent="submitFileUploadForm" class="mt-5 sm:flex sm:items-center">
-                            <div class="w-full sm:max-w-xs">
-                                <label for="file" class="sr-only"></label>
+                    <form @submit.prevent="submitFileUploadForm" class="mt-5 sm:flex sm:items-center">
+                        <div class="w-full sm:max-w-xs">
+                            <label for="file" class="sr-only"></label>
 
-                                <input type="file" name="file" id="file" ref="file" @change="uploadFile"
-                                       class="block text-sm w-11/12 file:bg-asblue-200 file:hover:bg-asblue-100 file:font-regular file:text-sm file:py-1.5 file:ring-0 file:text-asblue-800 break-all file:px-3 file:mr-4 text-gray-900">
-                            </div>
-                            <button type="submit"
-                                    class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-gray-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:ml-3 sm:mt-0 sm:w-auto">
-                                Upload
-                            </button>
-                        </form>
-                    </div>
+                            <input type="file" name="file" id="file" ref="file" @change="uploadFile"
+                                   class="block text-sm w-11/12 file:bg-asblue-200 file:hover:bg-asblue-100 file:font-regular file:text-sm file:py-1.5 file:ring-0 file:text-asblue-800 break-all file:px-3 file:mr-4 text-gray-900">
+                        </div>
+                        <button type="submit"
+                                class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-gray-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:ml-3 sm:mt-0 sm:w-auto">
+                            Upload
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -83,7 +83,7 @@
                             Name
                         </div>
                         <!-- seconda colonna -->
-                        <div v-if="rootFolderId == null && folderIsRoot"
+                        <div v-if="rootFolderId == null"
                              class="col-span-2">
                             Owner
                         </div>
@@ -102,9 +102,9 @@
                         <div v-if="!folderIsRoot" class="whitespace-nowrap mt-1 py-1 pl-3 inline-flex items-center">
                             <div class="inline-block">
                                 <ChevronLeftIcon v-if="parent != null"
-                                                 @click=(openFolder(parent.id))></ChevronLeftIcon>
+                                                 @click.prevent=(openFolder(parent.id))></ChevronLeftIcon>
                                 <ChevronLeftIcon v-else
-                                                 @click=(openFolder())></ChevronLeftIcon>
+                                                 @click.prevent=(openFolder())></ChevronLeftIcon>
                             </div>
                             <div class="inline-block font-semibold m-0 pb-1 pl-3">
                                 <label>
@@ -115,122 +115,163 @@
 
                         <!-- se sono Admin e sono nella root, mostro tutte le cartelle -->
                         <!-- Riga della tabella -->
-                        <div v-if="rootFolderId == null && folderIsRoot"
-                             v-for="folder in folders.data"
-                             class="grid grid-cols-8 gap-3 py-1 px-4 sm:px-6 text-sm">
-                            <div
-                                class="overflow-hidden col-span-3 whitespace-nowrap py-auto my-auto align-middle font-medium text-gray-900 inline-flex">
-                                <IconFolder class="inline-block my-auto mr-3 cursor-pointer"
-                                            @click="openFolder(folder.id)"/>
-                                <label class="cursor-pointer m-0 pt-1 text-align:center hover:underline"
-                                       @click="openFolder(folder.id)">
-                                    {{ folder.name }}
-                                </label>
-                            </div>
-                            <div
-                                class="overflow-hidden col-span-1 whitespace-nowrap pt-1 my-auto text-gray-500">
-                                {{ folder.owner }}
-                            </div>
+<!--                        <div v-if="rootFolderId == null && folderIsRoot">-->
+                        <div v-if="rootFolderId == null">
+                            <div v-for="folder in folders.data"
+                                 class="grid grid-cols-8 gap-3 py-1 px-4 sm:px-6 text-sm border-b">
+                                <div
+                                    class="overflow-hidden col-span-3 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex">
+                                    <IconFolder class="inline-block mr-3"/>
+                                    <!--                                @click.prevent="openFolder(folder.id)"-->
+                                    <label class="cursor-pointer m-0 pt-1 text-align:center overflow-hidden hover:underline"
+                                           @click.prevent="openFolder(folder.id)">
+                                        {{ folder.name }}
+                                    </label>
+                                </div>
+                                <div
+                                    class="col-span-1 whitespace-nowrap pt-1 my-auto text-gray-500 overflow-hidden">
+                                    {{ folder.owner }}
+                                </div>
 
-                            <!-- div vuoto per creare spazio -->
-                            <div class="col-span-1"/>
+                                <!-- div vuoto per creare spazio -->
+                                <div class="col-span-1"/>
 
-                            <div
-                                class="col-span-3 relative whitespace-nowrap pt-1 my-auto text-left font-medium">
-                                <ActionIconEdit v-if="isUserAdmin"
-                                                class="mr-2"
-                                                @click="openRenameFolderModal(folder.id)"/>
+                                <div
+                                    class="overflow-hidden col-span-3 relative whitespace-nowrap my-auto py-auto text-left font-medium">
+                                    <ActionIconEdit v-if="isUserAdmin"
+                                                    class="mr-2"
+                                                    @click.prevent="openRenameFolderModal(folder.id)"/>
 
-                                <a :href="route('backend.file-manager.zip-folder', folder.id)">
-                                    <ActionIconZip class="mr-2"/>
-                                </a>
+                                    <a :href="route('backend.file-manager.zip-folder', folder.id)">
+                                        <ActionIconZip class="mr-2"/>
+                                    </a>
 
-                                <ActionIconDelete class="mr-2"
-                                                  @click="openDeleteFolderModal(folder)"/>
-                            </div>
-                        </div>
-
-                        <!-- in tutti gli altri casi, mostro sia le sottocartelle, sia i file che contiene la cartella corrente -->
-                        <!-- 1) visualizzazione sottocartelle -->
-                        <div v-else v-for="folder in folders.data"
-                             class="grid grid-cols-8 gap-3 py-1 px-4 sm:px-6 text-sm">
-                            <div
-                                class="overflow-hidden col-span-3 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex">
-                                <IconFolder class="inline-block mr-3 cursor-pointer"
-                                            @click="openFolder(folder.id)"/>
-                                <label class="cursor-pointer m-0 pt-1 text-align:center overflow-hidden hover:underline"
-                                       @click="openFolder(folder.id)">
-                                    {{ folder.name }}
-                                </label>
-                            </div>
-                            <div
-                                class="col-span-1 whitespace-nowrap pt-1 my-auto text-gray-500 overflow-hidden">
-                                {{ folder.uuid }}
+                                    <ActionIconDelete class="mr-2"
+                                                      @click.prevent="openDeleteFolderModal(folder)"/>
+                                </div>
                             </div>
 
-                            <!-- div vuoto per creare spazio -->
-                            <div class="col-span-1"/>
+                            <!-- 2) visualizzazione file -->
+                            <div v-if="files" v-for="file in files.data"
+                                 class="grid grid-cols-8 gap-3 py-1 px-4 sm:px-6 text-sm border-b">
+                                <div
+                                    class="overflow-hidden col-span-3 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex">
+                                    <FileIcon class="inline-block my-auto mr-3"/>
+                                    <!--                                @click.prevent="openFile(file.id)"-->
+                                    <p class="m-0 pt-0.5">
+                                        <!--                                    @click.prevent="openFile(file.id)"-->
+                                        {{ file.file_name }}
+                                    </p>
+                                </div>
+                                <div class="col-span-1 whitespace-nowrap py-auto my-auto text-gray-500">
+                                    <p class="m-0 pt-0.5">
+                                        ----------
+                                    </p>
+                                </div>
 
-                            <div
-                                class="overflow-hidden col-span-3 relative whitespace-nowrap my-auto pt-1 py-auto text-left font-medium">
-                                <ActionIconEdit v-if="userFolderPermission.write"
-                                                class="mr-2"
-                                                @click="openRenameFolderModal(folder.id)"/>
+                                <!-- div vuoto per creare spazio -->
+                                <div class="col-span-1"/>
 
-                                <ActionIconShare class="mr-2"
-                                                 @click="openShareFolderModal(folder.id)"/>
+                                <div
+                                    class="overflow-hidden col-span-3 relative whitespace-nowrap my-auto py-auto text-left font-medium">
+                                    <ActionIconEdit v-if="userFolderPermission.write"
+                                                    class="mr-2"
+                                                    @click.prevent="openRenameFileModal(file.id)"/>
 
-                                <ManageFolderIcon v-if="userFolderPermission.write"
-                                                  class="mr-2"
-                                                  @click="manageFolder(folder)"/>
+                                    <a :href="route('backend.file-manager.download-file', file.id)">
+                                        <DownloadIcon class="mr-2"/>
+                                    </a>
 
-                                <a :href="route('backend.file-manager.zip-folder', folder.id)">
-                                    <ActionIconZip class="mr-2"/>
-                                </a>
-
-                                <ActionIconDelete class="mr-2"
-                                                  @click="openDeleteFolderModal(folder)"/>
+                                    <ActionIconDelete class="mr-2"
+                                                      @click.prevent="openDeleteFileModal(file)"/>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- 2) visualizzazione file -->
-                        <div class="grid grid-cols-8 gap-3 py-1.5 px-4 sm:px-6 text-sm" v-for="file in files.data">
-                            <div
-                                class="overflow-hidden col-span-3 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex">
-                                <FileIcon class="inline-block my-auto mr-3 cursor-pointer"
-                                          @click.prevent="openFile(file.id)"></FileIcon>
-                                <p class="cursor-pointer m-0 pt-0.5"
-                                   @click.prevent="openFile(file.id)">
-                                    {{ file.file_name }}
-                                </p>
+                        <!-- se invece non sono admin, visualizzo il contenuto della mia root folder (files e cartelle) -->
+                        <div v-else>
+                            <!-- 1) visualizzazione sottocartelle -->
+                            <div v-for="folder in folders.data"
+                                 class="grid grid-cols-8 gap-3 py-1 px-4 sm:px-6 text-sm border-b">
+                                <div
+                                    class="overflow-hidden col-span-3 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex">
+                                    <IconFolder class="inline-block mr-3"/>
+                                    <!--                                @click.prevent="openFolder(folder.id)"-->
+                                    <label class="cursor-pointer m-0 pt-1 text-align:center overflow-hidden hover:underline"
+                                           @click.prevent="openFolder(folder.id)">
+                                        {{ folder.name }}
+                                    </label>
+                                </div>
+                                <div
+                                    class="col-span-1 whitespace-nowrap pt-1 my-auto text-gray-500 overflow-hidden">
+                                    {{ folder.uuid }}
+                                </div>
+
+                                <!-- div vuoto per creare spazio -->
+                                <div class="col-span-1"/>
+
+                                <div
+                                    class="overflow-hidden col-span-3 relative whitespace-nowrap my-auto py-auto text-left font-medium">
+                                    <ActionIconEdit v-if="userFolderPermission.write"
+                                                    class="mr-2"
+                                                    @click.prevent="openRenameFolderModal(folder.id)"/>
+
+                                    <ActionIconShare class="mr-2"
+                                                     @click.prevent="openShareFolderModal(folder.id)"/>
+
+                                    <ManageFolderIcon v-if="userFolderPermission.write"
+                                                      class="mr-2"
+                                                      @click.prevent="manageFolder(folder)"/>
+
+                                    <a :href="route('backend.file-manager.zip-folder', folder.id)">
+                                        <ActionIconZip class="mr-2"/>
+                                    </a>
+
+                                    <ActionIconDelete class="mr-2"
+                                                      @click.prevent="openDeleteFolderModal(folder)"/>
+                                </div>
                             </div>
-                            <div class="col-span-1 whitespace-nowrap py-auto my-auto text-gray-500">
-                                <p class="m-0 pt-0.5">
-                                    ----------
-                                </p>
-                            </div>
 
-                            <!-- div vuoto per creare spazio -->
-                            <div class="col-span-1"/>
+                            <!-- 2) visualizzazione file -->
+                            <div v-for="file in files.data"
+                                 class="grid grid-cols-8 gap-3 py-1 px-4 sm:px-6 text-sm border-b">
+                                <div
+                                    class="overflow-hidden col-span-3 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex">
+                                    <FileIcon class="inline-block my-auto mr-3"/>
+                                    <!--                                @click.prevent="openFile(file.id)"-->
+                                    <p class="m-0 pt-0.5">
+                                        <!--                                    @click.prevent="openFile(file.id)"-->
+                                        {{ file.file_name }}
+                                    </p>
+                                </div>
+                                <div class="col-span-1 whitespace-nowrap py-auto my-auto text-gray-500">
+                                    <p class="m-0 pt-0.5">
+                                        ----------
+                                    </p>
+                                </div>
 
-                            <div
-                                class="overflow-hidden col-span-3 relative whitespace-nowrap py-auto  text-left font-medium ">
-                                <ActionIconEdit v-if="userFolderPermission.write"
-                                                class="mr-2"
-                                                @click="openRenameFileModal(file.id)"/>
+                                <!-- div vuoto per creare spazio -->
+                                <div class="col-span-1"/>
 
-                                <ActionIconShare class="mr-2"
-                                                 @click="openShareFileModal(file.id)"/>
+                                <div
+                                    class="overflow-hidden col-span-3 relative whitespace-nowrap py-auto  text-left font-medium ">
+                                    <ActionIconEdit v-if="userFolderPermission.write"
+                                                    class="mr-2"
+                                                    @click.prevent="openRenameFileModal(file.id)"/>
 
-                                <ManageFileIcon class="mr-2"
-                                                @click.prevent="manageFile(file)"/>
+                                    <ActionIconShare class="mr-2"
+                                                     @click.prevent="openShareFileModal(file.id)"/>
 
-                                <a :href="route('backend.file-manager.download-file', file.id)">
-                                    <DownloadIcon class="mr-2"/>
-                                </a>
+                                    <ManageFileIcon class="mr-2"
+                                                    @click.prevent="manageFile(file)"/>
 
-                                <ActionIconDelete class="mr-2"
-                                                  @click="openDeleteFileModal(file)"/>
+                                    <a :href="route('backend.file-manager.download-file', file.id)">
+                                        <DownloadIcon class="mr-2"/>
+                                    </a>
+
+                                    <ActionIconDelete class="mr-2"
+                                                      @click.prevent="openDeleteFileModal(file)"/>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -238,58 +279,10 @@
             </div>
         </div>
 
-        <!-- Sezione visualizzazione file e cartelle condivise per un utente (non admin) -->
-        <!--        <div v-if="!isUserAdmin"-->
-        <!--             class="m-0 sm:px-10 lg:px-10">-->
-        <!--            <div class="grid grid-cols-2">-->
-        <!--                <div class="">-->
-        <!--                    <label class="text-gray-800 font-extrabold text-lg">SHARED FOLDERS</label>-->
-        <!--                </div>-->
-        <!--                <div class="text-right pt-0.5">-->
-        <!--                    <label class="text-blue-400 font-light text-sm hover:underline hover:text-blue-600 cursor-pointer"-->
-        <!--                           @click="openSelectSharedFolders()"-->
-        <!--                    >-->
-        <!--                        Add-->
-        <!--                    </label>-->
-        <!--                </div>-->
-        <!--            </div>-->
-        <!--            <div class="mt-2 min-w-full divide-y divide-gray-300 bg-gray-50">-->
-        <!--                &lt;!&ndash; Tabella &ndash;&gt;-->
-        <!--                <div-->
-        <!--                    class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg mb-20 min-w-full divide-y divide-gray-300 bg-gray-100">-->
-        <!--                    &lt;!&ndash; Header &ndash;&gt;-->
-        <!--                    <div-->
-        <!--                        class="grid grid-cols-2 gap-3 px-4 sm:px-6 py-3.5 text-left text-sm font-semibold text-gray-900">-->
-        <!--                        &lt;!&ndash; prima colonna &ndash;&gt;-->
-        <!--                        <div>Name</div>-->
-        <!--                        &lt;!&ndash; seconda colonna &ndash;&gt;-->
-        <!--                        <div>Owner</div>-->
-        <!--                    </div>-->
-        <!--                    &lt;!&ndash; Riga della tabella &ndash;&gt;-->
-        <!--                    <div class="divide-y divide-gray-200 bg-white">-->
-        <!--                        <div v-for="folder in sharedFolders.data"-->
-        <!--                             class="grid grid-cols-2 gap-3 py-4 px-4 sm:px-6 text-sm">-->
-        <!--                            <div-->
-        <!--                                class="overflow-hidden whitespace-nowrap py-auto my-auto align-middle font-medium text-gray-900 inline-flex">-->
-        <!--                                <IconFolder class="inline-block my-auto mr-3"/>-->
-        <!--                                <label class="m-0 pt-1 text-align:center">-->
-        <!--                                    {{ folder.name }}-->
-        <!--                                </label>-->
-        <!--                            </div>-->
-        <!--                            <div-->
-        <!--                                class="overflow-hidden col-span-1 whitespace-nowrap pt-1 my-auto text-gray-500">-->
-        <!--                                {{ folder.owner }}-->
-        <!--                            </div>-->
-        <!--                        </div>-->
-        <!--                    </div>-->
-        <!--                </div>-->
-        <!--            </div>-->
-        <!--        </div>-->
-
         <!--------------------        MODALI        -------------------->
         <!-- modale errore creazione cartella -->
         <JetConfirmationModal :show="folderCreationErrorModal"
-                              @close="closeFolderCreationErrorModal">
+                              @close.prevent="closeFolderCreationErrorModal()">
             <template #title>
             <span class="text-center">
                 FOLDER CREATION ERROR
@@ -299,7 +292,7 @@
                 <span class="text-center">Warning, a folder with this name already exists in this path.</span>
             </template>
             <template #footer>
-                <JetButton @click="closeFolderCreationErrorModal"
+                <JetButton @click.prevent="closeFolderCreationErrorModal()"
                            class="bg-asred-200 text-white cursor-pointer mb-3 mr-2 px-6 py-2 rounded-sm hover:bg-gray-600">
                     <span>Ok</span>
                 </JetButton>
@@ -308,7 +301,7 @@
 
         <!-- modale cancellazione cartella -->
         <JetConfirmationModal :show="deleteFolderConfirmModal"
-                              @close="closeDeleteFolderModal">
+                              @close.prevent="closeDeleteFolderModal()">
             <template #title>
                 <span class="text-center">
                     DELETE FOLDER
@@ -323,11 +316,11 @@
                 </div>
             </template>
             <template #footer>
-                <JetButton @click="closeDeleteFolderModal"
+                <JetButton @click.prevent="closeDeleteFolderModal()"
                            class="bg-asred-200 text-white cursor-pointer mb-3 mr-2 px-6 py-2 rounded-sm hover:bg-gray-600">
                     <span>Cancel</span>
                 </JetButton>
-                <JetButton @click.prevent="deleteFolder"
+                <JetButton @click.prevent="deleteFolder()"
                            class="bg-asgreen-200 text-white rounded-sm mb-3  cursor-pointer  px-6 py-2 hover:bg-gray-600">
                     <span>Delete</span>
                 </JetButton>
@@ -336,7 +329,7 @@
 
         <!-- modale errore cancellazione cartella -->
         <JetConfirmationModal :show="folderDeletionErrorModal"
-                              @close="closeFolderDeletionErrorModal">
+                              @close.prevent="closeFolderDeletionErrorModal()">
             <template #title>
             <span class="text-center">
                 FOLDER DELETION ERROR
@@ -346,7 +339,7 @@
                 <span class="text-center">An error occurred during the folder deletion.</span>
             </template>
             <template #footer>
-                <JetButton @click="closeFolderDeletionErrorModal"
+                <JetButton @click.prevent="closeFolderDeletionErrorModal()"
                            class="bg-asred-200 text-white cursor-pointer mb-3 mr-2 px-6 py-2 rounded-sm hover:bg-gray-600">
                     <span>Ok</span>
                 </JetButton>
@@ -355,7 +348,7 @@
 
         <!-- modale cancellazione file -->
         <JetConfirmationModal :show="deleteFileConfirmModal"
-                              @close="closeDeleteFileModal()">
+                              @close.prevent="closeDeleteFileModal()">
             <template #title>
                 <span class="text-center">
                     DELETE FILE
@@ -368,7 +361,7 @@
                 <div class="mt-4 font-bold break-all text-red-400">Warning, the action is irreversible.</div>
             </template>
             <template #footer>
-                <JetButton @click="closeDeleteFileModal()"
+                <JetButton @click.prevent="closeDeleteFileModal()"
                            class="bg-asred-200 text-white cursor-pointer mb-3 mr-2 px-6 py-2 rounded-sm hover:bg-gray-600">
                     <span>Cancel</span>
                 </JetButton>
@@ -381,7 +374,7 @@
 
         <!-- modale errore cancellazione file -->
         <JetConfirmationModal :show="fileDeletionErrorModal"
-                              @close="closeFileDeletionErrorModal()">
+                              @close.prevent="closeFileDeletionErrorModal()">
             <template #title>
             <span class="text-center">
                 FILE DELETION ERROR
@@ -391,7 +384,7 @@
                 <span class="text-center">An error occurred during the file deletion.</span>
             </template>
             <template #footer>
-                <JetButton @click="openFolderDeletionErrorModal()"
+                <JetButton @click.prevent="openFolderDeletionErrorModal()"
                            class="bg-asred-200 text-white cursor-pointer mb-3 mr-2 px-6 py-2 rounded-sm hover:bg-gray-600">
                     <span>Ok</span>
                 </JetButton>
@@ -542,9 +535,9 @@ const manageFile = (file) => {
     });
 }
 
-const openFile = (fileId) => {
-    router.get(route('backend.file-manager.open-file', fileId));
-}
+// const openFile = (fileId) => {
+//     router.get(route('backend.file-manager.open-file', fileId));
+// }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // AZIONI FORM

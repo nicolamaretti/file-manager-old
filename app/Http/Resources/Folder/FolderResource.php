@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Facades\DB;
 use JsonSerializable;
 
 class FolderResource extends JsonResource
@@ -18,7 +19,11 @@ class FolderResource extends JsonResource
      */
     public function toArray(Request $request): array|Arrayable|JsonSerializable
     {
-        $user = User::find($this->user_id);
+        $user = DB::table('folders')
+            ->join('users', 'users.id', '=', 'folders.user_id')
+            ->where('folders.id', $this->id)
+            ->select('users.name as userName')
+            ->first();
 
         return [
             'id'            => $this->id,
@@ -27,7 +32,7 @@ class FolderResource extends JsonResource
             'uuid'          => $this->uuid,
             'folders'       => FolderResource::collection($this->folders),
             'fullPath'      => $this->getFullPath(),
-            'owner'         => $user->name,
+            'owner'         => $user->userName,
         ];
     }
 }

@@ -1,7 +1,7 @@
 <template>
     <div>
         <DialogModal :show="show"
-                     @close="closeModal()">
+                     @close.prevent="closeModal()">
             <template #title>
                 {{ title }}
             </template>
@@ -23,7 +23,7 @@
             </template>
 
             <template #footer>
-                <SecondaryButton @click="closeModal()">
+                <SecondaryButton @click.prevent="closeModal()">
                     Cancel
                 </SecondaryButton>
 

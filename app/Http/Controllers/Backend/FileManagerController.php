@@ -39,6 +39,9 @@ class FileManagerController extends Controller
         $folderIsRoot = true;
         $folder = null;
 
+//        dump($folders, $currentFolderId, $currentFolderName, $currentFolderFullPath, $rootFolderId, $isUserAdmin, $files, $parent, $folderIsRoot, $folder);
+
+
 //        $userOrganizationAdmin = $user->can('view-organization-level');
 //        $userDepartment = $user->can('view-department-level');
 
@@ -50,6 +53,9 @@ class FileManagerController extends Controller
                 ->get();
 
             $folders = FolderResource::collection($folders);
+
+//            dd($folders, $currentFolderId, $currentFolderName, $currentFolderFullPath, $rootFolderId, $isUserAdmin, $files, $parent, $folderIsRoot, $folder);
+
         } else {
             // se è utente normale ritorno la folder di root
             $folder = Folder::with('folders')
@@ -114,6 +120,8 @@ class FileManagerController extends Controller
                 }
             }
         }
+
+//        dd($folders, $currentFolderId, $currentFolderName, $currentFolderFullPath, $rootFolderId, $isUserAdmin, $files, $parent, $folderIsRoot, $folder);
 
         return Inertia::render('Dashboard', [
             'currentFolderId' => $currentFolderId,

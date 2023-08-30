@@ -46,7 +46,7 @@ Route::middleware([
     Route::get('/file-manager/zip-folder/{folder}', [FileManagerController::class, 'zipFolder'])->name('backend.file-manager.zip-folder');
     Route::put('/file-manager/rename-folder/{folderId}', [FileManagerController::class, 'renameFolder'])->name('backend.file-manager.rename-folder');
     Route::put('/file-manager/rename-file/{fileId}', [FileManagerController::class, 'renameFile'])->name('backend.file-manager.rename-file');
-    Route::get('/file-manager/open-file/{fileId}', [FileManagerController::class, 'openFile'])->name('backend.file-manager.open-file');
+//    Route::get('/file-manager/open-file/{fileId}', [FileManagerController::class, 'openFile'])->name('backend.file-manager.open-file');
     Route::post('/file-manager/share-folder/{folderId}', [FileManagerController::class, 'shareFolder'])->name('backend.file-manager.share-folder');
     Route::post('/file-manager/share-file/{fileId}', [FileManagerController::class, 'shareFile'])->name('backend.file-manager.share-file');
 

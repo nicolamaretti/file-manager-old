@@ -47,7 +47,7 @@
                                 class="col-span-3 relative whitespace-nowrap pt-1 my-auto text-left font-medium">
 
                                 <ActionIconDelete class="mr-2"
-                                                  @click="openStopShareFolderModal(folder)"/>
+                                                  @click.prevent="openStopShareFolderModal(folder)"/>
                             </div>
                         </div>
 
@@ -58,24 +58,19 @@
                                 class="overflow-hidden col-span-3 whitespace-nowrap py-auto my-auto align-middle font-medium text-gray-900 inline-flex">
                                 <FileIcon class="inline-block my-auto mr-3"
                                 />
-                                <!--                                @click="openFolder(folder.id)"-->
-                                <label class="m-0 pt-1 text-align:center"
-                                >
-                                    <!--                                    @click="openFolder(folder.id)"-->
-                                    <!--                                    {{ folder.name }}-->
+                                <label class="m-0 pt-1 text-align:center">
                                     {{ file.fileName }}
                                 </label>
                             </div>
                             <div
                                 class="overflow-hidden col-span-2 whitespace-nowrap pt-1 my-auto text-gray-500">
-                                <!--                                {{ folder.owner }}-->
                                 {{ file.userName }}
                             </div>
                             <div
                                 class="col-span-3 relative whitespace-nowrap pt-1 my-auto text-left font-medium">
 
                                 <ActionIconDelete class="mr-2"
-                                                  @click="openStopShareFileModal(file)"/>
+                                                  @click.prevent="openStopShareFileModal(file)"/>
                             </div>
                         </div>
                     </div>
@@ -85,7 +80,7 @@
 
         <!-- modale stop sharing folder -->
         <JetConfirmationModal :show="stopShareFolderConfirmModal"
-                              @close="closeStopShareFolderModal()">
+                              @close.prevent="closeStopShareFolderModal()">
             <template #title>
                 <span class="text-center">
                     STOP SHARING FOLDER
@@ -97,7 +92,7 @@
                 <span class="text-center">?</span>
             </template>
             <template #footer>
-                <JetButton @click="closeStopShareFolderModal()"
+                <JetButton @click.prevent="closeStopShareFolderModal()"
                            class="bg-asred-200 text-white cursor-pointer mb-3 mr-2 px-6 py-2 rounded-sm hover:bg-gray-600">
                     <span>Cancel</span>
                 </JetButton>
@@ -110,7 +105,7 @@
 
         <!-- modale stop sharing file -->
         <JetConfirmationModal :show="stopShareFileConfirmModal"
-                              @close="closeStopShareFileModal()">
+                              @close.prevent="closeStopShareFileModal()">
             <template #title>
                 <span class="text-center">
                     STOP SHARING FILE
@@ -122,7 +117,7 @@
                 <span class="text-center">?</span>
             </template>
             <template #footer>
-                <JetButton @click="closeStopShareFileModal()"
+                <JetButton @click.prevent="closeStopShareFileModal()"
                            class="bg-asred-200 text-white cursor-pointer mb-3 mr-2 px-6 py-2 rounded-sm hover:bg-gray-600">
                     <span>Cancel</span>
                 </JetButton>
