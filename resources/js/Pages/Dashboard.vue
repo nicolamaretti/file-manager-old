@@ -10,13 +10,17 @@
         <div class="bg-white shadow border-gray-300 border-t-2">
             <div class="px-4 py-5 flex">
                 <!-- 1.1) Creazione nuova cartella root (se Admin) -->
-                <div v-if="rootFolderId == null" class="basis-1/2 px-6">
+                <div v-if="rootFolderId == null"
+                     class="basis-1/2 px-6">
                     <h3 class="text-base font-semibold leading-6 text-gray-900">Create root folder</h3>
 
-                    <form @submit.prevent="submitRootFolderForm" class="mt-5 sm:flex sm:items-center">
+                    <form @submit.prevent="submitRootFolderForm"
+                          class="mt-5 sm:flex sm:items-center">
                         <div class="w-full sm:max-w-xs">
                             <label for="newRootFolderName" class="sr-only"></label>
-                            <input type="text" name="newRootFolderName" id="newRootFolderName"
+                            <input type="text"
+                                   name="newRootFolderName"
+                                   id="newRootFolderName"
                                    v-model="rootFolderForm.newRootFolderName"
                                    class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
                         </div>
@@ -29,14 +33,19 @@
 
                 <!-- 1.2) Creazione nuova cartella "normale" (se non Admin) -->
                 <div v-else class="basis-1/2 px-6">
-                    <div v-if="userFolderPermission.write" class="grid grid-cols-2 sm:flex">
-                        <div class="sm:basis-1/2 px-4">
+                    <div v-if="userFolderPermission.write"
+                         class="grid grid-cols-2 sm:flex">
+                        <div class="sm:basis-1/2">
                             <h3 class="text-base font-semibold leading-6 text-gray-900">Create folder</h3>
 
-                            <form @submit.prevent="submitFolderForm" class="mt-5 sm:flex sm:items-center">
+                            <form @submit.prevent="submitFolderForm"
+                                  class="mt-5 sm:flex sm:items-center">
                                 <div class="w-full sm:max-w-xs">
-                                    <label for="newFolderName" class="sr-only"></label>
-                                    <input type="text" name="newFolderName" id="newFolderName"
+                                    <label for="newFolderName"
+                                           class="sr-only"></label>
+                                    <input type="text"
+                                           name="newFolderName"
+                                           id="newFolderName"
                                            v-model="folderForm.newFolderName"
                                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
                                 </div>
@@ -433,10 +442,10 @@ import DownloadIcon from '@/Components/Icons/DownloadIcon.vue';
 import ActionIconEdit from '@/Components/Icons/ActionIconEdit.vue';
 import ChevronLeftIcon from '@/Components/Icons/ChevronLeftIcon.vue';
 import ManageFolderIcon from "@/Components/Icons/ManageFolderIcon.vue";
-import RenameFolderModal from '@/Components/RenameFolderModal.vue';
-import RenameFileModal from '@/Components/RenameFileModal.vue';
-import ShareFolderModal from "@/Components/ShareFolderModal.vue";
-import ShareFileModal from "@/Components/ShareFileModal.vue";
+import RenameFolderModal from '@/Components/MyComponents/RenameFolderModal.vue';
+import RenameFileModal from '@/Components/MyComponents/RenameFileModal.vue';
+import ShareFolderModal from "@/Components/MyComponents/ShareFolderModal.vue";
+import ShareFileModal from "@/Components/MyComponents/ShareFileModal.vue";
 import ActionIconShare from "@/Components/Icons/ActionIconShare.vue";
 
 // Shared props

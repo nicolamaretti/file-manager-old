@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Backend\ManageFileController;
 use App\Http\Controllers\Backend\SharedController;
+use App\Http\Controllers\NewController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;

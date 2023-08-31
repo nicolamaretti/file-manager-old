@@ -39,9 +39,6 @@ class FileManagerController extends Controller
         $folderIsRoot = true;
         $folder = null;
 
-//        dump($folders, $currentFolderId, $currentFolderName, $currentFolderFullPath, $rootFolderId, $isUserAdmin, $files, $parent, $folderIsRoot, $folder);
-
-
 //        $userOrganizationAdmin = $user->can('view-organization-level');
 //        $userDepartment = $user->can('view-department-level');
 
@@ -53,9 +50,6 @@ class FileManagerController extends Controller
                 ->get();
 
             $folders = FolderResource::collection($folders);
-
-//            dd($folders, $currentFolderId, $currentFolderName, $currentFolderFullPath, $rootFolderId, $isUserAdmin, $files, $parent, $folderIsRoot, $folder);
-
         } else {
             // se è utente normale ritorno la folder di root
             $folder = Folder::with('folders')
@@ -121,8 +115,6 @@ class FileManagerController extends Controller
             }
         }
 
-//        dd($folders, $currentFolderId, $currentFolderName, $currentFolderFullPath, $rootFolderId, $isUserAdmin, $files, $parent, $folderIsRoot, $folder);
-
         return Inertia::render('Dashboard', [
             'currentFolderId' => $currentFolderId,
             'currentFolderName' => $currentFolderName,
@@ -183,13 +175,8 @@ class FileManagerController extends Controller
         $newFolderName = $request->input('newFolderName');
         $currentFolderId = intval($request->input('currentFolderId'));
 
-//        dd($userId, $newFolderName, $request->input('currentFolderId'));
-
         if (!$newFolderName || $newFolderName == '' || !$currentFolderId) {
             abort(403, 'Missing parameters');
-//            return redirect()->back()->withErrors([
-//                'missingParams' => true
-//            ]);
         }
 
         $folderAlreadyExists = FileManagerHelper::checkFolderExistence($newFolderName, $currentFolderId);
@@ -221,8 +208,6 @@ class FileManagerController extends Controller
 
         // recupero gli id delle cartelle figlie (comprende anche l'id della cartella padre)
         $childrenIds = $folder->getChildrenIds();
-
-//        dd($childrenIds);
 
         // elimino la cartella, le sottocartelle e tutti i file a loro associati
 //        $deleted = Folder::find(123456789);
@@ -263,8 +248,6 @@ class FileManagerController extends Controller
         $currentFolder = Folder::find($currentFolderId);
 
         $fileFullName = $file->getClientOriginalName();
-
-//        dd($fileFullName);
 
         // verifico se all'interno della cartella esiste già un file con lo stesso nome
         $fileAlreadyExists = FileManagerHelper::checkFileExistence($fileFullName, $currentFolderId);
@@ -324,25 +307,23 @@ class FileManagerController extends Controller
         return response()->download($file->getPath(), $file->file_name);
     }
 
-    public function openFile(int $fileId): void
-    {
-        $file = Media::where('id', $fileId)->first();
-        $filePath = $file->getPath();
-        $filePath = str_replace('/', '\\', $filePath);
-
-//        dd($filePath);
-
-        try {
-            $process = new Process(['start', $filePath]);
-            $process->run();
-
-            if (!$process->isSuccessful()) {
-                throw new RuntimeException($process->getErrorOutput());
-            }
-        } catch (Exception $exception) {
-            dd($exception);
-        }
-    }
+//    public function openFile(int $fileId): void
+//    {
+//        $file = Media::where('id', $fileId)->first();
+//        $filePath = $file->getPath();
+//        $filePath = str_replace('/', '\\', $filePath);
+//
+//        try {
+//            $process = new Process(['start', $filePath]);
+//            $process->run();
+//
+//            if (!$process->isSuccessful()) {
+//                throw new RuntimeException($process->getErrorOutput());
+//            }
+//        } catch (Exception $exception) {
+//            dd($exception);
+//        }
+//    }
 
     public function zipFolder(int $folderId): BinaryFileResponse
     {
@@ -462,10 +443,6 @@ class FileManagerController extends Controller
                 'invalidEmail' => true,
             ]);
         }
-
-        $folder = Folder::findOrFail($folderId);
-//        $childrenFolderIds = $folder->getChildrenIds();
-//        dd($childrenFolderIds);
 
         $user = User::where('email', $email)->first();
         $userId = data_get($user, 'id');
