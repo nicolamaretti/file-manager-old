@@ -22,18 +22,18 @@
                     <fieldset class="mt-7">
                         <span>
                             <label for="move">Move</label>
-                            <input v-model="selectedAction" type="radio" name="action" id="move" value="move"
+                            <input v-model="selectedAction" type="radio" id="move" value="move"
                                    class="ml-2 mb-0. cursor-pointer">
                         </span>
                         <span class="ml-10">
                             <label for="copy">Copy</label>
-                            <input v-model="selectedAction" type="radio" name="action" id="copy" value="copy"
+                            <input v-model="selectedAction" type="radio" id="copy" value="copy"
                                    class="ml-2 mb-0.5 cursor-pointer">
                         </span>
                     </fieldset>
                     <div class="mt-7">
                         <JetButton class="bg-red-400"
-                                   @click.prevent="goBack('dashboard')"
+                                   @click.prevent="goBack('my-files')"
                         >
                             Cancel
                         </JetButton>
@@ -52,10 +52,6 @@
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
                     <h3 class="font-bold text-lg">Folders list:</h3>
                     <div class="pl-4">
-                        <!--                        <div v-if="!isRoot">-->
-                        <!--                            <p v-if="parent != null" class="underline text-blue-300" @click.prevent=(openFolder(parent.id))>Indietro</p>-->
-                        <!--                            <p v-if="parent == null" class="underline text-blue-300" @click.prevent=(openFolder(null))>Indietro</p>-->
-                        <!--                        </div>-->
 
                         <!-- Riga con back button -->
                         <div v-if="!folderIsRoot"

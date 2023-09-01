@@ -12,25 +12,25 @@
                         <div class="flex">
                             <!-- Logo -->
                             <div class="shrink-0 flex items-center">
-                                <Link :href="route('dashboard')">
+                                <Link :href="route('my-files')">
                                     <ApplicationMark class="block h-9 w-auto" />
                                 </Link>
                             </div>
 
                             <!-- Navigation Links -->
                             <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                                <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                                    My files
+                                <NavLink :href="route('my-files')" :active="route().current('my-files')">
+                                    My Files
                                 </NavLink>
                             </div>
                             <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                                <NavLink :href="route('backend.shared-with-me')" :active="route().current('backend.shared-with-me')">
-                                    Shared with me
+                                <NavLink :href="route('shared-with-me')" :active="route().current('shared-with-me')">
+                                    Shared With Me
                                 </NavLink>
                             </div>
                             <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                                <NavLink :href="route('backend.shared-by-me')" :active="route().current('backend.shared-by-me')">
-                                    Shared by me
+                                <NavLink :href="route('shared-by-me')" :active="route().current('shared-by-me')">
+                                    Shared By Me
                                 </NavLink>
                             </div>
                         </div>
@@ -174,18 +174,18 @@
                 <!-- Responsive Navigation Menu -->
                 <div :class="{'block': showingNavigationDropdown, 'hidden': ! showingNavigationDropdown}" class="sm:hidden">
                     <div class="pt-2 pb-3 space-y-1">
-                        <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
-                            My files
+                        <ResponsiveNavLink :href="route('my-files')" :active="route().current('my-files')">
+                            My Files
                         </ResponsiveNavLink>
                     </div>
                     <div class="pt-2 pb-3 space-y-1">
-                        <ResponsiveNavLink :href="route('backend.shared-with-me')" :active="route().current('backend.shared-with-me')">
-                            Shared with me
+                        <ResponsiveNavLink :href="route('shared-with-me')" :active="route().current('shared-with-me')">
+                            Shared With Me
                         </ResponsiveNavLink>
                     </div>
                     <div class="pt-2 pb-3 space-y-1">
-                        <ResponsiveNavLink :href="route('backend.shared-by-me')" :active="route().current('backend.shared-by-me')">
-                            Shared by me
+                        <ResponsiveNavLink :href="route('shared-by-me')" :active="route().current('shared-by-me')">
+                            Shared By Me
                         </ResponsiveNavLink>
                     </div>
 

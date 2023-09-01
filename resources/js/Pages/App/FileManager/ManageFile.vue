@@ -7,43 +7,6 @@
         </template>
 
         <div class="py-8">
-            <!-- Azioni cartella -->
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-8">
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
-                    <h3 class="font-bold text-lg">
-                        Selected file -
-                        <span class="text-cyan-600 font-light font-mono">{{ originalFilePath }}</span>
-                    </h3>
-
-                    <fieldset class="mt-7">
-                        <span>
-                            <label for="move">Move</label>
-                            <input v-model="selectedAction" type="radio" name="action" id="move" value="move"
-                                   class="ml-2 mb-0. cursor-pointer">
-                        </span>
-                        <span class="ml-10">
-                            <label for="copy">Copy</label>
-                            <input v-model="selectedAction" type="radio" name="action" id="copy" value="copy"
-                                   class="ml-2 mb-0.5 cursor-pointer">
-                        </span>
-                    </fieldset>
-                    <div class="mt-7">
-                        <JetButton class="bg-red-400"
-                                   @click.prevent="goBack('dashboard')"
-                        >
-                            Cancel
-                        </JetButton>
-
-                        <JetButton :disabled="buttonDisabled"
-                                   class="ml-4 bg-green-400 disabled:bg-gray-400"
-                                   @click.prevent="openConfirmModal()"
-                        >
-                            Confirm
-                        </JetButton>
-                    </div>
-                </div>
-            </div>
-
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-8">
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
                     <h3 class="font-bold text-lg">Folders list:</h3>
@@ -102,6 +65,43 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Azioni cartella -->
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-8">
+                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
+                    <h3 class="font-bold text-lg">
+                        Selected file -
+                        <span class="text-cyan-600 font-light font-mono">{{ originalFilePath }}</span>
+                    </h3>
+
+                    <fieldset class="mt-7">
+                        <span>
+                            <label for="move">Move</label>
+                            <input v-model="selectedAction" type="radio" id="move" value="move"
+                                   class="ml-2 mb-0. cursor-pointer">
+                        </span>
+                        <span class="ml-10">
+                            <label for="copy">Copy</label>
+                            <input v-model="selectedAction" type="radio" id="copy" value="copy"
+                                   class="ml-2 mb-0.5 cursor-pointer">
+                        </span>
+                    </fieldset>
+                    <div class="mt-7">
+                        <JetButton class="bg-red-400"
+                                   @click.prevent="goBack('my-files')"
+                        >
+                            Cancel
+                        </JetButton>
+
+                        <JetButton :disabled="buttonDisabled"
+                                   class="ml-4 bg-green-400 disabled:bg-gray-400"
+                                   @click.prevent="openConfirmModal()"
+                        >
+                            Confirm
+                        </JetButton>
                     </div>
                 </div>
             </div>

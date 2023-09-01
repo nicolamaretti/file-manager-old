@@ -1,8 +1,8 @@
 <template>
-    <AppLayout title="Shared with me">
+    <AppLayout title="Shared With Me">
         <template #header>
             <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                Shared with me
+                Shared With Me
             </h2>
         </template>
 
@@ -47,7 +47,7 @@
                             <div
                                 class="col-span-3 relative whitespace-nowrap pt-1 my-auto text-left font-medium">
 
-                                <a :href="route('backend.file-manager.zip-folder', folder.folderId)">
+                                <a :href="route('zip-folder', folder.folderId)">
                                     <ActionIconZip class="mr-2"/>
                                 </a>
                             </div>
@@ -73,7 +73,7 @@
                             <div
                                 class="col-span-3 relative whitespace-nowrap pt-1 my-auto text-left font-medium">
 
-                                <a :href="route('backend.file-manager.download-file', file.fileId)">
+                                <a :href="route('download-file', file.fileId)">
                                     <DownloadIcon class="mr-2"/>
                                 </a>
                             </div>

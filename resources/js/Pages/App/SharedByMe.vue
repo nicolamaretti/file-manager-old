@@ -1,8 +1,8 @@
 <template>
-    <AppLayout title="Shared by me">
+    <AppLayout title="Shared By Me">
         <template #header>
             <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                Shared by me
+                Shared By Me
             </h2>
         </template>
 
@@ -148,7 +148,7 @@ const props = defineProps({
 });
 
 const stopShareFolder = () => {
-    router.delete(route('backend.shared-by-me.stop-sharing-folder', folderToStop.value.folderId), {
+    router.delete(route('shared-by-me.stop-sharing-folder', folderToStop.value.folderId), {
         onSuccess: () => {
             closeStopShareFolderModal();
         },
@@ -161,7 +161,7 @@ const stopShareFolder = () => {
 }
 
 const stopShareFile = () => {
-    router.delete(route('backend.shared-by-me.stop-sharing-file', fileToStop.value.fileId), {
+    router.delete(route('shared-by-me.stop-sharing-file', fileToStop.value.fileId), {
         onSuccess: () => {
             closeStopShareFileModal();
         },

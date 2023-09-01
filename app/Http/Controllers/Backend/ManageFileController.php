@@ -94,7 +94,7 @@ class ManageFileController extends Controller
             $folders = FolderResource::collection($folders);
         }
 
-        return Inertia::render('Backend/FileManager/ManageFile', [
+        return Inertia::render('App/FileManager/ManageFile', [
             'originalFileId' => $originalFileId,
             'originalFilePath' => $originalFilePath,
             'originalFolderId' => $originalFolderId,

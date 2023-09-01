@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Backend\ManageFileController;
-use App\Http\Controllers\Backend\SharedController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -35,20 +34,26 @@ Route::middleware([
     'verified',
 ])->group(function () {
 
-    ////// MY
-    Route::get('/dashboard', [FileManagerController::class, 'index'])->name('dashboard');
-    Route::post('file-manager/create-root-folder', [FileManagerController::class, 'createRootFolder'])->name('backend.file-manager.create-root-folder');
-    Route::post('file-manager/create-folder', [FileManagerController::class, 'createFolder'])->name('backend.file-manager.create-folder');
-    Route::post('/file-manager/upload-file', [FileManagerController::class, 'uploadFile'])->name('backend.file-manager.upload-file');
-    Route::delete('/file-manager/{folderId}', [FileManagerController::class, 'deleteFolderAndChildren'])->name('backend.file-manager.delete-folder');
-    Route::delete('/file-manager/delete-file/{fileId}', [FileManagerController::class, 'deleteFile'])->name('backend.file-manager.delete-file');
-    Route::get('/file-manager/download-file/{file}', [FileManagerController::class, 'downloadFile'])->name('backend.file-manager.download-file');
-    Route::get('/file-manager/zip-folder/{folder}', [FileManagerController::class, 'zipFolder'])->name('backend.file-manager.zip-folder');
-    Route::put('/file-manager/rename-folder/{folderId}', [FileManagerController::class, 'renameFolder'])->name('backend.file-manager.rename-folder');
-    Route::put('/file-manager/rename-file/{fileId}', [FileManagerController::class, 'renameFile'])->name('backend.file-manager.rename-file');
+//    Route::get('/dashboard', [FileManagerController::class, 'myFiles'])->name('dashboard');
+    Route::get('/my-files/{folderId?}', [FileManagerController::class, 'myFiles'])->name('my-files');
+    Route::post('/create/root-folder', [FileManagerController::class, 'createRootFolder'])->name('create-root-folder');
+    Route::post('/create/folder', [FileManagerController::class, 'createFolder'])->name('create-folder');
+    Route::post('/upload/file', [FileManagerController::class, 'uploadFile'])->name('upload-file');
+    Route::delete('/delete/folder/{folderId}', [FileManagerController::class, 'deleteFolderAndChildren'])->name('delete-folder');
+    Route::delete('/delete/file/{fileId}', [FileManagerController::class, 'deleteFile'])->name('delete-file');
+    Route::get('/download/file/{file}', [FileManagerController::class, 'downloadFile'])->name('download-file');
+    Route::get('/zip/{folder}', [FileManagerController::class, 'zipFolder'])->name('zip-folder');
+    Route::put('/rename/folder/{folderId}', [FileManagerController::class, 'renameFolder'])->name('rename-folder');
+    Route::put('/rename/file/{fileId}', [FileManagerController::class, 'renameFile'])->name('rename-file');
 //    Route::get('/file-manager/open-file/{fileId}', [FileManagerController::class, 'openFile'])->name('backend.file-manager.open-file');
-    Route::post('/file-manager/share-folder/{folderId}', [FileManagerController::class, 'shareFolder'])->name('backend.file-manager.share-folder');
-    Route::post('/file-manager/share-file/{fileId}', [FileManagerController::class, 'shareFile'])->name('backend.file-manager.share-file');
+    Route::post('/share/folder/{folderId}', [FileManagerController::class, 'shareFolder'])->name('share-folder');
+    Route::post('/share/file/{fileId}', [FileManagerController::class, 'shareFile'])->name('share-file');
+
+    /* shared */
+    Route::get('/shared-with-me', [FileManagerController::class, 'sharedWithMe'])->name('shared-with-me');
+    Route::get('/shared-by-me', [FileManagerController::class, 'sharedByMe'])->name('shared-by-me');
+    Route::delete('/shared-by-me/stop-sharing-folder/{folderId}', [FileManagerController::class, 'stopSharingFolder'])->name('shared-by-me.stop-sharing-folder');
+    Route::delete('/shared-by-me/stop-sharing-file/{fileId}', [FileManagerController::class, 'stopSharingFile'])->name('shared-by-me.stop-sharing-file');
 
     /* copia/spostamento cartelle */
     Route::get('/file-system/manage-folder', [ManageFolderController::class, 'index'])->name('backend.file-system.manage-folder');
@@ -57,10 +62,4 @@ Route::middleware([
     /* copia/spostamento files */
     Route::get('/file-system/manage-file', [ManageFileController::class, 'index'])->name('backend.file-system.manage-file');
     Route::post('/file-system/moveOrCopyFile', [ManageFileController::class, 'moveOrCopyFile'])->name('backend.file-system.move-or-copy-file');
-
-    /* shared */
-    Route::get('/shared-with-me', [SharedController::class, 'sharedWithMe'])->name('backend.shared-with-me');
-    Route::get('/shared-by-me', [SharedController::class, 'sharedByMe'])->name('backend.shared-by-me');
-    Route::delete('/shared-by-me/stop-sharing-folder/{folderId}', [SharedController::class, 'stopSharingFolder'])->name('backend.shared-by-me.stop-sharing-folder');
-    Route::delete('/shared-by-me/stop-sharing-file/{fileId}', [SharedController::class, 'stopSharingFile'])->name('backend.shared-by-me.stop-sharing-file');
 });

@@ -15,7 +15,8 @@
                         v-model="form.name"
                         type="text"
                         class="mt-4 block w-3/4"
-                        autofocus
+                        @keyup.enter="confirmName()"
+                        @keyup.esc="closeModal()"
                     />
 
                     <InputError :message="form.error" class="mt-2" />
@@ -90,7 +91,7 @@ const closeModal = () => {
 }
 
 const confirmName = () => {
-    router.put(route('backend.file-manager.rename-folder', props.folderId), { newName: form.name },
+    router.put(route('rename-folder', props.folderId), { newName: form.name },
         {
             onSuccess: () => {
                 closeModal();

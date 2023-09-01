@@ -15,7 +15,8 @@
                         v-model="form.email"
                         type="email"
                         class="mt-4 block w-3/4"
-                        autofocus
+                        @keyup.enter="confirmEmail()"
+                        @keyup.esc="closeModal()"
                     />
 
                     <InputError :message="form.error" class="mt-2" />
@@ -91,7 +92,7 @@ const closeModal = () => {
 
 const confirmEmail = () => {
     console.log(props.folderId, form.email);
-    router.post(route('backend.file-manager.share-folder', props.folderId), { email: form.email },
+    router.post(route('share-folder', props.folderId), { email: form.email },
         {
             onSuccess: () => {
                 closeModal();

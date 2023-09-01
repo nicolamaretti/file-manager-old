@@ -24,7 +24,7 @@ use Symfony\Component\Process\Process;
 
 class FileManagerController extends Controller
 {
-    public function index(Request $request): InertiaResponse
+    public function myFiles(Request $request): InertiaResponse
     {
         $user = $request->user();
         $rootFolderId = $user->root_folder_id;
@@ -115,7 +115,7 @@ class FileManagerController extends Controller
             }
         }
 
-        return Inertia::render('Dashboard', [
+        return Inertia::render('App/MyFiles', [
             'currentFolderId' => $currentFolderId,
             'currentFolderName' => $currentFolderName,
             'currentFolderFullPath' => $currentFolderFullPath,
@@ -126,6 +126,81 @@ class FileManagerController extends Controller
             'parent' => $parent,
             'folderIsRoot' => $folderIsRoot,
             'folder' => $folder,
+        ]);
+    }
+
+    public function sharedWithMe(Request $request): InertiaResponse
+    {
+        $user = $request->user();
+
+        /* cerco le folders */
+        $sharedFolders = DB::table('folder_shares as fs')
+            ->join('folders', 'fs.folder_id', '=', 'folders.id')
+            ->join('users', 'fs.user_id', '=', 'users.id')
+            ->join('users as users_owner', 'fs.owner_id', '=', 'users_owner.id')
+            ->where('folders.user_id', '!=', $user->id)
+            ->where('fs.user_id', $user->id)
+            ->select('folders.id as folderId', 'folders.name as folderName', 'users_owner.name as folderOwner')
+            ->orderBy('folderName', 'ASC')
+            ->orderBy('folderOwner', 'ASC')
+            ->get();
+
+//        dd($sharedFolders);
+
+        /* cerco i files */
+        $sharedFiles = DB::table('file_shares as fs')
+            ->join('media', 'fs.file_id', '=', 'media.id')
+            ->join('users', 'fs.owner_id', '=', 'users.id')
+            ->where('fs.user_id', $user->id)
+            ->select('media.id as fileId', 'media.file_name as fileName', 'users.name as fileOwner')
+            ->orderBy('fileName', 'ASC')
+            ->orderBy('fileOwner', 'ASC')
+            ->get();
+
+//        dd($sharedFolders, $sharedFiles);
+
+        return Inertia::render('App/SharedWithMe', [
+            'folders' => $sharedFolders,
+            'files' => $sharedFiles,
+        ]);
+    }
+
+    public function sharedByMe(Request $request): InertiaResponse
+    {
+        $user = $request->user();
+
+        /* folders condivise dall'utente che fa la richiesta */
+        $sharedFolders = DB::table('folder_shares as fs')
+            ->join('folders', 'fs.folder_id', '=', 'folders.id')
+            ->join('users', 'fs.user_id', '=', 'users.id')
+            ->where('folders.user_id', $user->id)
+//            ->whereIn('fs.folder_id', $folderIds)
+            ->select('fs.id as folderId', 'folders.name as folderName', 'users.name as userName')
+            ->orderBy('folderName', 'ASC')
+            ->orderBy('userName', 'ASC')
+            ->get();
+
+
+        /* files condivisi dall'utente che fa la richiesta */
+
+        // 1) trovo la root folder dell'utente e tutte le sue figlie
+        $userRootFolderId = $user->root_folder_id;
+        $userRootFolder = Folder::findOrFail($userRootFolderId);
+        $childrenFolderIds = $userRootFolder->getChildrenIds();
+
+        // 2) estraggo i files dell'utente corrente che fanno parte dell'albero di cartelle trovato sopra e che sono is_shared
+        $sharedFiles = DB::table('file_shares as fs')
+            ->join('media', 'fs.file_id', '=', 'media.id')
+            ->join('users', 'fs.user_id', '=', 'users.id')
+            ->whereIn('media.model_id', $childrenFolderIds)
+            ->select('fs.id as fileId', 'media.file_name as fileName', 'users.name as userName')
+            ->orderBy('fileName', 'ASC')
+            ->orderBy('userName', 'ASC')
+            ->get();
+
+        return Inertia::render('App/SharedByMe', [
+            'folders' => $sharedFolders,
+            'files' => $sharedFiles,
         ]);
     }
 
@@ -156,7 +231,7 @@ class FileManagerController extends Controller
             $newFolder->uuid = Str::uuid();
             $newFolder->save();;
 
-            return redirect()->back()->banner("Root folder $newRootFolderName created successfully");
+            return redirect()->back()->banner("Root folder '$newRootFolderName' created successfully");
         } else {
             return redirect()->back()->withErrors([
                 'folderExistsError' => true
@@ -238,43 +313,47 @@ class FileManagerController extends Controller
 
         /* dopo il check $validated sono sicuro di avere sia 'file' che 'currentFolderId' */
 
-        $file = $request->files->get('file');
+        $files = $request->files->get('files');
+
         $currentFolderId = intval($request->input('currentFolderId'));
 
-        if (!$file || !$currentFolderId) {
+        if (!$files || !$currentFolderId) {
             abort(403, 'Missing parameters');
         }
 
         $currentFolder = Folder::find($currentFolderId);
 
-        $fileFullName = $file->getClientOriginalName();
+        foreach ($files as $file) {
+            $fileFullName = $file->getClientOriginalName();
 
-        // verifico se all'interno della cartella esiste già un file con lo stesso nome
-        $fileAlreadyExists = FileManagerHelper::checkFileExistence($fileFullName, $currentFolderId);
+            // verifico se all'interno della cartella esiste già un file con lo stesso nome
+            $fileAlreadyExists = FileManagerHelper::checkFileExistence($fileFullName, $currentFolderId);
 
-        if (!$fileAlreadyExists) {
-            // se non esiste, lo aggiungo normalmente alla cartella corrente
-            $currentFolder->addMedia($file)->toMediaCollection('documents');
+            if (!$fileAlreadyExists) {
+                // se non esiste, lo aggiungo normalmente alla cartella corrente
+                $currentFolder->addMedia($file)->toMediaCollection('documents');
+            } else {
+                // se esiste già, aggiungo un timestamp al nome del nuovo file e lo aggiungo alla cartella corrente
 
-            return redirect()->back()->banner("File '$fileFullName' uploaded successfully");
-        } else {
-            // se esiste già, aggiungo un timestamp al nome del nuovo file e lo aggiungo alla cartella corrente
+                // prendo nome ed estensione del file
+                $fileName = pathinfo($fileFullName, PATHINFO_FILENAME);
+                $fileExt = pathinfo($fileFullName, PATHINFO_EXTENSION);
 
-            // prendo nome ed estensione del file
-            $fileName = pathinfo($fileFullName, PATHINFO_FILENAME);
-            $fileExt = pathinfo($fileFullName, PATHINFO_EXTENSION);
+                // aggiungo il timestamp e ricreo il nome del file
+//                $fileNameTS = $fileName . '-' . time();
+                $fileNameTS = $fileName . '_copy';
+                $fileFullNameTS = $fileNameTS . '.' . $fileExt;
 
-            // aggiungo il timestamp e ricreo il nome del file
-            $fileNameTS = $fileName . '-' . time();
-            $fileFullNameTS = $fileNameTS . '.' . $fileExt;
+                $currentFolder->addMedia($file)
+                    ->usingFileName($fileFullNameTS)
+                    ->usingName($fileNameTS)
+                    ->toMediaCollection('documents');
 
-            $currentFolder->addMedia($file)
-                ->usingFileName($fileFullNameTS)
-                ->usingName($fileNameTS)
-                ->toMediaCollection('documents');
-
-            return redirect()->back()->banner("File '$fileFullNameTS' uploaded successfully");
+//                return redirect()->back()->banner("File '$fileFullNameTS' uploaded successfully");
+            }
         }
+
+        return redirect()->back()->banner("Files uploaded successfully");
     }
 
     public function deleteFile(string $fileId, Request $request): RedirectResponse
@@ -452,7 +531,7 @@ class FileManagerController extends Controller
             $sharedFolderAlreadyExists = DB::table('folder_shares')
                 ->where([
                     'folder_id' => $folderId,
-                    'user_id'   => $userId
+                    'user_id' => $userId
                 ])->get();
 
             if ($sharedFolderAlreadyExists->isNotEmpty()) {
@@ -501,7 +580,7 @@ class FileManagerController extends Controller
             $sharedFileAlreadyExists = DB::table('file_shares')
                 ->where([
                     'file_id' => $fileId,
-                    'user_id'   => $userId
+                    'user_id' => $userId
                 ])->get();
 
             if ($sharedFileAlreadyExists->isNotEmpty()) {
@@ -517,6 +596,46 @@ class FileManagerController extends Controller
             return redirect()->back()->banner('File shared successfully');
         } else {
             return redirect()->back()->dangerBanner('User not found');
+        }
+    }
+
+    public function stopSharingFolder(int $folderId): RedirectResponse
+    {
+//        $folder = DB::table('folder_shares as fs')
+//            ->join('folders', 'folders.id', '=', 'fs.folder_id')
+//            ->join('users', 'users.id', '=', 'fs.user_id')
+//            ->where('fs.id', $folderId)
+//            ->select('folders.name as folderName', 'users.name as userName')
+//            ->first();
+
+        $folder = FolderShare::find($folderId);
+
+        if ($folder) {
+            $folder->delete();
+
+            return redirect()->back();
+        } else {
+            return redirect()->back()->dangerBanner('An error occurred when trying to stop sharing this folder');
+        }
+    }
+
+    public function stopSharingFile(int $fileId): RedirectResponse
+    {
+//        $folder = DB::table('folder_shares as fs')
+//            ->join('folders', 'folders.id', '=', 'fs.folder_id')
+//            ->join('users', 'users.id', '=', 'fs.user_id')
+//            ->where('fs.id', $folderId)
+//            ->select('folders.name as folderName', 'users.name as userName')
+//            ->first();
+
+        $file = FileShare::find($fileId);
+
+        if ($file) {
+            $file->delete();
+
+            return redirect()->back();
+        } else {
+            return redirect()->back()->dangerBanner('An error occurred when trying to stop sharing this file');
         }
     }
 }
