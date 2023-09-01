@@ -1,6 +1,5 @@
 <script setup>
 import {Head, Link, router} from '@inertiajs/vue3';
-import ApplicationLogo from "@/Components/ApplicationLogo.vue";
 import ApplicationMark from "@/Components/ApplicationMark.vue";
 
 defineProps({
