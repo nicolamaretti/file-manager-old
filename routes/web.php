@@ -34,6 +34,9 @@ Route::middleware([
     'verified',
 ])->group(function () {
 
+    // NEW
+    Route::get('/new', [FileManagerController::class, 'new'])->name('new');
+
 //    Route::get('/dashboard', [FileManagerController::class, 'myFiles'])->name('dashboard');
     Route::get('/my-files/{folderId?}', [FileManagerController::class, 'myFiles'])->name('my-files');
     Route::post('/create/root-folder', [FileManagerController::class, 'createRootFolder'])->name('create-root-folder');

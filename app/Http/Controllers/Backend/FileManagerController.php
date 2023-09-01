@@ -24,6 +24,111 @@ use Symfony\Component\Process\Process;
 
 class FileManagerController extends Controller
 {
+    public function new(Request $request): InertiaResponse
+    {
+        $user = $request->user();
+        $rootFolderId = $user->root_folder_id;
+
+        $currentFolderId = null;
+        $currentFolderName = null;
+        $currentFolderFullPath = null;
+        $isUserAdmin = $user->can('view-all-level');
+        $folders = null;
+        $files = null;
+        $parent = null;
+        $folderIsRoot = true;
+        $folder = null;
+
+//        $userOrganizationAdmin = $user->can('view-organization-level');
+//        $userDepartment = $user->can('view-department-level');
+
+        // se sono admin visualizzo tutte le cartelle root
+        if ($rootFolderId == null) {
+            $folders = Folder::whereNull('folder_id')
+                ->with('folders')
+                ->orderBy('name', 'ASC')
+                ->get();
+
+            $folders = FolderResource::collection($folders);
+        } else {
+            // se è utente normale ritorno la folder di root
+            $folder = Folder::with('folders')
+                ->findOrFail($rootFolderId);
+
+            // cartelle figlie da visualizzare
+            $folders = $folder->folders;
+            $folders = $folders->sortBy('name');
+
+            // files da visualizzare
+            $files = $files = Media::where('model_id', $folder->id)
+                ->orderBy('file_name', 'ASC')
+                ->get();
+
+            $folder = FolderResource::make($folder);
+            $folders = FolderResource::collection($folders);
+            $files = FileResource::collection($files);
+
+            $currentFolderId = $folder->id;
+            $currentFolderName = $folder->name;
+            $currentFolderFullPath = $folder->fullPath;
+        }
+
+        // se la request ha il parametro folderId vuol dire che è stata selezionata una cartella: recupero le sue sottocartelle e i file
+        if ($request->has('folderId')) {
+            $folderId = intval($request->input('folderId'));
+
+            if ($folderId != $rootFolderId) {
+                $folderIsRoot = false;
+            }
+
+            $folder = Folder::with('folders')
+                ->find($folderId);
+
+            // cartelle figlie da visualizzare
+            $folders = $folder->folders->sortBy('name');
+
+            $folder = FolderResource::make($folder);
+            $folders = FolderResource::collection($folders);
+
+            $currentFolderId = $folder->id;
+            $currentFolderName = $folder->name;
+            $currentFolderFullPath = $folder->fullPath;
+
+            $parent = $folder->parent;
+
+            $files = Media::where('model_id', $folderId)
+                ->orderBy('file_name', 'ASC')
+                ->get();
+
+            $files = FileResource::collection($files);
+
+            // se si sta tentando di accedere ad una cartella che non è presente nella root folder dell'utente o in una delle sue sottocartelle, ritorno errore
+            if ($rootFolderId != null) {
+                // cerco la rootFolder nel db
+                $rootFolder = Folder::with('folders')->find($rootFolderId);
+
+                $rootFolderChildrenIds = $rootFolder->getChildrenIds();
+
+                if (!in_array($folderId, $rootFolderChildrenIds)) {
+                    abort(403);
+                }
+            }
+        }
+
+        return Inertia::render('New', [
+            'currentFolderId' => $currentFolderId,
+            'currentFolderName' => $currentFolderName,
+            'currentFolderFullPath' => $currentFolderFullPath,
+            'rootFolderId' => $rootFolderId,
+            'isUserAdmin' => $isUserAdmin,
+            'folders' => $folders,
+            'files' => $files,
+            'parent' => $parent,
+            'folderIsRoot' => $folderIsRoot,
+            'folder' => $folder,
+        ]);
+    }
+
     public function myFiles(Request $request): InertiaResponse
     {
         $user = $request->user();

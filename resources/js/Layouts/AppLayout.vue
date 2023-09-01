@@ -33,6 +33,11 @@
                                     Shared By Me
                                 </NavLink>
                             </div>
+                            <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
+                                <NavLink :href="route('new')" :active="route().current('new')">
+                                    AppLayout_new
+                                </NavLink>
+                            </div>
                         </div>
 
                         <div class="hidden sm:flex sm:items-center sm:ml-6">
@@ -186,6 +191,11 @@
                     <div class="pt-2 pb-3 space-y-1">
                         <ResponsiveNavLink :href="route('shared-by-me')" :active="route().current('shared-by-me')">
                             Shared By Me
+                        </ResponsiveNavLink>
+                    </div>
+                    <div class="pt-2 pb-3 space-y-1">
+                        <ResponsiveNavLink :href="route('new')" :active="route().current('new')">
+                            AppLayout_new
                         </ResponsiveNavLink>
                     </div>
 
