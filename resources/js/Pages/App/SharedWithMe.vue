@@ -47,7 +47,7 @@
                             <div
                                 class="col-span-3 relative whitespace-nowrap pt-1 my-auto text-left font-medium">
 
-                                <a :href="route('zip-folder', folder.folderId)">
+                                <a :href="route('folder.zip', folder.folderId)">
                                     <ActionIconZip class="mr-2"/>
                                 </a>
                             </div>
@@ -58,10 +58,8 @@
                              class="grid grid-cols-8 gap-3 py-auto px-4 sm:px-6 text-sm">
                             <div
                                 class="overflow-hidden col-span-3 whitespace-nowrap py-auto my-auto align-middle font-medium text-gray-900 inline-flex">
-                                <FileIcon class="inline-block my-auto mr-3"
-                                />
-                                <label class="m-0 pt-1 text-align:center"
-                                >
+                                <FileIcon class="inline-block my-auto mr-3"/>
+                                <label class="m-0 pt-1 text-align:center">
                                     {{ file.fileName }}
                                 </label>
                             </div>
@@ -73,7 +71,7 @@
                             <div
                                 class="col-span-3 relative whitespace-nowrap pt-1 my-auto text-left font-medium">
 
-                                <a :href="route('download-file', file.fileId)">
+                                <a :href="route('file.download', file.fileId)">
                                     <DownloadIcon class="mr-2"/>
                                 </a>
                             </div>

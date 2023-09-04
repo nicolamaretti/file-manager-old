@@ -39,18 +39,18 @@ Route::middleware([
 
 //    Route::get('/dashboard', [FileManagerController::class, 'myFiles'])->name('dashboard');
     Route::get('/my-files/{folderId?}', [FileManagerController::class, 'myFiles'])->name('my-files');
-    Route::post('/create/root-folder', [FileManagerController::class, 'createRootFolder'])->name('create-root-folder');
-    Route::post('/create/folder', [FileManagerController::class, 'createFolder'])->name('create-folder');
-    Route::post('/upload/file', [FileManagerController::class, 'uploadFile'])->name('upload-file');
-    Route::delete('/delete/folder/{folderId}', [FileManagerController::class, 'deleteFolderAndChildren'])->name('delete-folder');
-    Route::delete('/delete/file/{fileId}', [FileManagerController::class, 'deleteFile'])->name('delete-file');
-    Route::get('/download/file/{file}', [FileManagerController::class, 'downloadFile'])->name('download-file');
-    Route::get('/zip/{folder}', [FileManagerController::class, 'zipFolder'])->name('zip-folder');
-    Route::put('/rename/folder/{folderId}', [FileManagerController::class, 'renameFolder'])->name('rename-folder');
-    Route::put('/rename/file/{fileId}', [FileManagerController::class, 'renameFile'])->name('rename-file');
+    Route::post('/create/root-folder', [FileManagerController::class, 'createRootFolder'])->name('folder.create-root');
+    Route::post('/create/folder', [FileManagerController::class, 'createFolder'])->name('folder.create');
+    Route::post('/upload/file', [FileManagerController::class, 'uploadFile'])->name('file.upload');
+    Route::delete('/delete/folder/{folderId}', [FileManagerController::class, 'deleteFolderAndChildren'])->name('folder.delete');
+    Route::delete('/delete/file/{fileId}', [FileManagerController::class, 'deleteFile'])->name('file.delete');
+    Route::get('/download/file/{file}', [FileManagerController::class, 'downloadFile'])->name('file.download');
+    Route::get('/zip/{folder}', [FileManagerController::class, 'zipFolder'])->name('folder.zip');
+    Route::put('/rename/folder/{folderId}', [FileManagerController::class, 'renameFolder'])->name('folder.rename');
+    Route::put('/rename/file/{fileId}', [FileManagerController::class, 'renameFile'])->name('file.rename');
 //    Route::get('/file-manager/open-file/{fileId}', [FileManagerController::class, 'openFile'])->name('backend.file-manager.open-file');
-    Route::post('/share/folder/{folderId}', [FileManagerController::class, 'shareFolder'])->name('share-folder');
-    Route::post('/share/file/{fileId}', [FileManagerController::class, 'shareFile'])->name('share-file');
+    Route::post('/share/folder/{folderId}', [FileManagerController::class, 'shareFolder'])->name('folder.share');
+    Route::post('/share/file/{fileId}', [FileManagerController::class, 'shareFile'])->name('file.share');
 
     /* shared */
     Route::get('/shared-with-me', [FileManagerController::class, 'sharedWithMe'])->name('shared-with-me');

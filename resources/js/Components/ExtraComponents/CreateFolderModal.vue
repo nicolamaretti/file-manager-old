@@ -1,5 +1,5 @@
 <template>
-    <Modal :show="modelValue" @show="onShow()" max-width="sm">
+    <Modal :show="modelValue" @show="onShow()" max-width="lg">
         <div class="p-6">
             <!-- Titolo -->
             <h2 class="text-lg font-medium text-gray-900">
@@ -32,7 +32,8 @@
 
                 <PrimaryButton class="ml-3"
                                :class="{ 'opacity-25': form.processing }"
-                               @click="createFolder()" :disable="form.processing">
+                               @click="createFolder()"
+                               :disable="form.processing">
                     Submit
                 </PrimaryButton>
             </div>

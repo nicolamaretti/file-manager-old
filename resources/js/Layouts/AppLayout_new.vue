@@ -1,7 +1,7 @@
 <template>
     <Head :title="title"/>
 
-    <div class="h-screen bg-gray-50 flex w-full gap-4">
+    <div class="h-screen bg-gray-50 flex w-full gap-2 px-3">
         <!-- Sezione laterale sx -->
         <Navigation/>
 
@@ -9,7 +9,7 @@
         <main @drop.prevent="handleDrop()"
               @dragover.prevent="onDragOver()"
               @dragleave.prevent="onDragLeave()"
-              class="flex flex-col flex-1 px-4 overflow-hidden"
+              class="flex flex-col flex-1 ml-10 overflow-hidden"
               :class="dragOver ? 'dropzone' : ''">
 
             <!-- Se l'utente sta facendo un drag dentro all'applicazione -->
@@ -19,7 +19,7 @@
 
             <!-- Visualizzazione standard della barra di ricerca, del menu utente e della tabella con file e cartelle -->
             <template v-else>
-                <div class="flex items-center justify-between w-full">
+                <div class="flex items-center justify-between w-full ml-1">
                     <SearchForm/>
 
                     <UserSettingsDropdown/>

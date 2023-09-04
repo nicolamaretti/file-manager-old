@@ -152,7 +152,7 @@
                                                     class="mr-2"
                                                     @click.prevent="openRenameFolderModal(folder.id)"/>
 
-                                    <a :href="route('zip-folder', folder.id)">
+                                    <a :href="route('folder.zip', folder.id)">
                                         <ActionIconZip class="mr-2"/>
                                     </a>
 
@@ -188,7 +188,7 @@
                                                     class="mr-2"
                                                     @click.prevent="openRenameFileModal(file.id)"/>
 
-                                    <a :href="route('download-file', file.id)">
+                                    <a :href="route('file.download', file.id)">
                                         <DownloadIcon class="mr-2"/>
                                     </a>
 
@@ -233,7 +233,7 @@
                                                       class="mr-2"
                                                       @click.prevent="manageFolder(folder)"/>
 
-                                    <a :href="route('zip-folder', folder.id)">
+                                    <a :href="route('folder.zip', folder.id)">
                                         <ActionIconZip class="mr-2"/>
                                     </a>
 
@@ -275,7 +275,7 @@
                                     <ManageFileIcon class="mr-2"
                                                     @click.prevent="manageFile(file)"/>
 
-                                    <a :href="route('download-file', file.id)">
+                                    <a :href="route('file.download', file.id)">
                                         <DownloadIcon class="mr-2"/>
                                     </a>
 
@@ -487,7 +487,7 @@ const openFolder = (folderId = null) => {
 const deleteFolder = () => {
     console.log('Folder to delete: ' + folderToDelete.value);
 
-    router.delete(route('delete-folder', folderToDelete.value.id), {
+    router.delete(route('folder.delete', folderToDelete.value.id), {
         onSuccess: () => {
             closeDeleteFolderModal();
         },
@@ -503,7 +503,7 @@ const deleteFolder = () => {
 
 /* condividi cartella */
 const shareFolder = (folderId) => {
-    router.post(route('share-folder', folderId));
+    router.post(route('folder.share', folderId));
 }
 
 /* copia/spostamento cartella */
@@ -517,7 +517,7 @@ const manageFolder = (folder) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // AZIONI FILE
 const deleteFile = () => {
-    router.delete(route('delete-file', fileToDelete.value.id), {
+    router.delete(route('file.delete', fileToDelete.value.id), {
         onSuccess: () => {
             closeDeleteFileModal();
         },
@@ -558,7 +558,7 @@ const rootFolderForm = useForm({
 });
 
 const submitRootFolderForm = () => {
-    rootFolderForm.post(route('create-root-folder'), {
+    rootFolderForm.post(route('folder.create-root'), {
         onError: (error) => {
             rootFolderForm.reset('newRootFolderName');
 
@@ -582,7 +582,7 @@ const folderForm = useForm({
 })
 
 const submitFolderForm = () => {
-    folderForm.post(route('create-folder'), {
+    folderForm.post(route('folder.create'), {
         onError: (error) => {
             console.log(error);
 
@@ -608,7 +608,7 @@ const fileUploadForm = useForm({
 });
 
 const submitFileUploadForm = () => {
-    fileUploadForm.post(route('upload-file'));
+    fileUploadForm.post(route('file.upload'));
 }
 
 const onChange = (event) => {
