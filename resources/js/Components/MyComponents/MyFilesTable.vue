@@ -25,7 +25,8 @@
                                 <div class="col-span-2">Size</div>
                             </div>
 
-                            <div v-if="!files.data.length && !folders.data.length" class="py-8 text-center text-sm text-gray-400">
+                            <div v-if="!files.data.length && !folders.data.length"
+                                 class="py-8 text-center text-sm text-gray-400">
                                 There is no data in this folder
                             </div>
 
@@ -39,7 +40,10 @@
                                      @dblclick.prevent="openFolder(folder.id)">
                                     <div
                                         class="col-span-1 py-4 pl-6 whitespace-nowrap text-sm font-medium text-gray-900 pr-0 inline-flex items-center">
-                                        <Checkbox class="mr-4"/>
+                                        <Checkbox class="mr-4"
+                                                  @change="$event => toggleSelectFolder(folder.id)"
+                                                  v-model="selectedFolders[folder.id]"
+                                                  :checked="selectedFolders[folder.id]"/>
 
                                         <div @click.stop.prevent="addRemoveFavourite(folder)"
                                              class="text-yellow-500 mr-4">
@@ -55,7 +59,8 @@
                                             </svg>
                                         </div>
                                     </div>
-                                    <div class="col-span-4 pl-14 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
+                                    <div
+                                        class="col-span-4 pl-14 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
                                         <IconFolder class="mr-3"/>
                                         {{ folder.name }}
                                     </div>
@@ -66,7 +71,8 @@
                                              class="col-span-2 whitespace-nowrap align-middle my-auto text-gray-500 inline-flex items-center overflow-hidden">
                                             {{ folder.owner }}
                                         </div>
-                                        <div class="col-span-3 whitespace-nowrap align-middle my-auto text-gray-500 inline-flex items-center overflow-hidden">
+                                        <div
+                                            class="col-span-3 whitespace-nowrap align-middle my-auto text-gray-500 inline-flex items-center overflow-hidden">
                                             {{ folder.updated_at }}
                                         </div>
                                     </div>
@@ -74,7 +80,8 @@
                                          class="col-span-5 whitespace-nowrap align-middle my-auto text-gray-500 inline-flex items-center">
                                         {{ folder.updated_at }}
                                     </div>
-                                    <div class="col-span-2 whitespace-nowrap align-middle my-auto text-gray-500 inline-flex items-center">
+                                    <div
+                                        class="col-span-2 whitespace-nowrap align-middle my-auto text-gray-500 inline-flex items-center">
                                         -----
                                     </div>
                                 </div>
@@ -114,7 +121,8 @@
                                              class="col-span-2 whitespace-nowrap align-middle my-auto text-gray-500 inline-flex items-center overflow-hidden">
                                             {{ currentFolder.data.owner }}
                                         </div>
-                                        <div class="col-span-3 whitespace-nowrap align-middle my-auto text-gray-500 inline-flex items-center">
+                                        <div
+                                            class="col-span-3 whitespace-nowrap align-middle my-auto text-gray-500 inline-flex items-center">
                                             {{ file.updated_at }}
                                         </div>
                                     </div>
@@ -137,9 +145,9 @@
 </template>
 
 <script setup>
-import Checkbox from "@/Components/Checkbox.vue";
-import {router, usePage} from "@inertiajs/vue3";
 import {ref} from "vue";
+import {router, usePage} from "@inertiajs/vue3";
+import Checkbox from "@/Components/Checkbox.vue";
 import IconFolder from "@/Components/Icons/FolderIcon.vue";
 import FileIcon from "@/Components/Icons/FileIcon.vue";
 
@@ -152,7 +160,8 @@ const props = defineProps({
 });
 
 // Refs
-let selected = ref([]);
+let selectedFolders = ref([]);
+let selectedFiles = ref([]);
 let allSelected = ref(false);
 
 // Methods
@@ -168,24 +177,35 @@ const openFolder = (folderId = null) => {
     }
 }
 
-function onSelectCheckboxChange(file) {
-    if (!selected.value[file.id]) {
-        allSelected.value = false;
-    } else {
-        let checked = true;
+function toggleSelectFolder(folderId) {
+    selectedFiles.value.push(folderId);
+    // selectedFolders.value[folderId] = !selectedFolders.value[folderId];
+    //
+    // if (!selectedFolders.value[folderId]) {
+    //     selectedFiles.value.push([folderId => true]);
+    // }
 
-        for (let file of props.files.data) {
-            if (!selected.value[file.id]) {
-                checked = false;
-                break;
-            }
-        }
+    console.log(selectedFolders.value);
 
-        allSelected.value = checked
-    }
+    // if (!selected.value[file.id]) {
+    //     allSelected.value = false;
+    // } else {
+    //     let checked = true;
+    //
+    //     for (let file of props.files.data) {
+    //         if (!selected.value[file.id]) {
+    //             checked = false;
+    //             break;
+    //         }
+    //     }
+    //
+    //     allSelected.value = checked
+    // }
 }
 
 // selectedIds.value.push('pippo');
 console.log(props.files)
 console.log(props.folders)
+console.log(selectedFolders.value)
+console.log(selectedFiles.value)
 </script>

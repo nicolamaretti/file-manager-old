@@ -3,10 +3,10 @@
     <ol role="list" class="flex items-center space-x-4 ml-1">
       <li>
         <div>
-          <a href="#" class="text-gray-400 hover:text-gray-500">
-            <HomeIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-            <span class="sr-only">Home</span>
-          </a>
+            <NavLink :href="route('newMyFiles')" class="text-gray-400 hover:text-gray-500">
+                <HomeIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                <span class="sr-only">Home</span>
+            </NavLink>
         </div>
       </li>
       <li v-for="page in pages" :key="page.name">
@@ -21,6 +21,7 @@
 
 <script setup>
 import { ChevronRightIcon, HomeIcon } from '@heroicons/vue/20/solid'
+import NavLink from "@/Components/NavLink.vue";
 
 const pages = [
   { name: 'Projects', href: '#', current: false },
