@@ -13,7 +13,7 @@
                                     <Checkbox @change="onSelectAllChange" v-model:checked="allSelected"/>
                                 </div>
                                 <!-- seconda colonna -->
-                                <div class="col-span-4 pl-20">Name</div>
+                                <div class="col-span-4 pl-14">Name</div>
                                 <!-- terza colonna -->
                                 <div class="col-span-5">Shared with</div>
                             </div>
@@ -28,14 +28,13 @@
                                 <div v-if="folders"
                                      v-for="folder in folders"
                                      :key="folder.folderId"
-                                     class="grid grid-cols-12 gap-10 py-1">
+                                     class="grid grid-cols-12 gap-10 py-2">
                                     <div
                                         class="col-span-1 py-4 pl-6 whitespace-nowrap text-sm font-medium text-gray-900 pr-0 inline-flex items-center">
                                         <Checkbox class="mr-4"/>
-
-                                        <IconFolder/>
                                     </div>
-                                    <div class="col-span-4 pl-20 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
+                                    <div class="col-span-4 pl-14 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
+                                        <IconFolder class="mr-3"/>
                                         {{ folder.folderName }}
                                     </div>
                                     <div class="col-span-2 whitespace-nowrap align-middle my-auto text-gray-500 inline-flex items-center overflow-hidden">
@@ -51,11 +50,10 @@
                                     <div
                                         class="col-span-1 py-4 pl-6 whitespace-nowrap text-sm font-medium text-gray-900 pr-0 inline-flex items-center">
                                         <Checkbox class="mr-4"/>
-
-                                        <FileIcon/>
                                     </div>
                                     <div
-                                        class="col-span-4 pl-20 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
+                                        class="col-span-4 pl-14 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
+                                        <FileIcon class="mr-3"/>
                                         {{ file.fileName }}
                                     </div>
                                     <div class="col-span-2 whitespace-nowrap align-middle my-auto text-gray-500 inline-flex items-center overflow-hidden">
