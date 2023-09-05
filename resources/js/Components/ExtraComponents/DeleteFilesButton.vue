@@ -21,6 +21,7 @@
 <script setup>
 import {ref} from "vue";
 import ConfirmationDialog from "@/Components/ExtraComponents/ConfirmationDialog.vue";
+import {router} from "@inertiajs/vue3";
 
 const showDeleteDialog = ref(false);
 
@@ -36,5 +37,23 @@ function onDeleteCancel() {
 
 function onDeleteConfirm() {
   console.log('onDeleteConfirm');
+
+}
+
+const deleteFolder = () => {
+    console.log('Folder to delete: ' + folderToDelete.value);
+
+    router.delete(route('folder.delete', folderToDelete.value.id), {
+        onSuccess: () => {
+            closeDeleteFolderModal();
+        },
+        onError: (error) => {
+            console.log(error);
+
+            if (error.folderDeletionError) {
+                openFolderDeletionErrorModal();
+            }
+        }
+    });
 }
 </script>

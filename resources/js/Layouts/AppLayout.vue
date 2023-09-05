@@ -34,7 +34,7 @@
                                 </NavLink>
                             </div>
                             <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
-                                <NavLink :href="route('new')" :active="route().current('new')">
+                                <NavLink :href="route('newMyFiles')" :active="route().current('newMyFiles')">
                                     AppLayout_new
                                 </NavLink>
                             </div>
@@ -194,7 +194,7 @@
                         </ResponsiveNavLink>
                     </div>
                     <div class="pt-2 pb-3 space-y-1">
-                        <ResponsiveNavLink :href="route('new')" :active="route().current('new')">
+                        <ResponsiveNavLink :href="route('newMyFiles')" :active="route().current('newMyFiles')">
                             AppLayout_new
                         </ResponsiveNavLink>
                     </div>

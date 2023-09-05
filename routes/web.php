@@ -35,7 +35,9 @@ Route::middleware([
 ])->group(function () {
 
     // NEW
-    Route::get('/new', [FileManagerController::class, 'new'])->name('new');
+    Route::get('/newMyFiles', [FileManagerController::class, 'newMyFiles'])->name('newMyFiles');
+    Route::get('/newSharedWithMe', [FileManagerController::class, 'newSharedWithMe'])->name('newSharedWithMe');
+    Route::get('/newSharedByMe', [FileManagerController::class, 'newSharedByMe'])->name('newSharedByMe');
 
 //    Route::get('/dashboard', [FileManagerController::class, 'myFiles'])->name('dashboard');
     Route::get('/my-files/{folderId?}', [FileManagerController::class, 'myFiles'])->name('my-files');

@@ -21,23 +21,21 @@ use RuntimeException;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\Process\Process;
+use function Termwind\render;
 
 class FileManagerController extends Controller
 {
-    public function new(Request $request): InertiaResponse
+    public function newMyFiles(Request $request): InertiaResponse
     {
         $user = $request->user();
         $rootFolderId = $user->root_folder_id;
 
-        $currentFolderId = null;
-        $currentFolderName = null;
-        $currentFolderFullPath = null;
         $isUserAdmin = $user->can('view-all-level');
         $folders = null;
         $files = null;
         $parent = null;
         $folderIsRoot = true;
-        $folder = null;
+        $currentFolder = null;
 
 //        $userOrganizationAdmin = $user->can('view-organization-level');
 //        $userDepartment = $user->can('view-department-level');
@@ -52,25 +50,21 @@ class FileManagerController extends Controller
             $folders = FolderResource::collection($folders);
         } else {
             // se è utente normale ritorno la folder di root
-            $folder = Folder::with('folders')
+            $currentFolder = Folder::with('folders')
                 ->findOrFail($rootFolderId);
 
             // cartelle figlie da visualizzare
-            $folders = $folder->folders;
+            $folders = $currentFolder->folders;
             $folders = $folders->sortBy('name');
 
             // files da visualizzare
-            $files = $files = Media::where('model_id', $folder->id)
+            $files = $files = Media::where('model_id', $currentFolder->id)
                 ->orderBy('file_name', 'ASC')
                 ->get();
 
-            $folder = FolderResource::make($folder);
+            $currentFolder = FolderResource::make($currentFolder);
             $folders = FolderResource::collection($folders);
             $files = FileResource::collection($files);
-
-            $currentFolderId = $folder->id;
-            $currentFolderName = $folder->name;
-            $currentFolderFullPath = $folder->fullPath;
         }
 
         // se la request ha il parametro folderId vuol dire che è stata selezionata una cartella: recupero le sue sottocartelle e i file
@@ -81,20 +75,16 @@ class FileManagerController extends Controller
                 $folderIsRoot = false;
             }
 
-            $folder = Folder::with('folders')
+            $currentFolder = Folder::with('folders')
                 ->find($folderId);
 
             // cartelle figlie da visualizzare
-            $folders = $folder->folders->sortBy('name');
+            $folders = $currentFolder->folders->sortBy('name');
 
-            $folder = FolderResource::make($folder);
+            $currentFolder = FolderResource::make($currentFolder);
             $folders = FolderResource::collection($folders);
 
-            $currentFolderId = $folder->id;
-            $currentFolderName = $folder->name;
-            $currentFolderFullPath = $folder->fullPath;
-
-            $parent = $folder->parent;
+            $parent = $currentFolder->parent;
 
             $files = Media::where('model_id', $folderId)
                 ->orderBy('file_name', 'ASC')
@@ -115,19 +105,92 @@ class FileManagerController extends Controller
             }
         }
 
-        return Inertia::render('New', [
-            'currentFolderId' => $currentFolderId,
-            'currentFolderName' => $currentFolderName,
-            'currentFolderFullPath' => $currentFolderFullPath,
+        return Inertia::render('NewMyFiles', [
+            'currentFolder' => $currentFolder,
             'rootFolderId' => $rootFolderId,
             'isUserAdmin' => $isUserAdmin,
             'folders' => $folders,
             'files' => $files,
             'parent' => $parent,
             'folderIsRoot' => $folderIsRoot,
-            'folder' => $folder,
         ]);
     }
+
+    public function newSharedWithMe(Request $request): InertiaResponse
+    {
+        $user = $request->user();
+
+        /* cerco le folders */
+        $sharedFolders = DB::table('folder_shares as fs')
+            ->join('folders', 'fs.folder_id', '=', 'folders.id')
+            ->join('users', 'fs.user_id', '=', 'users.id')
+            ->join('users as users_owner', 'fs.owner_id', '=', 'users_owner.id')
+            ->where('folders.user_id', '!=', $user->id)
+            ->where('fs.user_id', $user->id)
+            ->select('folders.id as folderId', 'folders.name as folderName', 'users_owner.name as folderOwner')
+            ->orderBy('folderName', 'ASC')
+            ->orderBy('folderOwner', 'ASC')
+            ->get();
+
+//        dd($sharedFolders);
+
+        /* cerco i files */
+        $sharedFiles = DB::table('file_shares as fs')
+            ->join('media', 'fs.file_id', '=', 'media.id')
+            ->join('users', 'fs.owner_id', '=', 'users.id')
+            ->where('fs.user_id', $user->id)
+            ->select('media.id as fileId', 'media.file_name as fileName', 'users.name as fileOwner')
+            ->orderBy('fileName', 'ASC')
+            ->orderBy('fileOwner', 'ASC')
+            ->get();
+
+//        dd($sharedFolders, $sharedFiles);
+
+        return Inertia::render('NewSharedWithMe', [
+            'folders' => $sharedFolders,
+            'files' => $sharedFiles,
+        ]);
+    }
+
+    public function newSharedByMe(Request $request): InertiaResponse
+    {
+        $user = $request->user();
+
+        /* folders condivise dall'utente che fa la richiesta */
+        $sharedFolders = DB::table('folder_shares as fs')
+            ->join('folders', 'fs.folder_id', '=', 'folders.id')
+            ->join('users', 'fs.user_id', '=', 'users.id')
+            ->where('folders.user_id', $user->id)
+//            ->whereIn('fs.folder_id', $folderIds)
+            ->select('fs.id as folderId', 'folders.name as folderName', 'users.name as userName')
+            ->orderBy('folderName', 'ASC')
+            ->orderBy('userName', 'ASC')
+            ->get();
+
+
+        /* files condivisi dall'utente che fa la richiesta */
+
+        // 1) trovo la root folder dell'utente e tutte le sue figlie
+        $userRootFolderId = $user->root_folder_id;
+        $userRootFolder = Folder::findOrFail($userRootFolderId);
+        $childrenFolderIds = $userRootFolder->getChildrenIds();
+
+        // 2) estraggo i files dell'utente corrente che fanno parte dell'albero di cartelle trovato sopra e che sono is_shared
+        $sharedFiles = DB::table('file_shares as fs')
+            ->join('media', 'fs.file_id', '=', 'media.id')
+            ->join('users', 'fs.user_id', '=', 'users.id')
+            ->whereIn('media.model_id', $childrenFolderIds)
+            ->select('fs.id as fileId', 'media.file_name as fileName', 'users.name as userName')
+            ->orderBy('fileName', 'ASC')
+            ->orderBy('userName', 'ASC')
+            ->get();
+
+        return Inertia::render('NewSharedByMe', [
+            'folders' => $sharedFolders,
+            'files' => $sharedFiles,
+        ]);
+    }
+
 
     public function myFiles(Request $request): InertiaResponse
     {
@@ -344,7 +407,7 @@ class FileManagerController extends Controller
         }
     }
 
-    public function createFolder(Request $request): RedirectResponse
+    public function createFolder(Request $request): void
     {
         $user = $request->user();
 
@@ -355,25 +418,53 @@ class FileManagerController extends Controller
         $newFolderName = $request->input('newFolderName');
         $currentFolderId = intval($request->input('currentFolderId'));
 
-        if (!$newFolderName || $newFolderName == '' || !$currentFolderId) {
+        /* || !$currentFolderId */
+        if (!$newFolderName || $newFolderName == '') {
             abort(403, 'Missing parameters');
         }
 
-        $folderAlreadyExists = FileManagerHelper::checkFolderExistence($newFolderName, $currentFolderId);
+        $folderAlreadyExists = null;
 
-        if (!$folderAlreadyExists) {
-            $newFolder = new Folder();
-            $newFolder->name = $newFolderName;
-            $newFolder->user_id = $userId;
-            $newFolder->folder_id = $currentFolderId;
-            $newFolder->uuid = Str::uuid();
-            $newFolder->save();
+        /* se currentFolderId è null significa che sono utente admin */
+        if (!$currentFolderId) {
+            $folderAlreadyExists = FileManagerHelper::checkRootFolderExistence($newFolderName);
 
-            return redirect()->back()->banner("Folder '$newFolderName' created successfully");
+            /* se non esiste, cerco di creare una nuova ROOT folder */
+            if (!$folderAlreadyExists) {
+                $newFolder = new Folder();
+                $newFolder->name = $newFolderName;
+                $newFolder->user_id = $userId;
+                $newFolder->folder_id = null;
+                $newFolder->uuid = Str::uuid();
+                $newFolder->save();
+
+//            return redirect()->back()->banner("Folder '$newFolderName' created successfully");
+//                return redirect()->back();
+            } /*else {
+                return redirect()->back()->withErrors([
+                    'folderExistsError' => true
+                ]);
+            }*/
         } else {
-            return redirect()->back()->withErrors([
-                'folderExistsError' => true
-            ]);
+            /* se currentFolderId esiste significa che sono utente normale */
+            $folderAlreadyExists = FileManagerHelper::checkFolderExistence($newFolderName, $currentFolderId);
+
+            /* se non esiste, cerco di creare una nuova folder normale */
+            if (!$folderAlreadyExists) {
+                $newFolder = new Folder();
+                $newFolder->name = $newFolderName;
+                $newFolder->user_id = $userId;
+                $newFolder->folder_id = $currentFolderId;
+                $newFolder->uuid = Str::uuid();
+                $newFolder->save();
+
+//            return redirect()->back()->banner("Folder '$newFolderName' created successfully");
+//                return redirect()->route('newMyFiles');
+            } /*else {
+                return redirect()->route('newMyFiles')->withErrors([
+                    'folderExistsError' => true
+                ]);
+            }*/
         }
     }
 

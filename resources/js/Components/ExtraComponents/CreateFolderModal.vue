@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm, usePage} from "@inertiajs/vue3";
 import {nextTick, ref} from "vue";
 import Modal from "@/Components/Modal.vue";
 import InputLabel from "@/Components/InputLabel.vue";
@@ -53,15 +53,19 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 
 const props = defineProps({
     modelValue: Boolean,
-    currentFolderId: Number,
 });
+
+const page = usePage();
+
+// prendo il currentFoldeId dalle props della pagina base
+const currentFolder = page.props.currentFolder;
 
 const emit = defineEmits(['update:modelValue'])
 
 const form = useForm({
     _method: 'POST',
     newFolderName: '',
-    currentFolderId: props.currentFolderId
+    currentFolderId: currentFolder ? currentFolder.data.id : page.props.auth.user.root_folder_id,
 });
 
 const folderNameInput = ref(null)
@@ -75,11 +79,29 @@ function onShow() {
 function createFolder() {
     console.log('Create Folder');
 
+    form.post(route('folder.create'), {
+        preserveState: true,
+        onSuccess: (data) => {
+            console.log(data);
+
+            closeModal();
+        },
+        onError: (error) => {
+            console.log(error);
+
+            form.reset('newFolderName');
+
+            if (error.folderExistsError) {
+                form.errors.name = 'Folder already exists';
+            }
+        }
+    })
 }
 
 function closeModal() {
-    emit('update:modelValue')
+    emit('update:modelValue');
     form.clearErrors();
-    form.reset()
+    form.reset();
 }
+
 </script>
