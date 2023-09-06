@@ -18,7 +18,8 @@ class AdminUserSeeder extends Seeder
             'name'      => 'Admin',
             'email'     => 'admin@admin.it',
             'password'  => Hash::make('Value1234!'),
-            'can_write_folder' => true
+            'can_write_folder' => true,
+            'is_admin' => true,
         ]);
 
         $super_admin->markEmailAsVerified();

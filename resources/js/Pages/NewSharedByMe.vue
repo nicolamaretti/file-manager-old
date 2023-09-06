@@ -1,7 +1,6 @@
 <template>
     <AppLayout_new title="NewSharedByMe">
-        <nav class="flex items-center justify-between mb-3 mt-1">
-            <Breadcrumb/>
+        <nav class="flex items-center justify-end mb-3 mt-1">
             <div class="flex">
                 <DownloadFilesButton class="mr-3"/>
                 <DeleteFilesButton/>
@@ -17,20 +16,14 @@
 </template>
 
 <script setup>
-import {computed, ref} from "vue";
-import {router, usePage, Link} from "@inertiajs/vue3";
 import AppLayout_new from "@/Layouts/AppLayout_new.vue";
 import DownloadFilesButton from "@/Components/ExtraComponents/DownloadFilesButton.vue";
-import Breadcrumb from "@/Components/MyComponents/Breadcrumb.vue";
 import DeleteFilesButton from "@/Components/ExtraComponents/DeleteFilesButton.vue";
 import SharedByMeTable from "@/Components/MyComponents/SharedByMeTable.vue";
-import SharedWithMeTable from "@/Components/MyComponents/SharedWithMeTable.vue";
 
 const props = defineProps({
     folders: Array,
     files: Array,
 });
 
-console.log('aaaaaaaaaaaa')
-console.log(props);
 </script>

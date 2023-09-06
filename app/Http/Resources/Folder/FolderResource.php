@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Folder;
 
+use App\Models\Folder;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -24,6 +25,8 @@ class FolderResource extends JsonResource
             ->where('folders.id', $this->id)
             ->select('users.name as userName')
             ->first();
+
+//        $user = Folder::find($this->id)->with('user')->get();
 
         return [
             'id'            => $this->id,

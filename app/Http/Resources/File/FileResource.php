@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\File;
 
-use App\Models\User;
+use App\Helpers\FileManagerHelper;
 use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -22,7 +22,7 @@ class FileResource extends JsonResource
             'id'            => $this->id,
             'name'          => $this->name,
             'file_name'     => $this->file_name,
-            'size'          => $this->size,
+            'size'          => FileManagerHelper::getFileSize($this),
             'mime_type'     => $this->mime_type,
             'updated_at'    => $this->updated_at,
         ];

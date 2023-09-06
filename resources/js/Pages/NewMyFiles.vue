@@ -1,7 +1,7 @@
 <template>
     <AppLayout_new title="NewMyFiles">
         <nav class="flex items-center justify-between mb-3 mt-1">
-            <Breadcrumb/>
+            <Breadcrumb :ancestors="ancestors"/>
             <!-- Bottoni -->
             <div class="flex">
                 <ShareFilesButton class="mr-3"/>
@@ -21,17 +21,15 @@
 </template>
 
 <script setup>
-import {computed, onUpdated, ref} from "vue";
-import {router, usePage, Link} from "@inertiajs/vue3";
+import {onUpdated, ref} from "vue";
 import AppLayout_new from "@/Layouts/AppLayout_new.vue";
 import ShareFilesButton from "@/Components/ExtraComponents/ShareFilesButton.vue";
 import DownloadFilesButton from "@/Components/ExtraComponents/DownloadFilesButton.vue";
 import DeleteFilesButton from "@/Components/ExtraComponents/DeleteFilesButton.vue";
 import MyFilesTable from "@/Components/MyComponents/MyFilesTable.vue";
 import Breadcrumb from "@/Components/MyComponents/Breadcrumb.vue";
-import {all} from "axios";
 
-const userFolderPermission = computed(() => usePage().props.folderPermission);
+// const userFolderPermission = computed(() => usePage().props.folderPermission);
 
 const props = defineProps({
     currentFolder: Object,
@@ -41,6 +39,7 @@ const props = defineProps({
     folders: Object,
     files: Object,
     folderIsRoot: Boolean,
+    ancestors: Array,
 });
 
 const allFiles = ref({

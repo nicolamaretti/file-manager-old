@@ -2,7 +2,7 @@
     <div class="px-4 sm:px-6 lg:px-8">
         <div class="mt-0.5 flow-root">
             <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                <div class="inline-block min-w-full py-2 align-middle px-1 overflow-auto">
+                <div class="inline-block min-w-full py-2 align-middle px-1">
                     <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
                         <div class="flex-1 overflow-auto min-w-full divide-y divide-gray-300">
 
@@ -10,7 +10,7 @@
                             <div class="grid grid-cols-12 gap-10 py-3.5 text-left font-semibold bg-gray-100">
                                 <!-- prima colonna -->
                                 <div class="col-span-1 text-left pl-6 text-sm font-semibold text-gray-900">
-                                    <Checkbox @change="onSelectAllChange" v-model:checked="allSelected"/>
+                                    <Checkbox v-model:checked="allSelected" @change="onSelectAllChange"/>
                                 </div>
                                 <!-- seconda colonna -->
                                 <div class="col-span-4 pl-14">Name</div>
@@ -25,37 +25,42 @@
                                 <div class="col-span-2">Size</div>
                             </div>
 
-                            <div v-if="!files.data.length && !folders.data.length"
-                                 class="py-8 text-center text-sm text-gray-400">
-                                There is no data in this folder
+                            <!-- controllo per la home page dell'admin: all'inizio, files è null e fa crashare l'app -->
+                            <div v-if="files && folders">
+                                <div v-if="!files.data.length && !folders.data.length"
+                                     class="py-8 text-center text-sm text-gray-400">
+                                    There is no data in this folder
+                                </div>
                             </div>
 
                             <!-- Body -->
                             <div class="divide-y divide-gray-200 bg-white">
                                 <!-- 1) visualizzazione cartelle -->
-                                <div v-if="folders"
-                                     v-for="folder in folders.data"
+                                <div v-for="folder in folders.data"
+                                     v-if="folders"
                                      :key="folder.id"
+                                     :class="(selectedFolders[folder.id]) ? 'bg-blue-50' : 'bg-white'"
                                      class="grid grid-cols-12 gap-10 py-1 transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
                                      @dblclick.prevent="openFolder(folder.id)">
                                     <div
                                         class="col-span-1 py-4 pl-6 whitespace-nowrap text-sm font-medium text-gray-900 pr-0 inline-flex items-center">
-                                        <Checkbox class="mr-4"
-                                                  @change="$event => toggleSelectFolder(folder.id)"
-                                                  v-model="selectedFolders[folder.id]"
-                                                  :checked="selectedFolders[folder.id]"/>
+                                        <Checkbox v-model="selectedFolders[folder.id]"
+                                                  :checked="selectedFolders[folder.id]"
+                                                  class="mr-4"
+                                                  @change="$event => toggleSelectFolder(folder.id)"/>
 
-                                        <div @click.stop.prevent="addRemoveFavourite(folder)"
-                                             class="text-yellow-500 mr-4">
-                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                        <div class="text-yellow-500 mr-4"
+                                             @click.stop.prevent="addRemoveFavourite(folder)">
+                                            <svg class="w-6 h-6"
                                                  fill="none"
-                                                 viewBox="0 0 24 24"
-                                                 stroke-width="1.5"
                                                  stroke="currentColor"
-                                                 class="w-6 h-6">
-                                                <path stroke-linecap="round"
-                                                      stroke-linejoin="round"
-                                                      d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>
+                                                 stroke-width="1.5"
+                                                 viewBox="0 0 24 24"
+                                                 xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"/>
                                             </svg>
                                         </div>
                                     </div>
@@ -87,25 +92,26 @@
                                 </div>
 
                                 <!-- 2) visualizzazione file -->
-                                <div v-if="files"
-                                     v-for="file in files.data"
+                                <div v-for="file in files.data"
+                                     v-if="files"
                                      :key="file.id"
-                                     class="grid grid-cols-12 gap-10 py-1 transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
-                                     :class="(selected[file.id] || allSelected ) ? 'bg-blue-50' : 'bg-white'">
+                                     :class="(selectedFiles[file.id]) ? 'bg-blue-50' : 'bg-white'"
+                                     class="grid grid-cols-12 gap-10 py-1 transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer">
                                     <div
                                         class="col-span-1 py-4 pl-6 whitespace-nowrap text-sm font-medium text-gray-900 pr-0 inline-flex items-center">
                                         <Checkbox class="mr-4"/>
-                                        <div @click.stop.prevent="addRemoveFavourite(folder)"
-                                             class="text-yellow-500 mr-4">
-                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                        <div class="text-yellow-500 mr-4"
+                                             @click.stop.prevent="addRemoveFavourite(folder)">
+                                            <svg class="w-6 h-6"
                                                  fill="none"
-                                                 viewBox="0 0 24 24"
-                                                 stroke-width="1.5"
                                                  stroke="currentColor"
-                                                 class="w-6 h-6">
-                                                <path stroke-linecap="round"
-                                                      stroke-linejoin="round"
-                                                      d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"/>
+                                                 stroke-width="1.5"
+                                                 viewBox="0 0 24 24"
+                                                 xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
+                                                    stroke-linecap="round"
+                                                    stroke-linejoin="round"/>
                                             </svg>
                                         </div>
                                     </div>
@@ -132,7 +138,7 @@
                                     </div>
                                     <div
                                         class="col-span-2 whitespace-nowrap align-middle my-auto text-gray-500 inline-flex items-center">
-                                        {{ file.size }} KB
+                                        {{ file.size }}
                                     </div>
                                 </div>
                             </div>
@@ -168,12 +174,10 @@ let allSelected = ref(false);
 const openFolder = (folderId = null) => {
     if (folderId != null) {
         // ritorna la cartella selezionata
-        router.get(route('newMyFiles'), {
-            folderId: folderId
-        });
+        router.get(route('newMyFiles'), {folderId: folderId}, {preserveScroll: true});
     } else {
         // ritorna le cartelle di root
-        router.get(route('newMyFiles'));
+        router.get(route('newMyFiles'), {}, {preserveScroll: true});
     }
 }
 
@@ -201,6 +205,10 @@ function toggleSelectFolder(folderId) {
     //
     //     allSelected.value = checked
     // }
+}
+
+function onSelectAllChange() {
+
 }
 
 // selectedIds.value.push('pippo');

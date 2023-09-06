@@ -3,6 +3,8 @@
 namespace App\Traits;
 
 use App\Models\Folder;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 trait RecursivelyTrait
@@ -44,6 +46,15 @@ trait RecursivelyTrait
         }
 
         $this->copyFolderRecursive($this->id, $destinationFolderId);
+    }
+
+    public function getAncestors()
+    {
+        $userIsAdmin = Auth::user()->is_admin;
+
+        $ancestors = array();
+
+        return $this->getAncestorsRecursive($userIsAdmin, $this, $ancestors);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -124,6 +135,34 @@ trait RecursivelyTrait
             foreach ($folderAChildren as $child) {
                 $this->copyFolderRecursive($child->id, $newFolder->id);
             }
+        }
+    }
+
+    private function getAncestorsRecursive(bool $userIsAdmin, Folder $folder, array &$ancestors): array
+    {
+        if($folder->parent === null) {
+            // sono nella root folder
+
+            if ($userIsAdmin) {
+                // se sono admin aggiungo anche l'ultima folder
+                array_push($ancestors, [
+                    'id' => $folder->id,
+                    'name' => $folder->name,
+                ]);
+            }
+
+            // gli elementi nell'array vengono memorizzati "a ritroso" dalla cartella corrente fino alla root, quindi li inverto
+            $ancestors = array_reverse($ancestors);
+
+            return $ancestors;
+        } else {
+            // aggiungo la folder corrente al path
+            array_push($ancestors, [
+                'id' => $folder->id,
+                'name' => $folder->name,
+            ]);
+
+            return $this->getAncestorsRecursive($userIsAdmin, $folder->parent, $ancestors);
         }
     }
 }

@@ -44,8 +44,8 @@ class Folder extends Model implements HasMedia, Zipable, Recursively
         return $this->belongsTo(Folder::class, 'folder_id');
     }
 
-//    public function sharedUsers(): BelongsToMany
-//    {
-//        return $this->belongsToMany(User::class, 'user_id');
-//    }
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

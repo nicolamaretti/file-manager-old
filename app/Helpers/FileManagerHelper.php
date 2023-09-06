@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Http\Resources\File\FileResource;
 use App\Http\Resources\Folder\FolderResource;
 use App\Models\Folder;
 use http\Env\Request;
@@ -74,6 +75,15 @@ class FileManagerHelper
         /* a questo punto ho il path */
 
         return implode('/', $path) . '/' . $file->file_name;
+    }
+
+    public static function getFileSize(FileResource $file): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+
+        $power = $file->size > 0 ? floor(log($file->size, 1024)) : 0;
+
+        return number_format($file->size / pow(1024, $power), 2, '.', ',') . ' ' . $units[$power];
     }
 
     /**

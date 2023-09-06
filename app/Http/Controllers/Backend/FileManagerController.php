@@ -37,6 +37,9 @@ class FileManagerController extends Controller
         $folderIsRoot = true;
         $currentFolder = null;
 
+        // array dei nomi delle cartelle per il breadcrumb
+        $ancestors = [];
+
 //        $userOrganizationAdmin = $user->can('view-organization-level');
 //        $userDepartment = $user->can('view-department-level');
 
@@ -64,6 +67,7 @@ class FileManagerController extends Controller
 
             $currentFolder = FolderResource::make($currentFolder);
             $folders = FolderResource::collection($folders);
+//            dd($files);
             $files = FileResource::collection($files);
         }
 
@@ -92,6 +96,8 @@ class FileManagerController extends Controller
 
             $files = FileResource::collection($files);
 
+            $ancestors = $currentFolder->getAncestors();
+
             // se si sta tentando di accedere ad una cartella che non è presente nella root folder dell'utente o in una delle sue sottocartelle, ritorno errore
             if ($rootFolderId != null) {
                 // cerco la rootFolder nel db
@@ -107,12 +113,13 @@ class FileManagerController extends Controller
 
         return Inertia::render('NewMyFiles', [
             'currentFolder' => $currentFolder,
-            'rootFolderId' => $rootFolderId,
-            'isUserAdmin' => $isUserAdmin,
-            'folders' => $folders,
-            'files' => $files,
-            'parent' => $parent,
-            'folderIsRoot' => $folderIsRoot,
+            'rootFolderId'  => $rootFolderId,
+            'isUserAdmin'   => $isUserAdmin,
+            'folders'       => $folders,
+            'files'         => $files,
+            'parent'        => $parent,
+            'folderIsRoot'  => $folderIsRoot,
+            'ancestors'     => $ancestors,
         ]);
     }
 
@@ -167,28 +174,38 @@ class FileManagerController extends Controller
             ->orderBy('userName', 'ASC')
             ->get();
 
-
         /* files condivisi dall'utente che fa la richiesta */
 
         // 1) trovo la root folder dell'utente e tutte le sue figlie
         $userRootFolderId = $user->root_folder_id;
-        $userRootFolder = Folder::findOrFail($userRootFolderId);
-        $childrenFolderIds = $userRootFolder->getChildrenIds();
 
-        // 2) estraggo i files dell'utente corrente che fanno parte dell'albero di cartelle trovato sopra e che sono is_shared
-        $sharedFiles = DB::table('file_shares as fs')
-            ->join('media', 'fs.file_id', '=', 'media.id')
-            ->join('users', 'fs.user_id', '=', 'users.id')
-            ->whereIn('media.model_id', $childrenFolderIds)
-            ->select('fs.id as fileId', 'media.file_name as fileName', 'users.name as userName')
-            ->orderBy('fileName', 'ASC')
-            ->orderBy('userName', 'ASC')
-            ->get();
+        if (!$userRootFolderId) {
+            // sono utente admin
+            return Inertia::render('NewSharedByMe', [
+                'folders' => [],
+                'files' => [],
+            ]);
 
-        return Inertia::render('NewSharedByMe', [
-            'folders' => $sharedFolders,
-            'files' => $sharedFiles,
-        ]);
+        } else {
+            // sono utente normale
+            $userRootFolder = Folder::findOrFail($userRootFolderId);
+            $childrenFolderIds = $userRootFolder->getChildrenIds();
+
+            // 2) estraggo i files dell'utente corrente che fanno parte dell'albero di cartelle trovato sopra e che sono is_shared
+            $sharedFiles = DB::table('file_shares as fs')
+                ->join('media', 'fs.file_id', '=', 'media.id')
+                ->join('users', 'fs.user_id', '=', 'users.id')
+                ->whereIn('media.model_id', $childrenFolderIds)
+                ->select('fs.id as fileId', 'media.file_name as fileName', 'users.name as userName')
+                ->orderBy('fileName', 'ASC')
+                ->orderBy('userName', 'ASC')
+                ->get();
+
+            return Inertia::render('NewSharedByMe', [
+                'folders' => $sharedFolders,
+                'files' => $sharedFiles,
+            ]);
+        }
     }
 
 
