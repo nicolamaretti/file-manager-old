@@ -30,7 +30,7 @@ class FileManagerController extends Controller
         $user = $request->user();
         $rootFolderId = $user->root_folder_id;
 
-        $isUserAdmin = $user->can('view-all-level');
+        $isUserAdmin = (bool) $user->is_admin;
         $folders = null;
         $files = null;
         $parent = null;
@@ -67,7 +67,6 @@ class FileManagerController extends Controller
 
             $currentFolder = FolderResource::make($currentFolder);
             $folders = FolderResource::collection($folders);
-//            dd($files);
             $files = FileResource::collection($files);
         }
 
@@ -134,9 +133,9 @@ class FileManagerController extends Controller
             ->join('users as users_owner', 'fs.owner_id', '=', 'users_owner.id')
             ->where('folders.user_id', '!=', $user->id)
             ->where('fs.user_id', $user->id)
-            ->select('folders.id as folderId', 'folders.name as folderName', 'users_owner.name as folderOwner')
-            ->orderBy('folderName', 'ASC')
-            ->orderBy('folderOwner', 'ASC')
+            ->select('folders.id as id', 'folders.name as name', 'users_owner.name as owner')
+            ->orderBy('name', 'ASC')
+            ->orderBy('owner', 'ASC')
             ->get();
 
 //        dd($sharedFolders);
@@ -146,9 +145,9 @@ class FileManagerController extends Controller
             ->join('media', 'fs.file_id', '=', 'media.id')
             ->join('users', 'fs.owner_id', '=', 'users.id')
             ->where('fs.user_id', $user->id)
-            ->select('media.id as fileId', 'media.file_name as fileName', 'users.name as fileOwner')
-            ->orderBy('fileName', 'ASC')
-            ->orderBy('fileOwner', 'ASC')
+            ->select('media.id as id', 'media.file_name as name', 'users.name as owner')
+            ->orderBy('name', 'ASC')
+            ->orderBy('owner', 'ASC')
             ->get();
 
 //        dd($sharedFolders, $sharedFiles);

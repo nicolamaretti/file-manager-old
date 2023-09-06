@@ -13,13 +13,9 @@
                                     <Checkbox @change="onSelectAllChange" v-model:checked="allSelected"/>
                                 </div>
                                 <!-- seconda colonna -->
-                                <div class="col-span-4 pl-14">Name</div>
+                                <div class="col-span-4 ml-6">Name</div>
                                 <!-- terza colonna -->
                                 <div class="col-span-5">Owner</div>
-                            </div>
-
-                            <div v-if="!files.length && !folders.length" class="py-8 text-center text-sm text-gray-400">
-                                There is no shared files with you
                             </div>
 
                             <!-- Body -->
@@ -27,7 +23,7 @@
                                 <!-- 1) visualizzazione cartelle -->
                                 <div v-if="folders"
                                      v-for="folder in folders"
-                                     :key="folder.folderId"
+                                     :key="folder.id"
                                      class="grid grid-cols-12 gap-10 py-1">
                                     <div
                                         class="col-span-1 py-4 pl-6 whitespace-nowrap text-sm font-medium text-gray-900 pr-0 inline-flex items-center">
@@ -47,25 +43,25 @@
                                             </svg>
                                         </div>
                                     </div>
-                                    <div class="col-span-4 pl-14 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
+                                    <div class="col-span-4 ml-6 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
                                         <IconFolder class="mr-3"/>
-                                        {{ folder.folderName }}
+                                        {{ folder.name }}
                                     </div>
                                     <div class="col-span-2 whitespace-nowrap align-middle my-auto text-gray-500 inline-flex items-center overflow-hidden">
-                                        {{ folder.folderOwner }}
+                                        {{ folder.owner }}
                                     </div>
                                 </div>
 
                                 <!-- 2) visualizzazione file -->
                                 <div v-if="files"
                                      v-for="file in files"
-                                     :key="file.fileId"
+                                     :key="file.id"
                                      class="grid grid-cols-12 gap-10 py-1 transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer">
                                     <div
                                         class="col-span-1 py-4 pl-6 whitespace-nowrap text-sm font-medium text-gray-900 pr-0 inline-flex items-center">
                                         <Checkbox class="mr-4"/>
 
-                                        <div @click.stop.prevent="addRemoveFavourite(folder)"
+                                        <div @click.stop.prevent="addRemoveFavourite(file)"
                                              class="text-yellow-500 mr-4">
                                             <svg xmlns="http://www.w3.org/2000/svg"
                                                  fill="none"
@@ -80,16 +76,20 @@
                                         </div>
                                     </div>
                                     <div
-                                        class="col-span-4 pl-14 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
+                                        class="col-span-4 ml-6 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
                                         <FileIcon class="mr-3"/>
-                                        {{ file.fileName }}
+                                        {{ file.name }}
                                     </div>
                                     <div class="col-span-2 whitespace-nowrap align-middle my-auto text-gray-500 inline-flex items-center overflow-hidden">
-                                        {{ file.fileOwner }}
+                                        {{ file.owner }}
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <div v-if="!files.length && !folders.length" class="py-8 text-center text-sm text-gray-400">
+                        There is no file shared with you
                     </div>
                 </div>
             </div>

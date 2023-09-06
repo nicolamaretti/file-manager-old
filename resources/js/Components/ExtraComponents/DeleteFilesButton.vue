@@ -23,6 +23,20 @@ import {ref} from "vue";
 import ConfirmationDialog from "@/Components/ExtraComponents/ConfirmationDialog.vue";
 import {router} from "@inertiajs/vue3";
 
+const props = defineProps({
+    deleteAll: {
+        type: Boolean,
+        required: false,
+        default: false,
+    },
+    deleteIds: {
+        type: Array,
+        required: false,
+    }
+});
+
+const emit = defineEmits(['delete']);
+
 const showDeleteDialog = ref(false);
 
 function onDeleteClick() {

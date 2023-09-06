@@ -10,12 +10,13 @@
         <!-- Tabella -->
         <div class="flex-1 overflow-auto">
             <SharedWithMeTable :folders="folders"
-                               :files="files"/>
+                            :files="files"/>
         </div>
     </AppLayout_new>
 </template>
 
 <script setup>
+import {ref} from "vue";
 import AppLayout_new from "@/Layouts/AppLayout_new.vue";
 import DownloadFilesButton from "@/Components/ExtraComponents/DownloadFilesButton.vue";
 import SharedWithMeTable from "@/Components/MyComponents/SharedWithMeTable.vue";
