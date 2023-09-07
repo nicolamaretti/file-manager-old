@@ -85,6 +85,8 @@ function createFolder() {
             console.log(data);
 
             closeModal();
+
+            // ToDo show success notification
         },
         onError: (error) => {
             console.log(error);

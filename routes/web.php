@@ -38,6 +38,7 @@ Route::middleware([
     Route::get('/newMyFiles', [FileManagerController::class, 'newMyFiles'])->name('newMyFiles');
     Route::get('/newSharedWithMe', [FileManagerController::class, 'newSharedWithMe'])->name('newSharedWithMe');
     Route::get('/newSharedByMe', [FileManagerController::class, 'newSharedByMe'])->name('newSharedByMe');
+    Route::delete('/delete/', [FileManagerController::class, 'deleteFilesAndFolders'])->name('delete');
 
 //    Route::get('/dashboard', [FileManagerController::class, 'myFiles'])->name('dashboard');
     Route::get('/my-files/{folderId?}', [FileManagerController::class, 'myFiles'])->name('my-files');

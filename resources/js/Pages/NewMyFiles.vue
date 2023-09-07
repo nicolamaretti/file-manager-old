@@ -7,23 +7,21 @@
             <div class="flex">
                 <ShareFilesButton class="mr-3"/>
                 <DownloadFilesButton class="mr-3"/>
-                <DeleteFilesButton/>
+                <DeleteFilesButton :delete-folder-ids="selectedFolderIds"
+                                   :delete-file-ids="selectedFileIds" @delete="onDelete()"/>
             </div>
         </nav>
-
         <!-- Tabella -->
         <div class="flex-1 overflow-auto">
 <!--            <MyFilesTable :files="props.files"-->
 <!--                          :folders="props.folders"-->
 <!--                          :currentFolder="props.currentFolder"-->
 <!--                          :isUserAdmin="isUserAdmin"/>-->
+
             <div class="px-4 sm:px-6 lg:px-8">
                 <div class="mt-0.5 flow-root">
                     <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                         <div class="inline-block min-w-full py-2 align-middle px-1">
-                            <pre>{{allSelected}}</pre>
-                            <pre>{{selectedFolders}}</pre>
-                            <pre>{{selectedFiles}}</pre>
                             <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
                                 <div class="flex-1 overflow-auto min-w-full divide-y divide-gray-300">
 
@@ -34,7 +32,7 @@
                                             <Checkbox @change="onSelectAllChange()" v-model:checked="allSelected"/>
                                         </div>
                                         <!-- seconda colonna -->
-                                        <div class="col-span-4 ml-6">Name</div>
+                                        <div class="col-span-4 ml-2">Name</div>
                                         <!-- terza colonna -->
                                         <div v-if="isUserAdmin" class="grid grid-cols-5 col-span-5">
                                             <!-- l'admin vede anche l'owner -->
@@ -79,7 +77,7 @@
                                                 </div>
                                             </div>
                                             <div
-                                                class="col-span-4 ml-6 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
+                                                class="col-span-4 ml-2 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
                                                 <IconFolder class="mr-3"/>
                                                 {{ folder.name }}
                                             </div>
@@ -131,7 +129,7 @@
                                                 </div>
                                             </div>
                                             <div
-                                                class="col-span-4 ml-6 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
+                                                class="col-span-4 ml-2 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
                                                 <FileIcon class="mr-3"/>
                                                 {{ file.file_name }}
                                             </div>
@@ -294,6 +292,12 @@ function onSelectFileCheckboxChange(fileId) {
 
         allSelected.value = checked;
     }
+}
+
+function onDelete() {
+    allSelected.value = false;
+    selectedFolders.value = {};
+    selectedFiles.value = {};
 }
 
 </script>

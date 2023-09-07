@@ -6,9 +6,9 @@
         <Navigation/>
 
         <!-- Sezione centrale -->
-        <main @drop.prevent="handleDrop()"
-              @dragover.prevent="onDragOver()"
-              @dragleave.prevent="onDragLeave()"
+        <main @drop.prevent="handleDrop"
+              @dragover.prevent="onDragOver"
+              @dragleave.prevent="onDragLeave"
               class="flex flex-col flex-1 ml-10 overflow-hidden"
               :class="dragOver ? 'dropzone' : ''">
 
@@ -39,8 +39,9 @@
 </template>
 
 <script setup>
-import {ref} from 'vue';
-import {Head, Link, router} from '@inertiajs/vue3';
+import {onMounted, ref} from 'vue';
+import {Head, Link, router, useForm} from '@inertiajs/vue3';
+import {emitter, FILE_UPLOAD_STARTED} from "@/event-bus.js";
 import Navigation from "@/Components/ExtraComponents/Navigation.vue";
 import SearchForm from "@/Components/ExtraComponents/SearchForm.vue";
 import UserSettingsDropdown from "@/Components/ExtraComponents/UserSettingsDropdown.vue";
@@ -49,6 +50,15 @@ defineProps({
     title: String,
 });
 
+onMounted(() => {
+    emitter.on(FILE_UPLOAD_STARTED, uploadFiles);
+});
+
+const fileUploadForm = useForm({
+    _method: 'POST',
+    files: [],
+    currentFolderId: props.currentFolderId
+});
 const dragOver = ref(false);
 
 function onDragOver() {
@@ -59,8 +69,23 @@ function onDragLeave() {
     dragOver.value = false;
 }
 
-function handleDrop() {
-    console.log('handleDrop');
+function handleDrop(ev) {
+    dragOver.value = false;
+
+    // i file che droppiamo sono all'interno di questo evento
+    const files = ev.dataTransfer.files;
+
+    console.log(files);
+
+    if (!files.length) {
+        return;
+    } else {
+
+    }
+}
+
+function uploadFiles(files) {
+    console.log(files)
 }
 
 </script>

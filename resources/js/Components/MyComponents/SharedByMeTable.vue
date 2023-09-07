@@ -13,7 +13,7 @@
                                     <Checkbox @change="onSelectAllChange" v-model:checked="allSelected"/>
                                 </div>
                                 <!-- seconda colonna -->
-                                <div class="col-span-4 ml-6">Name</div>
+                                <div class="col-span-4 ml-2">Name</div>
                                 <!-- terza colonna -->
                                 <div class="col-span-5">Shared with</div>
                             </div>
@@ -29,7 +29,7 @@
                                         class="col-span-1 py-4 pl-6 whitespace-nowrap text-sm font-medium text-gray-900 pr-0 inline-flex items-center">
                                         <Checkbox class="mr-4"/>
                                     </div>
-                                    <div class="col-span-4 ml.6 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
+                                    <div class="col-span-4 ml-2 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
                                         <IconFolder class="mr-3"/>
                                         {{ folder.folderName }}
                                     </div>
@@ -48,7 +48,7 @@
                                         <Checkbox class="mr-4"/>
                                     </div>
                                     <div
-                                        class="col-span-4 ml-6 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
+                                        class="col-span-4 ml-2 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex items-center overflow-hidden">
                                         <FileIcon class="mr-3"/>
                                         {{ file.fileName }}
                                     </div>

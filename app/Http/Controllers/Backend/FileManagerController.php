@@ -30,7 +30,7 @@ class FileManagerController extends Controller
         $user = $request->user();
         $rootFolderId = $user->root_folder_id;
 
-        $isUserAdmin = (bool) $user->is_admin;
+        $isUserAdmin = (bool)$user->is_admin;
         $folders = null;
         $files = null;
         $parent = null;
@@ -112,13 +112,13 @@ class FileManagerController extends Controller
 
         return Inertia::render('NewMyFiles', [
             'currentFolder' => $currentFolder,
-            'rootFolderId'  => $rootFolderId,
-            'isUserAdmin'   => $isUserAdmin,
-            'folders'       => $folders,
-            'files'         => $files,
-            'parent'        => $parent,
-            'folderIsRoot'  => $folderIsRoot,
-            'ancestors'     => $ancestors,
+            'rootFolderId' => $rootFolderId,
+            'isUserAdmin' => $isUserAdmin,
+            'folders' => $folders,
+            'files' => $files,
+            'parent' => $parent,
+            'folderIsRoot' => $folderIsRoot,
+            'ancestors' => $ancestors,
         ]);
     }
 
@@ -205,6 +205,46 @@ class FileManagerController extends Controller
                 'files' => $sharedFiles,
             ]);
         }
+    }
+
+    public function deleteFilesAndFolders(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if (!($user->can_write_folder))
+            abort(403);
+
+        $deleteFileIds = $request->input('deleteFileIds');
+        $deleteFolderIds = $request->input('deleteFolderIds');
+
+        /* eliminazione dei file */
+        if ($deleteFileIds) {
+            Media::whereIn('id', $deleteFileIds)
+                ->get()
+                ->each(fn($file) => $file->delete());
+        }
+
+        /* eliminazione delle folder */
+        if ($deleteFolderIds) {
+            foreach ($deleteFolderIds as $id) {
+                $folder = Folder::findOrFail($id);
+
+                // recupero gli id delle cartelle figlie (comprende anche l'id della cartella padre)
+                $childrenIds = $folder->getChildrenIds();
+
+                Folder::whereIn('id', $childrenIds)
+                    ->get()
+                    ->each(fn($folder) => $folder->delete());
+            }
+
+//            dump($allFolderIds);
+//
+//            $allFolderIds = array_merge($allFolderIds);
+//
+//            dd($allFolderIds);
+        }
+
+        return redirect()->back();
     }
 
 

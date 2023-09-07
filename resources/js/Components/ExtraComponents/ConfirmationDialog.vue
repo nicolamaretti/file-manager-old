@@ -29,8 +29,9 @@ import DangerButton from "@/Components/DangerButton.vue";
 const props = defineProps({
     show: Boolean,
     message: String
-})
-const emit = defineEmits(['cancel', 'confirm'])
+});
+
+const emit = defineEmits(['cancel', 'confirm']);
 
 // Computed
 
@@ -39,7 +40,3 @@ const emit = defineEmits(['cancel', 'confirm'])
 // Hooks
 
 </script>
-
-<style scoped>
-
-</style>
