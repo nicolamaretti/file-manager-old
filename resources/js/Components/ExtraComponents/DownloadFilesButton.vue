@@ -1,5 +1,5 @@
 <template>
-  <PrimaryButton @click="download()">
+  <PrimaryButton @click="onDownloadClick">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
          class="w-4 h-4 mr-2">
       <path stroke-linecap="round" stroke-linejoin="round"
@@ -11,8 +11,31 @@
 
 <script setup>
 import PrimaryButton from "@/Components/PrimaryButton.vue";
+import {emitter, FILE_DOWNLOAD_STARTED} from "@/event-bus.js";
 
-function download() {
-  console.log('download');
+const props = defineProps({
+    downloadFolderIds: {
+        type: Array,
+        required: false,
+    },
+    downloadFileIds: {
+        type: Array,
+        required: false,
+    },
+});
+
+const emit = defineEmits(['download']);
+
+function onDownloadClick() {
+    if (!props.downloadFileIds.length && !props.downloadFolderIds.length) {
+        // showErrorDialog('Please select at least one file to delete');
+
+        return;
+    } else {
+        emitter.emit(FILE_DOWNLOAD_STARTED, {
+            'downloadFolderIds': props.downloadFolderIds,
+            'downloadFileIds': props.downloadFileIds
+        });
+    }
 }
 </script>

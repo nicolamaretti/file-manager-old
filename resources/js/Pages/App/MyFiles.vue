@@ -608,7 +608,7 @@ const fileUploadForm = useForm({
 });
 
 const submitFileUploadForm = () => {
-    fileUploadForm.post(route('file.upload'));
+    fileUploadForm.post(route('upload'));
 }
 
 const onChange = (event) => {

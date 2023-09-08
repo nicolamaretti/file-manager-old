@@ -40,8 +40,8 @@
 
 <script setup>
 import {onMounted, ref} from 'vue';
-import {Head, Link, router, useForm} from '@inertiajs/vue3';
-import {emitter, FILE_UPLOAD_STARTED} from "@/event-bus.js";
+import {Head, Link, router, useForm, usePage} from '@inertiajs/vue3';
+import {emitter, FILE_DOWNLOAD_STARTED, FILE_UPLOAD_STARTED} from "@/event-bus.js";
 import Navigation from "@/Components/ExtraComponents/Navigation.vue";
 import SearchForm from "@/Components/ExtraComponents/SearchForm.vue";
 import UserSettingsDropdown from "@/Components/ExtraComponents/UserSettingsDropdown.vue";
@@ -52,13 +52,18 @@ defineProps({
 
 onMounted(() => {
     emitter.on(FILE_UPLOAD_STARTED, uploadFiles);
+    emitter.on(FILE_DOWNLOAD_STARTED, download);
 });
+
+const page = usePage();
+// const currentFolderId = page.props.currentFolder.data.id;
 
 const fileUploadForm = useForm({
     _method: 'POST',
     files: [],
-    currentFolderId: props.currentFolderId
+    currentFolderId: null
 });
+
 const dragOver = ref(false);
 
 function onDragOver() {
@@ -75,18 +80,33 @@ function handleDrop(ev) {
     // i file che droppiamo sono all'interno di questo evento
     const files = ev.dataTransfer.files;
 
-    console.log(files);
-
     if (!files.length) {
         return;
     } else {
-
+        uploadFiles(files);
     }
 }
 
 function uploadFiles(files) {
-    console.log(files)
+    console.log(files);
+
+    fileUploadForm.files = files;
+    fileUploadForm.currentFolderId = page.props.currentFolder.data.id;
+
+    fileUploadForm.post(route('upload'));
 }
+
+function download(downloadObject) {
+    console.log('Folders to download: ' + downloadObject.downloadFolderIds);
+    console.log('Files to download: ' + downloadObject.downloadFileIds);
+
+    router.visit(route('download', {
+        'downloadFolderIds': downloadObject.downloadFolderIds,
+        'downloadFileIds': downloadObject.downloadFileIds
+    }));
+}
+
+console.log('AppLayout', page.props, fileUploadForm);
 
 </script>
 

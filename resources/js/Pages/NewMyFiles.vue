@@ -5,10 +5,17 @@
 
             <!-- Bottoni -->
             <div class="flex">
-                <ShareFilesButton class="mr-3"/>
-                <DownloadFilesButton class="mr-3"/>
-                <DeleteFilesButton :delete-folder-ids="selectedFolderIds"
-                                   :delete-file-ids="selectedFileIds" @delete="onDelete()"/>
+                <ShareFilesButton class="mr-3"
+                                  :share-file-ids="selectedFileIds"
+                                  :share-folder-ids="selectedFolderIds"
+                                  @restore="onRestore"/>
+                <DownloadFilesButton class="mr-3"
+                                     :download-file-ids="selectedFileIds"
+                                     :download-folder-ids="selectedFolderIds"
+                                     @download="onRestore"/>
+                <DeleteFilesButton :delete-file-ids="selectedFileIds"
+                                   :delete-folder-ids="selectedFolderIds"
+                                   @delete="onRestore"/>
             </div>
         </nav>
         <!-- Tabella -->
@@ -107,6 +114,7 @@
                                              :key="file.id"
                                              :class="(selectedFiles[file.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
                                              class="grid grid-cols-12 gap-10 py-1 transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
+                                             @="onDrag"
                                              @click="$event => toggleSelectFile(file.id)">
                                             <div class="col-span-1 py-4 pl-6 whitespace-nowrap text-sm font-medium text-gray-900 pr-0 inline-flex items-center">
                                                 <Checkbox @change="$event => onSelectFileCheckboxChange(file.id)"
@@ -294,10 +302,14 @@ function onSelectFileCheckboxChange(fileId) {
     }
 }
 
-function onDelete() {
+function onRestore() {
     allSelected.value = false;
     selectedFolders.value = {};
     selectedFiles.value = {};
+}
+
+function onDrag() {
+    console.log('onDrag')
 }
 
 </script>

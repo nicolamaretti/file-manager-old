@@ -38,13 +38,16 @@ Route::middleware([
     Route::get('/newMyFiles', [FileManagerController::class, 'newMyFiles'])->name('newMyFiles');
     Route::get('/newSharedWithMe', [FileManagerController::class, 'newSharedWithMe'])->name('newSharedWithMe');
     Route::get('/newSharedByMe', [FileManagerController::class, 'newSharedByMe'])->name('newSharedByMe');
-    Route::delete('/delete/', [FileManagerController::class, 'deleteFilesAndFolders'])->name('delete');
+    Route::delete('/delete/', [FileManagerController::class, 'delete'])->name('delete');
+    Route::post('/upload/', [FileManagerController::class, 'upload'])->name('upload');
+    Route::get('/download/', [FileManagerController::class, 'download'])->name('download');
+    Route::post('/share/', [FileManagerController::class, 'share'])->name('share');
 
 //    Route::get('/dashboard', [FileManagerController::class, 'myFiles'])->name('dashboard');
     Route::get('/my-files/{folderId?}', [FileManagerController::class, 'myFiles'])->name('my-files');
     Route::post('/create/root-folder', [FileManagerController::class, 'createRootFolder'])->name('folder.create-root');
     Route::post('/create/folder', [FileManagerController::class, 'createFolder'])->name('folder.create');
-    Route::post('/upload/file', [FileManagerController::class, 'uploadFile'])->name('file.upload');
+//    Route::post('/upload/file', [FileManagerController::class, 'uploadFile'])->name('file.upload');
     Route::delete('/delete/folder/{folderId}', [FileManagerController::class, 'deleteFolderAndChildren'])->name('folder.delete');
     Route::delete('/delete/file/{fileId}', [FileManagerController::class, 'deleteFile'])->name('file.delete');
     Route::get('/download/file/{file}', [FileManagerController::class, 'downloadFile'])->name('file.download');

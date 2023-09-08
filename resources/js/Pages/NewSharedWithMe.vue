@@ -3,7 +3,7 @@
         <nav class="flex justify-end mb-3 mt-1">
             <div class="flex">
                 <DownloadFilesButton class="mr-3"/>
-                <DeleteFilesButton/>
+<!--                <DeleteFilesButton/>-->
             </div>
         </nav>
 

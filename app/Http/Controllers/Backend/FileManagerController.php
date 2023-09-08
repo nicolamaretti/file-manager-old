@@ -18,9 +18,11 @@ use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use RuntimeException;
+use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\Process\Process;
+use ZipArchive;
 use function Termwind\render;
 
 class FileManagerController extends Controller
@@ -207,7 +209,55 @@ class FileManagerController extends Controller
         }
     }
 
-    public function deleteFilesAndFolders(Request $request): RedirectResponse
+    public function upload(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if (!($user->can_write_folder))
+            abort(403);
+
+        $files = $request->files->get('files');
+
+        $currentFolderId = intval($request->input('currentFolderId'));
+
+        if (!$files || !$currentFolderId) {
+            abort(403, 'Missing parameters');
+        }
+
+        $currentFolder = Folder::find($currentFolderId);
+
+        foreach ($files as $file) {
+            $fileFullName = $file->getClientOriginalName();
+
+            // verifico se all'interno della cartella esiste già un file con lo stesso nome
+            $fileAlreadyExists = FileManagerHelper::checkFileExistence($fileFullName, $currentFolderId);
+
+            if (!$fileAlreadyExists) {
+                // se non esiste, lo aggiungo normalmente alla cartella corrente
+                $currentFolder->addMedia($file)->toMediaCollection('documents');
+            } else {
+                // se esiste già, aggiungo un timestamp al nome del nuovo file e lo aggiungo alla cartella corrente
+
+                // prendo nome ed estensione del file
+                $fileName = pathinfo($fileFullName, PATHINFO_FILENAME);
+                $fileExt = pathinfo($fileFullName, PATHINFO_EXTENSION);
+
+                // aggiungo il timestamp e ricreo il nome del file
+//                $fileNameTS = $fileName . '-' . time();
+                $fileNameTS = $fileName . '_copy';
+                $fileFullNameTS = $fileNameTS . '.' . $fileExt;
+
+                $currentFolder->addMedia($file)
+                    ->usingFileName($fileFullNameTS)
+                    ->usingName($fileNameTS)
+                    ->toMediaCollection('documents');
+            }
+        }
+
+        return redirect()->back();
+    }
+
+    public function delete(Request $request): RedirectResponse
     {
         $user = $request->user();
 
@@ -236,15 +286,107 @@ class FileManagerController extends Controller
                     ->get()
                     ->each(fn($folder) => $folder->delete());
             }
-
-//            dump($allFolderIds);
-//
-//            $allFolderIds = array_merge($allFolderIds);
-//
-//            dd($allFolderIds);
         }
 
         return redirect()->back();
+    }
+
+
+    public function download(Request $request)
+    {
+        $user = $request->user();
+
+        $fileIds = $request->input('downloadFileIds');
+        $folderIds = $request->input('downloadFolderIds');
+
+//        dd($fileIds, count($fileIds) === 1, $folderIds);
+
+
+        /* DOWNLOAD FILES */
+        if (!$folderIds && $fileIds && count($fileIds) === 1) {
+            // ho un solo file da scaricare
+
+            $file = Media::findOrFail($fileIds[0]);
+
+//            dd($file->getPath(), pathinfo($file->getPath()));
+
+//            $dest = 'public/' . $file->getPath();
+//
+//            dd($dest);
+
+            // il file è il suo percorso intero
+            return response()->download($file->getPath(), $file->file_name);
+        }
+
+
+        /* FOLDERS */
+//        $folder = Folder::findOrFail($folderId);
+//
+//        $zip = $folder->getZipFolder();
+//
+//        return response()->download($zip)->deleteFileAfterSend();
+    }
+
+    public function share(Request $request)
+    {
+        $currentUser = $request->user();
+
+        $email = $request->input('email');
+        $fileIds = $request->input('shareFileIds');
+        $folderIds = $request->input('shareFolderIds');
+
+        if ($email == $currentUser->email) {
+            return redirect()->back()->withErrors([
+                'message' => 'Invalid email'
+            ]);
+        }
+
+        $user = User::query()->where('email', $email)->first();
+        $userId = data_get($user, 'id');
+
+        if ($userId) {
+            if($fileIds) {
+                foreach ($fileIds as $fileId) {
+                    $sharedFile = FileShare::query()
+                        ->where('file_id', $fileId)
+                        ->where('user_id', $userId)
+                        ->get();
+
+                    if (!$sharedFile) {
+                        $newSharedFile = new FileShare();
+                        $newSharedFile->file_id = $fileId;
+                        $newSharedFile->user_id = $user->id;
+                        $newSharedFile->owner_id = $currentUser->id;
+                        $newSharedFile->save();
+                    }
+                }
+            }
+
+            if ($folderIds) {
+                foreach ($folderIds as $folderId) {
+                    $sharedFolder = FolderShare::query()
+                        ->where('folder_id', $folderId)
+                        ->where('user_id', $userId)
+                        ->first();
+
+                    if (!$sharedFolder) {
+                        $newSharedFolder = new FolderShare();
+                        $newSharedFolder->folder_id = $folderId;
+                        $newSharedFolder->user_id = $user->id;
+                        $newSharedFolder->owner_id = $currentUser->id;
+                        $newSharedFolder->save();
+                    }
+                }
+            }
+
+            return redirect()->back()->with([
+                'message' => 'Files shared successfully'
+            ]);
+        } else {
+            return redirect()->back()->withErrors([
+                'message' => 'User not found'
+            ]);
+        }
     }
 
 
@@ -551,63 +693,6 @@ class FileManagerController extends Controller
         }
     }
 
-    public function uploadFile(Request $request): RedirectResponse
-    {
-        $user = $request->user();
-
-        if (!($user->can_write_folder))
-            abort(403);
-
-//        $validated = $request->validate([
-//            'file' => 'required|file',
-//            'currentFolderId' => 'required'
-//        ]);
-
-        /* dopo il check $validated sono sicuro di avere sia 'file' che 'currentFolderId' */
-
-        $files = $request->files->get('files');
-
-        $currentFolderId = intval($request->input('currentFolderId'));
-
-        if (!$files || !$currentFolderId) {
-            abort(403, 'Missing parameters');
-        }
-
-        $currentFolder = Folder::find($currentFolderId);
-
-        foreach ($files as $file) {
-            $fileFullName = $file->getClientOriginalName();
-
-            // verifico se all'interno della cartella esiste già un file con lo stesso nome
-            $fileAlreadyExists = FileManagerHelper::checkFileExistence($fileFullName, $currentFolderId);
-
-            if (!$fileAlreadyExists) {
-                // se non esiste, lo aggiungo normalmente alla cartella corrente
-                $currentFolder->addMedia($file)->toMediaCollection('documents');
-            } else {
-                // se esiste già, aggiungo un timestamp al nome del nuovo file e lo aggiungo alla cartella corrente
-
-                // prendo nome ed estensione del file
-                $fileName = pathinfo($fileFullName, PATHINFO_FILENAME);
-                $fileExt = pathinfo($fileFullName, PATHINFO_EXTENSION);
-
-                // aggiungo il timestamp e ricreo il nome del file
-//                $fileNameTS = $fileName . '-' . time();
-                $fileNameTS = $fileName . '_copy';
-                $fileFullNameTS = $fileNameTS . '.' . $fileExt;
-
-                $currentFolder->addMedia($file)
-                    ->usingFileName($fileFullNameTS)
-                    ->usingName($fileNameTS)
-                    ->toMediaCollection('documents');
-
-//                return redirect()->back()->banner("File '$fileFullNameTS' uploaded successfully");
-            }
-        }
-
-        return redirect()->back()->banner("Files uploaded successfully");
-    }
-
     public function deleteFile(string $fileId, Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -890,4 +975,71 @@ class FileManagerController extends Controller
             return redirect()->back()->dangerBanner('An error occurred when trying to stop sharing this file');
         }
     }
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ///  PRIVATE HELPERS
+//    private function getZipFolder(): string
+//    {
+//        // $this è l'oggetto Folder su cui è stato chiamato getZipFolder()
+//
+//        // primo elemento del path è la cartella corrente
+//        $path = array($this->name);
+//
+//        $zip_file = $this->name . '.zip';
+//
+//        // creo (o sovrascrivo) l'archivio e lo apro
+//        $zipArchive = new ZipArchive();
+//        $zipArchive->open($zip_file, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+//
+//        $this->zipFolderRecursive($this, $zipArchive, $path);
+//
+//        $zipArchive->close();
+//
+//        return $zip_file;
+//    }
+//
+//    /**
+//     * $path è passato per copia perché per ogni sottocartella il percorso cambia
+//     *
+//     * @param Folder $folder
+//     * @param ZipArchive $zipArchive
+//     * @param array $path
+//     * @return void
+//     */
+//    private function zipFolderRecursive(Folder $folder, ZipArchive &$zipArchive, array $path): void
+//    {
+//        $folders = $folder->folders;
+//        $files = $folder->getMedia('documents');
+//
+//        if ($files->isNotEmpty()) {
+//            $this->zipFiles($files, $zipArchive, $path);
+//        }
+//
+//        if($folders->isNotEmpty()) {
+//            foreach ($folders as $subFolder) {
+//                // copia locale del path per arrivare al file
+//                $myPath = $path;
+//
+//                // aggiungo la cartella corrente al path
+//                array_push($myPath, $subFolder->name);
+//
+//                $this->zipFolderRecursive($subFolder, $zipArchive, $myPath);
+//            }
+//        }
+//
+//        if ($folders->isEmpty() && $files->isEmpty()) {
+//            // aggiunta di una cartella vuota
+//            $zipArchive->addEmptyDir(implode('/', $path));
+//        }
+//    }
+//    private function zipFiles(MediaCollection $files, ZipArchive &$zipArchive, array $path): void
+//    {
+//        foreach ($files as $file) {
+//            $filePath = $file->getPath();
+//            $myPath = implode('/', $path) . '/' . $file->file_name;
+//
+//            $zipArchive->addFile($filePath, $myPath);
+//        }
+//    }
 }
