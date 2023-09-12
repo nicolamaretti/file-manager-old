@@ -37,6 +37,7 @@ class FolderResource extends JsonResource
             'fullPath'      => $this->getFullPath(),
             'updated_at'    => $this->updated_at,
             'owner'         => $user->userName,
+            'is_favourite'  => $this->starred,
         ];
     }
 }

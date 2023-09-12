@@ -1,5 +1,5 @@
 <template>
-    <Modal :show="modelValue" @show="onShow()" max-width="lg">
+    <Modal :show="modelValue" @show="onShow" max-width="lg">
         <div class="p-6">
             <!-- Titolo -->
             <h2 class="text-lg font-medium text-gray-900">
@@ -16,9 +16,8 @@
                            class="mt-1 block w-full"
                            :class="form.errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
                            placeholder="Folder Name"
-                           autofocus
-                           @keyup.enter="createFolder()"
-                           @keyup.esc="closeModal()"
+                           @keyup.enter="createFolder"
+                           @keyup.esc="closeModal"
                 />
 
                 <InputError :message="form.errors.name" class="mt-2"/>
@@ -26,13 +25,13 @@
 
             <!-- Bottoni -->
             <div class="mt-6 flex justify-end">
-                <SecondaryButton @click="closeModal()">
+                <SecondaryButton @click="closeModal">
                     Cancel
                 </SecondaryButton>
 
                 <PrimaryButton class="ml-3"
                                :class="{ 'opacity-25': form.processing }"
-                               @click="createFolder()"
+                               @click="createFolder"
                                :disable="form.processing">
                     Submit
                 </PrimaryButton>
@@ -55,9 +54,8 @@ const props = defineProps({
     modelValue: Boolean,
 });
 
+// prendo il currentFolderId dalle props della pagina base
 const page = usePage();
-
-// prendo il currentFoldeId dalle props della pagina base
 const currentFolder = page.props.currentFolder;
 
 const emit = defineEmits(['update:modelValue'])
@@ -77,25 +75,23 @@ function onShow() {
 }
 
 function createFolder() {
-    console.log('Create Folder');
+    console.log('Create Folder', form);
 
-    form.post(route('folder.create'), {
+    form.post(route('createFolder'), {
         preserveState: true,
         onSuccess: (data) => {
-            console.log(data);
+            console.log('createFolderSuccess', data);
 
             closeModal();
 
             // ToDo show success notification
         },
-        onError: (error) => {
-            console.log(error);
+        onError: (errors) => {
+            console.log('createFolderErrors', errors);
 
-            form.reset('newFolderName');
+            form.errors.name = errors.message;
 
-            if (error.folderExistsError) {
-                form.errors.name = 'Folder already exists';
-            }
+            folderNameInput.value.focus();
         }
     })
 }

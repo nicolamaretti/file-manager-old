@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -46,6 +47,11 @@ class Folder extends Model implements HasMedia, Zipable, Recursively
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'id');
+    }
+
+    public function starred() {
+        return $this->hasOne(StarredFolder::class, 'folder_id', 'id')
+            ->where('user_id', Auth::id());
     }
 }

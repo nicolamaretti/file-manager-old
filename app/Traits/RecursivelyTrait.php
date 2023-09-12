@@ -48,7 +48,7 @@ trait RecursivelyTrait
         $this->copyFolderRecursive($this->id, $destinationFolderId);
     }
 
-    public function getAncestors()
+    public function getAncestors(): array
     {
         $userIsAdmin = Auth::user()->is_admin;
 

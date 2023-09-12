@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Media extends Model
 {
@@ -15,4 +16,8 @@ class Media extends Model
         'size',
     ];
 
+    public function starred() {
+        return $this->hasOne(StarredFile::class, 'file_id', 'id')
+            ->where('user_id', Auth::id());
+    }
 }

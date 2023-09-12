@@ -55,9 +55,6 @@ onMounted(() => {
     emitter.on(FILE_DOWNLOAD_STARTED, download);
 });
 
-const page = usePage();
-// const currentFolderId = page.props.currentFolder.data.id;
-
 const fileUploadForm = useForm({
     _method: 'POST',
     files: [],
@@ -105,8 +102,6 @@ function download(downloadObject) {
         'downloadFileIds': downloadObject.downloadFileIds
     }));
 }
-
-console.log('AppLayout', page.props, fileUploadForm);
 
 </script>
 

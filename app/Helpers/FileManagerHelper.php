@@ -20,10 +20,10 @@ class FileManagerHelper
      */
     public static function checkRootFolderExistence(string $folderName): bool
     {
-        $folder = Folder::where(function ($query) use($folderName){
-            $query->where('name', $folderName)
-                ->whereNull('folder_id');
-        })->get();
+        $folder = Folder::query()
+            ->whereNull('folder_id')
+            ->where('name', $folderName)
+            ->get();
 
         return $folder->isNotEmpty();
     }
@@ -37,7 +37,8 @@ class FileManagerHelper
      */
     public static function checkFolderExistence(string $folderName, int $parentFolderId): bool
     {
-        $folder = Folder::where('name', $folderName)
+        $folder = Folder::query()
+            ->where('name', $folderName)
             ->where('folder_id', $parentFolderId)
             ->get();
 
@@ -53,7 +54,10 @@ class FileManagerHelper
      */
     public static function checkFileExistence(string $fileName, int $folderId): bool
     {
-        $files = Folder::find($folderId)->getMedia('documents')->where('file_name', $fileName);
+        $files = Folder::query()
+            ->find($folderId)
+            ->getMedia('documents')
+            ->where('file_name', $fileName);
 
         return $files->isNotEmpty();
     }
@@ -66,7 +70,7 @@ class FileManagerHelper
      */
     public static function getFilePath(int $fileId): string
     {
-        $file = Media::findOrFail($fileId);
+        $file = Media::query()->findOrFail($fileId);
         $parentId = $file->model_id;
         $path = [];
 
@@ -135,7 +139,7 @@ class FileManagerHelper
      */
     private static function getFilePathRecursive(int $folderId, &$path): void
     {
-        $folder = Folder::findOrFail($folderId);
+        $folder = Folder::query()->findOrFail($folderId);
 
         array_push($path, $folder->id);
 
