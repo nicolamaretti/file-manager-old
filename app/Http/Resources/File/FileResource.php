@@ -25,7 +25,7 @@ class FileResource extends JsonResource
             'size'          => FileManagerHelper::getFileSize($this),
             'mime_type'     => $this->mime_type,
             'updated_at'    => $this->updated_at,
-            'is_favourite'  => $this->is_favourite,
+            'is_favourite'  => FileManagerHelper::fileIsFavourite($this->id),
         ];
     }
 }

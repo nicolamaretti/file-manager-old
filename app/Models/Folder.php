@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use function PHPUnit\Framework\isEmpty;
 
 class Folder extends Model implements HasMedia, Zipable, Recursively
 {
@@ -42,16 +43,35 @@ class Folder extends Model implements HasMedia, Zipable, Recursively
 
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(Folder::class, 'folder_id');
+        return $this->belongsTo(Folder::class, 'folder_id', 'id');
     }
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'id');
+        return $this->belongsTo(User::class, 'id', 'user_id');
     }
 
-    public function starred() {
-        return $this->hasOne(StarredFolder::class, 'folder_id', 'id')
-            ->where('user_id', Auth::id());
+    public function isFavourite(): bool
+    {
+        $folderIsFavourite = StarredFolder::query()
+            ->where('user_id', Auth::id())
+            ->where('folder_id', $this->id)
+            ->first();
+
+        if ($folderIsFavourite) {
+            return true;
+        }
+
+        return false;
     }
+
+//    public function starred() {
+//        return $this->hasOne(StarredFolder::class, 'folder_id', 'id')
+//            ->where('user_id', Auth::id());
+//    }
+//
+//    public function shared(): HasMany
+//    {
+//        return $this->hasMany(FolderShare::class, 'folder_id', 'id');
+//    }
 }

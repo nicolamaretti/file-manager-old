@@ -36,6 +36,7 @@ Route::middleware([
 
     // NEW
     Route::get('/newMyFiles', [FileManagerController::class, 'newMyFiles'])->name('newMyFiles');
+    Route::get('/favourites', [FileManagerController::class, 'favourites'])->name('favourites');
     Route::get('/newSharedWithMe', [FileManagerController::class, 'newSharedWithMe'])->name('newSharedWithMe');
     Route::get('/newSharedByMe', [FileManagerController::class, 'newSharedByMe'])->name('newSharedByMe');
     Route::post('/create/folder', [FileManagerController::class, 'createFolder'])->name('createFolder');

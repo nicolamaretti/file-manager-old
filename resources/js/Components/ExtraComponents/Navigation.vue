@@ -12,6 +12,7 @@
 
             <div class="py-3">
                 <NavLink :href="route('newMyFiles')" :active="route().current('newMyFiles')">My Files</NavLink>
+                <NavLink :href="route('favourites')" :active="route().current('favourites')">Favourites</NavLink>
                 <NavLink :href="route('newSharedWithMe')" :active="route().current('newSharedWithMe')">Shared With Me</NavLink>
                 <NavLink :href="route('newSharedByMe')" :active="route().current('newSharedByMe')">Shared By Me</NavLink>
             </div>

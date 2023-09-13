@@ -33,86 +33,63 @@ class FileManagerController extends Controller
     {
         $user = $request->user();
         $rootFolderId = $user->root_folder_id;
-
-//        $onlyFavourites = (bool) $request->input('onlyFavourites');
-//        dd($onlyFavourites);
-
-        $isUserAdmin = (bool)$user->is_admin;
-        $folders = null;
+        $isUserAdmin = (bool) $user->is_admin;
         $files = null;
         $parent = null;
         $currentFolder = null;
 
         // array dei nomi delle cartelle per il breadcrumb
         $ancestors = [];
+        $folderId = intval($request->input('folderId'));
 
-//        $userOrganizationAdmin = $user->can('view-organization-level');
-//        $userDepartment = $user->can('view-department-level');
+        if (!$folderId) {
+            /* non è stata selezionata una folder da aprire, quindi ritorno la root folder dell'utente */
+            $folderToOpenId = $rootFolderId;
+        } else {
+            $folderToOpenId = $folderId;
+        }
 
-        /* se sono admin visualizzo tutte le cartelle root */
-        if ($isUserAdmin) {
+        if ($isUserAdmin && !$folderId) {
+            /* se sono admin visualizzo tutte le cartelle root */
             $folders = Folder::query()
                 ->whereNull('folder_id')
-                ->with('folders')
                 ->orderBy('name', 'ASC')
                 ->get();
 
             $folders = FolderResource::collection($folders);
         } else {
             /* se è utente normale ritorno la folder di root con le sue cartelle e i suoi file */
-            $currentFolder = Folder::query()
-                ->with('folders')
-                ->findOrFail($rootFolderId);
-
-            // folders figlie
-            $folders = $currentFolder->folders->sortBy('name');
-
-            // files
-            $files = Media::query()
-                ->where('model_id', $currentFolder->id)
-                ->orderBy('file_name', 'ASC')
-                ->get();
-
-            $currentFolder = FolderResource::make($currentFolder);
-            $folders = FolderResource::collection($folders);
-            $files = FileResource::collection($files);
-        }
-
-        // se la request ha il parametro folderId vuol dire che è stata selezionata una cartella: recupero le sue sottocartelle e i file
-        $folderId = intval($request->input('folderId'));
-
-        if ($folderId) {
-            $currentFolder = Folder::query()
-                ->with('folders')
-                ->find($folderId);
-
-            // cartelle figlie da visualizzare
-            $folders = $currentFolder->folders->sortBy('name');
-
-            $files = Media::query()
-                ->where('model_id', $folderId)
-                ->orderBy('file_name', 'ASC')
-                ->get();
-
-            $currentFolder = FolderResource::make($currentFolder);
-            $folders = FolderResource::collection($folders);
-            $files = FileResource::collection($files);
-
+            $currentFolder = Folder::query()->findOrFail($folderToOpenId);
             $parent = $currentFolder->parent;
 
+            /* folders */
+            $folders = Folder::query()
+                ->where('folder_id', $folderToOpenId)
+                ->orderBy('name', 'ASC')
+                ->get();
+
+            /* files */
+            $files = Media::query()
+                ->where('model_id', $folderToOpenId)
+                ->orderBy('file_name', 'ASC')
+                ->get();
+
+            $currentFolder = FolderResource::make($currentFolder);
+            $folders = FolderResource::collection($folders);
+            $files = FileResource::collection($files);
             $ancestors = $currentFolder->getAncestors();
 
-            // se si sta tentando di accedere ad una cartella che non è presente nella root folder dell'utente o in una delle sue sottocartelle, ritorno errore
-            if ($rootFolderId != null) {
-                // cerco la rootFolder nel db
-                $rootFolder = Folder::with('folders')->find($rootFolderId);
-
-                $rootFolderChildrenIds = $rootFolder->getChildrenIds();
-
-                if (!in_array($folderId, $rootFolderChildrenIds)) {
-                    abort(403);
-                }
-            }
+            /* se un utente sta tentando di accedere ad una cartella che non gli appartiene, ritorno errore */
+//            if (!$isUserAdmin) {
+//                // cerco la rootFolder nel db
+//                $rootFolder = Folder::query()->find($rootFolderId);
+//
+//                $rootFolderChildrenIds = $rootFolder->getChildrenIds();
+//
+//                if (in_array($folderId, $rootFolderChildrenIds)) {
+//                    abort(403);
+//                }
+//            }
         }
 
         return Inertia::render('NewMyFiles', [
@@ -123,6 +100,65 @@ class FileManagerController extends Controller
             'files' => $files,
             'parent' => $parent,
             'ancestors' => $ancestors,
+        ]);
+    }
+
+    public function favourites(Request $request): InertiaResponse
+    {
+        $user = $request->user();
+        $rootFolderId = $user->root_folder_id;
+        $isUserAdmin = $user->is_admin;
+
+        $folderId = intval($request->input('folderId'));
+
+        if (!$folderId) {
+            /* non è stata selezionata una folder da aprire, quindi ritorno la root folder dell'utente */
+            $folderToOpenId = $rootFolderId;
+        } else {
+            $folderToOpenId = $folderId;
+        }
+
+
+//        if ($user->is_admin) {
+//            $folders = Folder::query()
+//                ->select('folders.*')
+//                ->whereNull('folder_id')
+//                ->with('folders')
+//                ->join('starred_folders', 'starred_folders.folder_id', '=', 'folders.id')
+//                ->orderBy('name', 'ASC')
+//                ->get();
+//        } else {
+//
+//        }
+
+        $currentFolder = Folder::query()->findOrFail($folderToOpenId);
+
+        /* favourite folders */
+        $folders = Folder::query()
+            ->select('folders.*')
+            ->where('folders.folder_id', $folderToOpenId)
+            ->join('starred_folders', 'starred_folders.folder_id', '=', 'folders.id')
+            ->orderBy('name', 'ASC')
+            ->get();
+
+        /* favourite files */
+        $files = Media::query()
+            ->select('media.*')
+            ->where('model_id', $folderToOpenId)
+            ->join('starred_files', 'starred_files.file_id', '=', 'media.id')
+            ->orderBy('file_name', 'ASC')
+            ->get();
+
+        $currentFolder = FolderResource::make($currentFolder);
+        $folders = FolderResource::collection($folders);
+        $files = FileResource::collection($files);
+        $ancestors = $currentFolder->getAncestors();
+
+        return Inertia::render('Favourites', [
+            'currentFolder' => $currentFolder,
+            'folders'       => $folders,
+            'files'         => $files,
+            'ancestors'     => $ancestors,
         ]);
     }
 
@@ -408,7 +444,6 @@ class FileManagerController extends Controller
             /* addRemove file */
 
             $starredFile = StarredFile::query()
-                ->with('file')
                 ->where('file_id', $fileId)
                 ->where('user_id', $userId)
                 ->first();
@@ -418,17 +453,7 @@ class FileManagerController extends Controller
                 $newStarredFile->file_id = $fileId;
                 $newStarredFile->user_id = $userId;
                 $newStarredFile->save();
-
-                $file = Media::query()->find($fileId);
-
-                $file->is_favourite = true;
-                $file->save();
             } else {
-                $file = $starredFile->file;
-
-                $file->is_favourite = false;
-                $file->save();
-
                 $starredFile->delete();
             }
         }
@@ -437,7 +462,6 @@ class FileManagerController extends Controller
             /* addRemove folder */
 
             $starredFolder = StarredFolder::query()
-                ->with('folder')
                 ->where('folder_id', $folderId)
                 ->where('user_id', $userId)
                 ->first();
@@ -447,17 +471,7 @@ class FileManagerController extends Controller
                 $newStarredFolder->folder_id = $folderId;
                 $newStarredFolder->user_id = $userId;
                 $newStarredFolder->save();
-
-                $folder = Folder::query()->find($folderId);
-
-                $folder->is_favourite = true;
-                $folder->save();
             } else {
-                $folder = $starredFolder->folder;
-
-                $folder->is_favourite = false;
-                $folder->save();
-
                 $starredFolder->delete();
             }
         }

@@ -5,9 +5,11 @@ namespace App\Helpers;
 use App\Http\Resources\File\FileResource;
 use App\Http\Resources\Folder\FolderResource;
 use App\Models\Folder;
+use App\Models\StarredFile;
 use http\Env\Request;
 use Illuminate\Http\File;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class FileManagerHelper
@@ -81,6 +83,12 @@ class FileManagerHelper
         return implode('/', $path) . '/' . $file->file_name;
     }
 
+    /**
+     * Calcola la dimensione di un file
+     *
+     * @param FileResource $file
+     * @return string
+     */
     public static function getFileSize(FileResource $file): string
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -88,6 +96,26 @@ class FileManagerHelper
         $power = $file->size > 0 ? floor(log($file->size, 1024)) : 0;
 
         return number_format($file->size / pow(1024, $power), 2, '.', ',') . ' ' . $units[$power];
+    }
+
+    /**
+     * Calcola se un file è marcato come preferito
+     *
+     * @param int $fileId
+     * @return bool
+     */
+    public static function fileIsFavourite(int $fileId): bool
+    {
+        $fileIsFavourite = StarredFile::query()
+            ->where('user_id', Auth::id())
+            ->where('file_id', $fileId)
+            ->first();
+
+        if ($fileIsFavourite) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

@@ -16,8 +16,8 @@ class Media extends Model
         'size',
     ];
 
-    public function starred() {
-        return $this->hasOne(StarredFile::class, 'file_id', 'id')
-            ->where('user_id', Auth::id());
-    }
+//    public function starred() {
+//        return $this->hasOne(StarredFile::class, 'file_id', 'id')
+//            ->where('user_id', Auth::id());
+//    }
 }

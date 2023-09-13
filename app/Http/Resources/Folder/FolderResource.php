@@ -20,7 +20,7 @@ class FolderResource extends JsonResource
      */
     public function toArray(Request $request): array|Arrayable|JsonSerializable
     {
-        $user = DB::table('folders')
+        $user = Folder::query()
             ->join('users', 'users.id', '=', 'folders.user_id')
             ->where('folders.id', $this->id)
             ->select('users.name as userName')
@@ -37,7 +37,7 @@ class FolderResource extends JsonResource
             'fullPath'      => $this->getFullPath(),
             'updated_at'    => $this->updated_at,
             'owner'         => $user->userName,
-            'is_favourite'  => $this->starred,
+            'is_favourite'  => $this->isFavourite(),
         ];
     }
 }
