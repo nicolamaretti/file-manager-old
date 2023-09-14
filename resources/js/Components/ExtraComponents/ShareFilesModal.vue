@@ -1,7 +1,7 @@
 <template>
     <DialogModal :show="props.modelValue" @show="onShow" max-width=lg>
         <template #title>
-            Share Files
+            Share
         </template>
         <template #content>
             <InputLabel for="shareEmail" value="Enter Email Address" class="sr-only"/>

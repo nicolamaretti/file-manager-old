@@ -11,8 +11,10 @@
                                   :file-id="Number(selectedFileIds[0])"
                                   @restore="onRestore"/>
                 <CopyFileButton class="mr-3"
-                                v-if="(selectedFolderIds.length === 1 && selectedFileIds.length === 0) || (selectedFolderIds.length === 0 && selectedFileIds.length === 1)"
-                                @restore="onRestore"/>
+                                v-if="(selectedFolderIds.length > 0 || selectedFileIds.length > 0)"
+                                :copy-file-ids="selectedFileIds"
+                                :copy-folder-ids="selectedFolderIds"
+                                @copy="onRestore"/>
                 <MoveFilesButton class="mr-3"
                                  v-if="(selectedFolderIds.length > 0 || selectedFileIds.length > 0)"
                                  :move-file-ids="selectedFileIds"
@@ -323,4 +325,5 @@ function onRestore() {
     selectedFiles.value = {};
 }
 
+console.log(props)
 </script>

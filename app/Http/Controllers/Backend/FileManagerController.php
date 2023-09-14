@@ -667,6 +667,42 @@ class FileManagerController extends Controller
         }
     }
 
+    public function copy(Request $request): RedirectResponse
+    {
+        $fileIds = $request->input('copyFileIds');
+        $folderIds = $request->input('copyFolderIds');
+        $currentFolderId = intval($request->input('currentFolderId'));
+        $currentFolder = Folder::query()->find($currentFolderId);
+
+        if ($folderIds) {
+            Folder::query()
+                ->whereIn('id', $folderIds)
+                ->get()
+                ->each(function ($folder) {
+                    $folder->copyFolder();
+                });
+        }
+
+        if ($fileIds) {
+            Media::query()
+                ->whereIn('id', $fileIds)
+                ->get()
+                ->each(function ($file) use($currentFolder) {
+                    $fileExt = pathinfo($file->file_name, PATHINFO_EXTENSION);
+                    $newFileName = $file->name . '-copy';
+
+                    $file->name = $newFileName;
+                    $file->file_name = $newFileName . '.' . $fileExt;
+
+                    $file->copy($currentFolder, 'documents');
+                });
+        }
+
+        return redirect()->back()->with([
+            'message' => 'Files copied correctly'
+        ]);
+    }
+
     public function move()
     {
         dd('move');
@@ -686,11 +722,6 @@ class FileManagerController extends Controller
         return Inertia::render('MoveFilesModalTable', [
             'folders' => $folders,
         ]);
-    }
-
-    public function copy()
-    {
-
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

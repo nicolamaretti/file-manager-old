@@ -46,21 +46,23 @@ import DialogModal from "@/Components/DialogModal.vue";
 
 const props = defineProps({
     modelValue: Boolean,
+    copyFolderIds: Array,
+    copyFileIds: Array,
 });
+
+const emit = defineEmits(['update:modelValue', 'copy']);
 
 // prendo il currentFoldeId dalle props della pagina base
 const page = usePage();
-const currentFolder = page.props.currentFolder;
-
-const emit = defineEmits(['update:modelValue', 'copy']);
 
 const newFolderNameInput = ref(null);
 
 const form = useForm({
     _method: 'POST',
     newFolderName: '',
-    currentFolderId: currentFolder ? currentFolder.data.id : page.props.auth.user.root_folder_id,
-    copy: true,
+    copyFileIds: [],
+    copyFolderIds: [],
+    currentFolderId: null,
 });
 
 function onShow() {
@@ -70,10 +72,14 @@ function onShow() {
 function copy() {
     console.log('Copy');
 
-    form.post(route('createFolder'), {
+    form.currentFolderId = page.props.currentFolder ? page.props.currentFolder.data.id : page.props.auth.user.root_folder_id;
+    form.copyFileIds = props.copyFileIds;
+    form.copyFolderIds = props.copyFolderIds;
+
+    form.post(route('copy'), {
         preserveState: true,
         onSuccess: (data) => {
-            console.log(data);
+            console.log('copySuccess', data);
 
             emit('copy');
 
@@ -82,13 +88,13 @@ function copy() {
             // ToDo show success notification
         },
         onError: (error) => {
-            console.log(error);
+            console.log('copyError', error);
 
             form.errors.name = error.message;
 
             newFolderNameInput.value.focus();
         }
-    })
+    });
 }
 
 function closeModal() {
@@ -96,6 +102,4 @@ function closeModal() {
     form.clearErrors();
     form.reset();
 }
-
-console.log(currentFolder);
 </script>

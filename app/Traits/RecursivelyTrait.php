@@ -35,8 +35,13 @@ trait RecursivelyTrait
         return $this->getFullPathRecursive($this, $path);
     }
 
-    public function copyFolder(int $destinationFolderId): void
+    public function copyFolder(int $destinationFolderId = null): void
     {
+        if (!$destinationFolderId) {
+            /* se non è specificata la folder di destinazione, copio la folder nella folder padre in cui si trova */
+            $destinationFolderId = $this->folder_id;
+        }
+
         /* controllo che la cartella di destinazione non sia una cartella figlia di quella
          * che si sta tentando di copiare */
         $childrenIds = $this->getChildrenIds();
@@ -112,27 +117,28 @@ trait RecursivelyTrait
         }
     }
 
-    private function copyFolderRecursive(int $currentFolderId, int $destinationFolderId): void
+    private function copyFolderRecursive(int $currentFolderId, int $parentFolderId): void
     {
-        $folderA = Folder::with('folders')->find($currentFolderId);
-        $folderB = Folder::find($destinationFolderId);
+        $folder = Folder::query()
+            ->with('folders')
+            ->find($currentFolderId);
 
-        $folderAChildren = $folderA->folders;
-        $folderAFiles = $folderA->getMedia('documents');
+        $folderChildren = $folder->folders;
+        $folderFiles = $folder->getMedia('documents');
 
         $newFolder = new Folder();
-        $newFolder->name = $folderA->name;
-        $newFolder->folder_id = $folderB->id;
-        $newFolder->user_id = $folderA->user_id;
+        $newFolder->name = $folder->name . '_copy';
+        $newFolder->folder_id = $parentFolderId;
+        $newFolder->user_id = $folder->user_id;
         $newFolder->uuid = Str::uuid();
         $newFolder->save();
 
-        foreach ($folderAFiles as $file) {
+        foreach ($folderFiles as $file) {
             $file->copy($newFolder, 'documents');
         }
 
-        if ($folderAChildren->isNotEmpty()) {
-            foreach ($folderAChildren as $child) {
+        if ($folderChildren->isNotEmpty()) {
+            foreach ($folderChildren as $child) {
                 $this->copyFolderRecursive($child->id, $newFolder->id);
             }
         }

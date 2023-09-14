@@ -21,14 +21,8 @@ import ConfirmationDialog from "@/Components/ExtraComponents/ConfirmationDialog.
 import {router} from "@inertiajs/vue3";
 
 const props = defineProps({
-    deleteFolderIds: {
-        type: Array,
-        required: false,
-    },
-    deleteFileIds: {
-        type: Array,
-        required: false,
-    },
+    deleteFolderIds: Array,
+    deleteFileIds: Array,
 });
 
 const emit = defineEmits(['delete']);

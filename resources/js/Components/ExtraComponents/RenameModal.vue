@@ -1,7 +1,7 @@
 <template>
     <DialogModal :show="modelValue" @show="onShow" max-width="lg">
         <template #title>
-            Rename File
+            Rename
         </template>
         <template #content>
             <InputLabel for="newName" value="Folder Name" class="sr-only"/>
