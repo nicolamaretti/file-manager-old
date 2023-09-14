@@ -56,14 +56,13 @@ const props = defineProps({
 
 // prendo il currentFolderId dalle props della pagina base
 const page = usePage();
-const currentFolder = page.props.currentFolder;
 
 const emit = defineEmits(['update:modelValue'])
 
 const form = useForm({
     _method: 'POST',
     newFolderName: '',
-    currentFolderId: currentFolder ? currentFolder.data.id : page.props.auth.user.root_folder_id,
+    currentFolderId: null,
 });
 
 const folderNameInput = ref(null)
@@ -75,6 +74,8 @@ function onShow() {
 }
 
 function createFolder() {
+    form.currentFolderId = page.props.currentFolder ? page.props.currentFolder.data.id : page.props.auth.user.root_folder_id;
+
     console.log('Create Folder', form);
 
     form.post(route('createFolder'), {
@@ -101,5 +102,4 @@ function closeModal() {
     form.clearErrors();
     form.reset();
 }
-
 </script>

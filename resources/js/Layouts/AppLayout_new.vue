@@ -40,7 +40,7 @@
 
 <script setup>
 import {onMounted, ref} from 'vue';
-import {Head, Link, router, useForm, usePage} from '@inertiajs/vue3';
+import {Head, router, useForm, usePage} from '@inertiajs/vue3';
 import {emitter, FILE_DOWNLOAD_STARTED, FILE_UPLOAD_STARTED} from "@/event-bus.js";
 import Navigation from "@/Components/ExtraComponents/Navigation.vue";
 import SearchForm from "@/Components/ExtraComponents/SearchForm.vue";
@@ -54,6 +54,8 @@ onMounted(() => {
     emitter.on(FILE_UPLOAD_STARTED, uploadFiles);
     emitter.on(FILE_DOWNLOAD_STARTED, download);
 });
+
+const page = usePage();
 
 const fileUploadForm = useForm({
     _method: 'POST',
