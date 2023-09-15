@@ -202,8 +202,6 @@ class FileManagerController extends Controller
             }
         }
 
-//        dd($sharedFolders, $sharedFiles);
-
         return Inertia::render('NewSharedWithMe', [
             'folders' => $sharedFolders,
             'files' => $sharedFiles,
@@ -219,20 +217,47 @@ class FileManagerController extends Controller
             ->where('fs.owner_id', $user->id)
             ->join('folders', 'fs.folder_id', '=', 'folders.id')
             ->join('users', 'fs.user_id', '=', 'users.id')
-            ->select('fs.id as id', 'folders.name as name', 'users.name as username')
+            ->select('fs.id as id', 'folders.id as folderId', 'folders.name as name', 'users.name as username')
             ->orderBy('name', 'ASC')
             ->orderBy('username', 'ASC')
             ->get();
+
+        /* is_favourite ? */
+        foreach ($sharedFolders as $sharedFolder) {
+            $starred = StarredFolder::query()
+                ->where('folder_id', $sharedFolder->folderId)
+                ->where('user_id', $user->id)
+                ->get();
+            if ($starred->isNotEmpty()) {
+                $sharedFolder->is_favourite = true;
+            } else {
+                $sharedFolder->is_favourite = false;
+            }
+        }
 
         $sharedFiles = FileShare::query()
             ->from('file_shares as fs')
             ->where('fs.owner_id', $user->id)
             ->join('media', 'fs.file_id', '=', 'media.id')
             ->join('users', 'fs.user_id', '=', 'users.id')
-            ->select('fs.id as id', 'media.file_name as name', 'users.name as username')
+            ->select('fs.id as id', 'media.id as fileId', 'media.file_name as name', 'users.name as username')
             ->orderBy('name', 'ASC')
             ->orderBy('username', 'ASC')
             ->get();
+
+        /* is_favourite ? */
+        foreach ($sharedFiles as $sharedFile) {
+            $starred = StarredFile::query()
+                ->where('file_id', $sharedFile->fileId)
+                ->where('user_id', $user->id)
+                ->get();
+
+            if ($starred->isNotEmpty()) {
+                $sharedFile->is_favourite = true;
+            } else {
+                $sharedFile->is_favourite = false;
+            }
+        }
 
         return Inertia::render('NewSharedByMe', [
             'folders' => $sharedFolders,
