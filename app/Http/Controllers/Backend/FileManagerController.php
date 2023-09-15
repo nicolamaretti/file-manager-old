@@ -154,7 +154,8 @@ class FileManagerController extends Controller
         $user = $request->user();
 
         /* cerco le folders */
-        $sharedFolders = DB::table('folder_shares as fs')
+        $sharedFolders = FolderShare::query()
+            ->from('folder_shares as fs')
             ->join('folders', 'fs.folder_id', '=', 'folders.id')
             ->join('users', 'fs.user_id', '=', 'users.id')
             ->join('users as users_owner', 'fs.owner_id', '=', 'users_owner.id')
@@ -178,7 +179,8 @@ class FileManagerController extends Controller
         }
 
         /* cerco i files */
-        $sharedFiles = DB::table('file_shares as fs')
+        $sharedFiles = FileShare::query()
+            ->from('file_shares as fs')
             ->join('media', 'fs.file_id', '=', 'media.id')
             ->join('users', 'fs.owner_id', '=', 'users.id')
             ->where('fs.user_id', $user->id)
@@ -212,48 +214,30 @@ class FileManagerController extends Controller
     {
         $user = $request->user();
 
-        /* folders condivise dall'utente che fa la richiesta */
-        $sharedFolders = DB::table('folder_shares as fs')
+        $sharedFolders = FolderShare::query()
+            ->from('folder_shares as fs')
+            ->where('fs.owner_id', $user->id)
             ->join('folders', 'fs.folder_id', '=', 'folders.id')
             ->join('users', 'fs.user_id', '=', 'users.id')
-            ->where('folders.user_id', $user->id)
             ->select('fs.id as id', 'folders.name as name', 'users.name as username')
             ->orderBy('name', 'ASC')
             ->orderBy('username', 'ASC')
             ->get();
 
-        /* files condivisi dall'utente che fa la richiesta */
+        $sharedFiles = FileShare::query()
+            ->from('file_shares as fs')
+            ->where('fs.owner_id', $user->id)
+            ->join('media', 'fs.file_id', '=', 'media.id')
+            ->join('users', 'fs.user_id', '=', 'users.id')
+            ->select('fs.id as id', 'media.file_name as name', 'users.name as username')
+            ->orderBy('name', 'ASC')
+            ->orderBy('username', 'ASC')
+            ->get();
 
-        // 1) trovo la root folder dell'utente e tutte le sue figlie
-        $userRootFolderId = $user->root_folder_id;
-
-        if (!$userRootFolderId) {
-            // sono utente admin
-            return Inertia::render('NewSharedByMe', [
-                'folders' => [],
-                'files' => [],
-            ]);
-
-        } else {
-            // sono utente normale
-            $userRootFolder = Folder::query()->findOrFail($userRootFolderId);
-            $childrenFolderIds = $userRootFolder->getChildrenIds();
-
-            // 2) estraggo i files dell'utente corrente che fanno parte dell'albero di cartelle trovato sopra e che sono is_shared
-            $sharedFiles = DB::table('file_shares as fs')
-                ->join('media', 'fs.file_id', '=', 'media.id')
-                ->join('users', 'fs.user_id', '=', 'users.id')
-                ->whereIn('media.model_id', $childrenFolderIds)
-                ->select('fs.id as id', 'media.file_name as name', 'users.name as username')
-                ->orderBy('name', 'ASC')
-                ->orderBy('username', 'ASC')
-                ->get();
-
-            return Inertia::render('NewSharedByMe', [
-                'folders' => $sharedFolders,
-                'files' => $sharedFiles,
-            ]);
-        }
+        return Inertia::render('NewSharedByMe', [
+            'folders' => $sharedFolders,
+            'files' => $sharedFiles,
+        ]);
     }
 
     public function createFolder(Request $request): RedirectResponse
