@@ -12,21 +12,15 @@ use App\Models\FolderShare;
 use App\Models\StarredFile;
 use App\Models\StarredFolder;
 use App\Models\User;
-use Exception;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
-use RuntimeException;
-use Spatie\MediaLibrary\MediaCollections\Models\Collections\MediaCollection;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use Symfony\Component\Process\Process;
-use ZipArchive;
-use function Sodium\add;
-use function Termwind\render;
 
 class FileManagerController extends Controller
 {
@@ -242,7 +236,7 @@ class FileManagerController extends Controller
 
         } else {
             // sono utente normale
-            $userRootFolder = Folder::findOrFail($userRootFolderId);
+            $userRootFolder = Folder::query()->findOrFail($userRootFolderId);
             $childrenFolderIds = $userRootFolder->getChildrenIds();
 
             // 2) estraggo i files dell'utente corrente che fanno parte dell'albero di cartelle trovato sopra e che sono is_shared
@@ -345,7 +339,7 @@ class FileManagerController extends Controller
             abort(403, 'Missing parameters');
         }
 
-        $currentFolder = Folder::find($currentFolderId);
+        $currentFolder = Folder::query()->find($currentFolderId);
 
         foreach ($files as $file) {
             $fileFullName = $file->getClientOriginalName();
@@ -365,7 +359,7 @@ class FileManagerController extends Controller
 
                 // aggiungo il timestamp e ricreo il nome del file
 //                $fileNameTS = $fileName . '-' . time();
-                $fileNameTS = $fileName . '_copy';
+                $fileNameTS = $fileName . '-copy';
                 $fileFullNameTS = $fileNameTS . '.' . $fileExt;
 
                 $currentFolder->addMedia($file)
@@ -416,6 +410,7 @@ class FileManagerController extends Controller
 
     public function download(Request $request)
     {
+        dd($request);
         $user = $request->user();
 
         $fileIds = $request->input('downloadFileIds');
@@ -452,12 +447,12 @@ class FileManagerController extends Controller
     public function addRemoveFavourites(Request $request): RedirectResponse
     {
         $userId = $request->user()->id;
-        $fileId = $request->input('fileId');
-        $folderId = $request->input('folderId');
+        $fileId = intval($request->input('fileId'));
+        $folderId = intval($request->input('folderId'));
 
         /* ad ogni request, c'è solo uno tra fileId e folderId */
 
-        if ($fileId) {
+        if ($fileId != 0) {
             /* addRemove file */
 
             $starredFile = StarredFile::query()
@@ -475,7 +470,7 @@ class FileManagerController extends Controller
             }
         }
 
-        if ($folderId) {
+        if ($folderId != 0) {
             /* addRemove folder */
 
             $starredFolder = StarredFolder::query()
@@ -599,7 +594,7 @@ class FileManagerController extends Controller
 
         /* c'è fileId o folderId, non entrambi */
 
-        if ($fileId) {
+        if ($fileId != 0) {
             /* RENAME FILE */
 
             /* controllo se all'interno della cartella in cui si trova il file esiste già un
@@ -631,7 +626,6 @@ class FileManagerController extends Controller
             /* RENAME FOLDER */
             $folder = Folder::query()->find($folderId);
             $parent = $folder->parent;
-            $folderAlreadyExists = null;
 
             if (!$parent) {
                 /* se parent è null significa che si vuole rinominare una root folder,
@@ -673,6 +667,10 @@ class FileManagerController extends Controller
         $folderIds = $request->input('copyFolderIds');
         $currentFolderId = intval($request->input('currentFolderId'));
         $currentFolder = Folder::query()->find($currentFolderId);
+
+        if (!$currentFolder) {
+            abort(403, 'Missing parameters');
+        }
 
         if ($folderIds) {
             Folder::query()

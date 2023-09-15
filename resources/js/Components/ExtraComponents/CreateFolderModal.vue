@@ -1,105 +1,93 @@
 <template>
-    <Modal :show="modelValue" @show="onShow" max-width="lg">
-        <div class="p-6">
-            <!-- Titolo -->
-            <h2 class="text-lg font-medium text-gray-900">
-                Create New Folder
-            </h2>
+    <DialogModal :show="modelValue" max-width="lg">
+        <template #title>
+            Create New Folder
+        </template>
+        <template #content>
+            <InputLabel for="folderName" value="Folder Name" class="sr-only"/>
 
-            <!-- Input -->
-            <div class="mt-6">
-                <InputLabel for="folderName" value="Folder Name" class="sr-only"/>
+            <TextInput type="text"
+                       ref="folderNameInput"
+                       v-model="folderName"
+                       id="folderName"
+                       class="mt-1 block w-full"
+                       :class="errorMessage ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                       placeholder="Folder Name"
+                       @keyup.enter="createFolder"
+                       @keyup.esc="closeModal"
+            />
 
-                <TextInput type="text"
-                           ref="folderNameInput"
-                           id="folderName" v-model="form.newFolderName"
-                           class="mt-1 block w-full"
-                           :class="form.errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                           placeholder="Folder Name"
-                           @keyup.enter="createFolder"
-                           @keyup.esc="closeModal"
-                />
+            <InputError :message="errorMessage" class="mt-2"/>
+        </template>
+        <template #footer>
+            <SecondaryButton @click="closeModal">
+                Cancel
+            </SecondaryButton>
 
-                <InputError :message="form.errors.name" class="mt-2"/>
-            </div>
-
-            <!-- Bottoni -->
-            <div class="mt-6 flex justify-end">
-                <SecondaryButton @click="closeModal">
-                    Cancel
-                </SecondaryButton>
-
-                <PrimaryButton class="ml-3"
-                               :class="{ 'opacity-25': form.processing }"
-                               @click="createFolder"
-                               :disable="form.processing">
-                    Submit
-                </PrimaryButton>
-            </div>
-        </div>
-    </Modal>
+            <PrimaryButton class="ml-3"
+                           @click="createFolder">
+                Submit
+            </PrimaryButton>
+        </template>
+    </DialogModal>
 </template>
 
 <script setup>
-import {router, useForm, usePage} from "@inertiajs/vue3";
-import {nextTick, ref} from "vue";
-import Modal from "@/Components/Modal.vue";
+import {router, usePage} from "@inertiajs/vue3";
+import {ref} from "vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
 import InputError from "@/Components/InputError.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
+import DialogModal from "@/Components/DialogModal.vue";
 
+// Props & Emit
 const props = defineProps({
     modelValue: Boolean,
 });
 
+const emit = defineEmits(['update:modelValue'])
+
+// Refs
+const folderNameInput = ref(null);
+const folderName = ref('');
+const errorMessage = ref('');
+
 // prendo il currentFolderId dalle props della pagina base
 const page = usePage();
 
-const emit = defineEmits(['update:modelValue'])
-
-const form = useForm({
-    _method: 'POST',
-    newFolderName: '',
-    currentFolderId: null,
-});
-
-const folderNameInput = ref(null)
-
-function onShow() {
-    console.log('onShow');
-
-    nextTick(() => folderNameInput.value.focus())
-}
-
+// Methods
 function createFolder() {
-    form.currentFolderId = page.props.currentFolder ? page.props.currentFolder.data.id : page.props.auth.user.root_folder_id;
+    console.log('Create Folder',folderName.value);
 
-    console.log('Create Folder', form);
-
-    form.post(route('createFolder'), {
-        preserveState: true,
-        onSuccess: (data) => {
-            console.log('createFolderSuccess', data);
-
-            closeModal();
-
-            // ToDo show success notification
+    router.post(route('createFolder'),
+        {
+            newFolderName: folderName.value,
+            currentFolderId: page.props.currentFolder ? page.props.currentFolder.data.id : page.props.auth.user.root_folder_id
         },
-        onError: (errors) => {
-            console.log('createFolderErrors', errors);
+        {
+            preserveState: true,
+            onSuccess: (data) => {
+                console.log('createFolderSuccess', data);
 
-            form.errors.name = errors.message;
+                closeModal();
 
-            folderNameInput.value.focus();
-        }
-    })
+                // ToDo show success notification
+            },
+            onError: (errors) => {
+                console.log('createFolderErrors', errors);
+
+                errorMessage.value = errors.message;
+
+                folderNameInput.value.focus();
+            }
+        });
 }
 
 function closeModal() {
     emit('update:modelValue');
-    form.clearErrors();
-    form.reset();
+    errorMessage.value = '';
+    folderName.value = '';
 }
 </script>

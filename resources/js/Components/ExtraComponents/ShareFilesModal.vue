@@ -1,5 +1,5 @@
 <template>
-    <DialogModal :show="props.modelValue" @show="onShow" max-width=lg>
+    <DialogModal :show="props.modelValue" max-width=lg>
         <template #title>
             Share
         </template>
@@ -9,20 +9,21 @@
             <TextInput type="text"
                        ref="emailInput"
                        id="shareEmail"
-                       v-model="form.email"
-                       :class="form.errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                       v-model="email"
+                       :class="errorMessage ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
                        class="mt-1 block w-full"
                        placeholder="Enter Email Address"
                        @keyup.enter="share"
             />
 
-            <InputError :message="form.errors.email" class="mt-2"/>
+            <InputError :message="errorMessage" class="mt-2"/>
         </template>
         <template #footer>
-            <SecondaryButton @click="closeModal">Cancel</SecondaryButton>
+            <SecondaryButton @click="closeModal">
+                Cancel
+            </SecondaryButton>
             <PrimaryButton class="ml-3"
-                           :class="{ 'opacity-25': form.processing }"
-                           @click="share" :disable="form.processing">
+                           @click="share">
                 Submit
             </PrimaryButton>
         </template>
@@ -30,18 +31,17 @@
 </template>
 
 <script setup>
-// Imports
 import TextInput from "@/Components/TextInput.vue";
 import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
-import {useForm} from "@inertiajs/vue3";
+import {router, useForm} from "@inertiajs/vue3";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
-import {nextTick, ref} from "vue";
+import {ref} from "vue";
 import DialogModal from "@/Components/DialogModal.vue";
 // import {showSuccessNotification} from "@/event-bus.js";
 
-// Props
+// Props & Emit
 const props = defineProps({
     modelValue: Boolean,
     shareFolderIds: Array,
@@ -50,43 +50,44 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'share']);
 
+// Refs
 const emailInput = ref(null);
+const email = ref('');
+const errorMessage = ref('');
 
-const form = useForm({
-    email: null,
-    shareFolderIds: [],
-    shareFileIds:[],
-});
-
-function onShow() {
-    nextTick(() => emailInput.value.focus());
-}
-
+// Methods
 function share() {
-    form.shareFileIds = props.shareFileIds;
-    form.shareFolderIds = props.shareFolderIds;
+    console.log('Share');
 
-    const email = form.email
-
-    form.post(route('share'), {
-        preserveScroll: true,
-        onSuccess: () => {
-            closeModal();
-            emit('share');
-            form.reset();
-            // showSuccessNotification(`Selected files will be shared to "${email}" if the emails exists in the system`)
+    router.post(route('share'),
+        {
+            email: email.value,
+            shareFileIds: props.shareFileIds,
+            shareFolderIds: props.shareFolderIds
         },
-        onError: (error) => {
-            form.errors.email = error.message;
-            emailInput.value.focus()
-        }
-    });
+        {
+            preserveScroll: true,
+            onSuccess: (data) => {
+                console.log('shareSuccess', data);
+
+                closeModal();
+                emit('share');
+                // ToDo showSuccessNotification(`Selected files will be shared to "${email.value}" if the emails exists in the system`)
+            },
+            onError: (errors) => {
+                console.log('shareError', errors);
+
+                errorMessage.value = errors.message;
+
+                emailInput.value.focus();
+            }
+        });
 }
 
 function closeModal() {
     emit('update:modelValue');
-    form.clearErrors();
-    form.reset();
+    email.value = '';
+    errorMessage.value = '';
 }
 
 // Hooks

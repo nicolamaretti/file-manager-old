@@ -20,28 +20,6 @@
             </PrimaryButton>
         </template>
     </DialogModal>
-<!--    <Modal :show="modelValue" max-width="lg">-->
-<!--        <div class="p-6">-->
-<!--            &lt;!&ndash; Titolo &ndash;&gt;-->
-
-
-<!--            <MoveFilesModalTable/>-->
-
-<!--            &lt;!&ndash; Bottoni &ndash;&gt;-->
-<!--            <div class="mt-6 flex justify-end">-->
-<!--                <SecondaryButton @click="closeModal">-->
-<!--                    Cancel-->
-<!--                </SecondaryButton>-->
-
-<!--                <PrimaryButton class="ml-3"-->
-<!--                               :class="{ 'opacity-25': selected }"-->
-<!--                               @click="move"-->
-<!--                               :disable="selected">-->
-<!--                    Submit-->
-<!--                </PrimaryButton>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </Modal>-->
 </template>
 
 <script setup>

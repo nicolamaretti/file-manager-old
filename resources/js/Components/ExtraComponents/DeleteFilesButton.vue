@@ -31,12 +31,13 @@ const showDeleteDialog = ref(false);
 
 function onDeleteClick() {
     if (!props.deleteFileIds.length && !props.deleteFolderIds.length) {
+        console.log('Please select at least one file to delete');
         // showErrorDialog('Please select at least one file to delete');
 
         return;
     }
-        showDeleteDialog.value = true;
 
+    showDeleteDialog.value = true;
 }
 
 function onDeleteCancel() {
@@ -44,23 +45,25 @@ function onDeleteCancel() {
 }
 
 function onDeleteConfirm() {
+    console.log('Delete');
+
     router.delete(route('delete', {
         deleteFolderIds: props.deleteFolderIds,
         deleteFileIds: props.deleteFileIds
     }), {
-        onSuccess: () => {
+        onSuccess: (data) => {
+            console.log('onDeleteSuccess', data);
+
             showDeleteDialog.value = false;
 
             emit('delete');
 
             // ToDo show success notification
         },
-        onError: (error) => {
-            console.log(error);
+        onError: (errors) => {
+            console.log('onDeleteError', errors);
 
-            // if (error.folderDeletionError) {
-            //     openFolderDeletionErrorModal();
-            // }
+            // ToDo show error dialog
         }
     });
 }

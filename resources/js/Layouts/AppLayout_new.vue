@@ -40,31 +40,23 @@
 
 <script setup>
 import {onMounted, ref} from 'vue';
-import {Head, router, useForm, usePage} from '@inertiajs/vue3';
-import {emitter, FILE_DOWNLOAD_STARTED, FILE_UPLOAD_STARTED} from "@/event-bus.js";
+import {Head, router, usePage} from '@inertiajs/vue3';
+import {emitter, FILE_UPLOAD_STARTED} from "@/event-bus.js";
 import Navigation from "@/Components/ExtraComponents/Navigation.vue";
 import SearchForm from "@/Components/ExtraComponents/SearchForm.vue";
 import UserSettingsDropdown from "@/Components/ExtraComponents/UserSettingsDropdown.vue";
 
+// Props & Emit
 defineProps({
     title: String,
 });
 
-onMounted(() => {
-    emitter.on(FILE_UPLOAD_STARTED, uploadFiles);
-    emitter.on(FILE_DOWNLOAD_STARTED, download);
-});
+// Refs
+const dragOver = ref(false);
 
 const page = usePage();
 
-const fileUploadForm = useForm({
-    _method: 'POST',
-    files: [],
-    currentFolderId: null
-});
-
-const dragOver = ref(false);
-
+// Methods
 function onDragOver() {
     dragOver.value = true;
 }
@@ -79,31 +71,34 @@ function handleDrop(ev) {
     // i file che droppiamo sono all'interno di questo evento
     const files = ev.dataTransfer.files;
 
-    if (!files.length) {
-        return;
-    } else {
+    if (files.length) {
         uploadFiles(files);
     }
 }
 
 function uploadFiles(files) {
-    console.log(files);
+    console.log('Upload');
 
-    fileUploadForm.files = files;
-    fileUploadForm.currentFolderId = page.props.currentFolder.data.id;
-
-    fileUploadForm.post(route('upload'));
+    router.post(route('upload'),
+        {
+            files: files,
+            currentFolderId: page.props.currentFolder.data.id,
+        },
+        {
+            preserveState: true,
+            only: ['files'],
+            onSuccess: (data) => {
+                console.log('uploadSuccess', data);
+            },
+            onError: (errors) => {
+                console.log('uploadError', errors.message);
+            }
+        });
 }
 
-function download(downloadObject) {
-    console.log('Folders to download: ' + downloadObject.downloadFolderIds);
-    console.log('Files to download: ' + downloadObject.downloadFileIds);
-
-    router.visit(route('download', {
-        'downloadFolderIds': downloadObject.downloadFolderIds,
-        'downloadFileIds': downloadObject.downloadFileIds
-    }));
-}
+onMounted(() => {
+    emitter.on(FILE_UPLOAD_STARTED, uploadFiles);
+});
 
 </script>
 

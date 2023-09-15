@@ -142,13 +142,12 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref} from "vue";
-import {router, useForm, usePage} from "@inertiajs/vue3";
+import {computed, ref} from "vue";
+import {router} from "@inertiajs/vue3";
 import AppLayout_new from "@/Layouts/AppLayout_new.vue";
 import ShareFilesButton from "@/Components/ExtraComponents/ShareFilesButton.vue";
 import DownloadFilesButton from "@/Components/ExtraComponents/DownloadFilesButton.vue";
 import DeleteFilesButton from "@/Components/ExtraComponents/DeleteFilesButton.vue";
-import Breadcrumb from "@/Components/MyComponents/Breadcrumb.vue";
 import Checkbox from "@/Components/Checkbox.vue";
 import FileIcon from "@/Components/Icons/FileIcon.vue";
 import FolderIcon from "@/Components/Icons/FolderIcon.vue";
@@ -156,7 +155,7 @@ import RenameFileButton from "@/Components/ExtraComponents/RenameFileButton.vue"
 import CopyFileButton from "@/Components/ExtraComponents/CopyFileButton.vue";
 import MoveFilesButton from "@/Components/ExtraComponents/MoveFilesButton.vue";
 
-// Props
+// Props & Emit
 const props = defineProps({
     folders: Object,
     files: Object,
@@ -171,31 +170,25 @@ const selectedFolders = ref({});
 const selectedFiles = ref({});
 const allSelected = ref(false);
 
-const addRemoveFavouritesForm = useForm({
-    _method: 'POST',
-    'folderId': null,
-    'fileId': null,
-});
+// function openFolder(folderId = null) {
+//     router.get(route('favourites'), {
+//         'folderId': folderId,
+//     }, {
+//         preserveScroll: true,
+//         preserveState:true,
+//         onSuccess: (data) => {
+//             console.log('openFolderSuccess', data)
+//             // openFolderForm.reset();
+//         },
+//         onError: (errors) => {
+//             console.log('openFolderErrors', errors)
+//             // openFolderForm.reset();
+//             // openFolderForm.clearErrors();
+//         }
+//     });
+// }
 
 // Methods
-function openFolder(folderId = null) {
-    router.get(route('favourites'), {
-        'folderId': folderId,
-    }, {
-        preserveScroll: true,
-        preserveState:true,
-        onSuccess: (data) => {
-            console.log('openFolderSuccess', data)
-            // openFolderForm.reset();
-        },
-        onError: (errors) => {
-            console.log('openFolderErrors', errors)
-            // openFolderForm.reset();
-            // openFolderForm.clearErrors();
-        }
-    });
-}
-
 function onSelectAllChange() {
     props.folders.data.forEach(f => {
         selectedFolders.value[f.id] = allSelected.value;
@@ -276,29 +269,33 @@ function onSelectFileCheckboxChange(fileId) {
 }
 
 function addRemoveFavouriteFolder(folderId) {
-    addRemoveFavouritesForm.folderId = folderId;
-
-    sendFavouriteRequest();
+    sendFavouriteRequest(folderId, null);
 }
 
 function addRemoveFavouriteFile(fileId) {
-    addRemoveFavouritesForm.fileId = fileId;
-
-    sendFavouriteRequest();
+    sendFavouriteRequest(null, fileId);
 }
 
-function sendFavouriteRequest() {
-    addRemoveFavouritesForm.post(route('addRemoveFavourites'), {
-        onSuccess: (data) => {
-            console.log(data);
-            addRemoveFavouritesForm.reset();
+function sendFavouriteRequest(folderId, fileId) {
+    console.log('addRemoveFavourite');
+
+    router.post(route('addRemoveFavourites'),
+        {
+            folderId: folderId,
+            fileId: fileId
         },
-        onError: (errors) => {
-            console.log(errors);
-            addRemoveFavouritesForm.reset();
-            addRemoveFavouritesForm.clearErrors();
-        },
-    });
+        {
+            onSuccess: (data) => {
+                console.log('addRemoveFavouriteSuccess', data);
+
+                // ToDo show success notification
+            },
+            onError: (errors) => {
+                console.log('addRemoveFavouriteError', errors);
+
+                // ToDo show error dialog
+            },
+        });
 }
 
 function onRestore() {

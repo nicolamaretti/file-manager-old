@@ -5,26 +5,22 @@
 
             <!-- Bottoni -->
             <div class="flex">
-                <RenameFileButton class="mr-3"
-                                  v-if="(selectedFolderIds.length === 1 && selectedFileIds.length === 0) || (selectedFolderIds.length === 0 && selectedFileIds.length === 1)"
+                <RenameFileButton v-if="(selectedFolderIds.length === 1 && selectedFileIds.length === 0) || (selectedFolderIds.length === 0 && selectedFileIds.length === 1)"
                                   :folder-id="Number(selectedFolderIds[0])"
                                   :file-id="Number(selectedFileIds[0])"
                                   @restore="onRestore"/>
-                <CopyFileButton class="mr-3"
-                                v-if="(selectedFolderIds.length > 0 || selectedFileIds.length > 0)"
+                <CopyFileButton v-if="(selectedFolderIds.length > 0 || selectedFileIds.length > 0)"
                                 :copy-file-ids="selectedFileIds"
                                 :copy-folder-ids="selectedFolderIds"
                                 @copy="onRestore"/>
-                <MoveFilesButton class="mr-3"
-                                 v-if="(selectedFolderIds.length > 0 || selectedFileIds.length > 0)"
+                <MoveFilesButton v-if="(selectedFolderIds.length > 0 || selectedFileIds.length > 0)"
                                  :move-file-ids="selectedFileIds"
                                  :move-folder-ids="selectedFolderIds"
                                  @restore="onRestore"/>
                 <ShareFilesButton :share-file-ids="selectedFileIds"
                                   :share-folder-ids="selectedFolderIds"
                                   @restore="onRestore"/>
-                <DownloadFilesButton class="mr-3"
-                                     :download-file-ids="selectedFileIds"
+                <DownloadFilesButton :download-file-ids="selectedFileIds"
                                      :download-folder-ids="selectedFolderIds"
                                      @download="onRestore"/>
                 <DeleteFilesButton :delete-file-ids="selectedFileIds"
@@ -65,10 +61,10 @@
                     :key="folder.id"
                     :class="(selectedFolders[folder.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
                     class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
-                    @click="$event => toggleSelectFolder(folder.id)"
+                    @click="toggleSelectFolder(folder.id)"
                     @dblclick.prevent="openFolder(folder.id)">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[30px] max-w-[30px] pr-0">
-                        <Checkbox @change="$event => onSelectFolderCheckboxChange(folder.id)"
+                        <Checkbox @change="onSelectFolderCheckboxChange(folder.id)"
                                   v-model="selectedFolders[folder.id]"
                                   :checked="selectedFolders[folder.id] || allSelected"
                                   class="mr-4"/>
@@ -108,9 +104,9 @@
                     :key="file.id"
                     :class="(selectedFiles[file.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
                     class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
-                    @click="$event => toggleSelectFile(file.id)">
+                    @click="toggleSelectFile(file.id)">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[30px] max-w-[30px] pr-0">
-                        <Checkbox @change="$event => onSelectFileCheckboxChange(file.id)"
+                        <Checkbox @change="onSelectFileCheckboxChange(file.id)"
                                   v-model="selectedFiles[file.id]"
                                   :checked="selectedFiles[file.id] || allSelected"
                                   class="mr-4"/>
@@ -157,8 +153,8 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref} from "vue";
-import {router, useForm, usePage} from "@inertiajs/vue3";
+import {computed, ref} from "vue";
+import {router} from "@inertiajs/vue3";
 import AppLayout_new from "@/Layouts/AppLayout_new.vue";
 import ShareFilesButton from "@/Components/ExtraComponents/ShareFilesButton.vue";
 import DownloadFilesButton from "@/Components/ExtraComponents/DownloadFilesButton.vue";
@@ -171,7 +167,7 @@ import RenameFileButton from "@/Components/ExtraComponents/RenameFileButton.vue"
 import CopyFileButton from "@/Components/ExtraComponents/CopyFileButton.vue";
 import MoveFilesButton from "@/Components/ExtraComponents/MoveFilesButton.vue";
 
-// Props
+// Props & Emit
 const props = defineProps({
     currentFolder: Object,
     isUserAdmin: Boolean,
@@ -189,27 +185,20 @@ const selectedFolders = ref({});
 const selectedFiles = ref({});
 const allSelected = ref(false);
 
-const addRemoveFavouritesForm = useForm({
-    _method: 'POST',
-    'folderId': null,
-    'fileId': null,
-});
-
 // Methods
 function openFolder(folderId = null) {
+    console.log('openFolder');
+
     router.get(route('newMyFiles'), {
         'folderId': folderId,
     }, {
         preserveScroll: true,
         preserveState:true,
         onSuccess: (data) => {
-            console.log('openFolderSuccess', data)
-            // openFolderForm.reset();
+            console.log('openFolderSuccess', data);
         },
         onError: (errors) => {
-            console.log('openFolderErrors', errors)
-            // openFolderForm.reset();
-            // openFolderForm.clearErrors();
+            console.log('openFolderErrors', errors);
         }
     });
 }
@@ -294,29 +283,33 @@ function onSelectFileCheckboxChange(fileId) {
 }
 
 function addRemoveFavouriteFolder(folderId) {
-    addRemoveFavouritesForm.folderId = folderId;
-
-    sendFavouriteRequest();
+    sendAddRemoveFavouriteRequest(folderId, null);
 }
 
 function addRemoveFavouriteFile(fileId) {
-    addRemoveFavouritesForm.fileId = fileId;
-
-    sendFavouriteRequest();
+    sendAddRemoveFavouriteRequest(null, fileId);
 }
 
-function sendFavouriteRequest() {
-    addRemoveFavouritesForm.post(route('addRemoveFavourites'), {
-        onSuccess: (data) => {
-            console.log(data);
-            addRemoveFavouritesForm.reset();
+function sendAddRemoveFavouriteRequest(folderId, fileId) {
+    console.log('addRemoveFavourite');
+
+    router.post(route('addRemoveFavourites'),
+        {
+            folderId: folderId,
+            fileId: fileId
         },
-        onError: (errors) => {
-            console.log(errors);
-            addRemoveFavouritesForm.reset();
-            addRemoveFavouritesForm.clearErrors();
-        },
-    });
+        {
+            onSuccess: (data) => {
+                console.log('addRemoveFavouriteSuccess', data);
+
+                // ToDo show success notification
+            },
+            onError: (errors) => {
+                console.log('addRemoveFavouriteError', errors);
+
+                // ToDo show error dialog
+            },
+        });
 }
 
 function onRestore() {
@@ -325,5 +318,5 @@ function onRestore() {
     selectedFiles.value = {};
 }
 
-console.log(props)
+console.log('NewMyFiles', props)
 </script>

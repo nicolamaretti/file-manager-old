@@ -2,6 +2,8 @@
 
 namespace App\Interfaces;
 
+use Illuminate\Http\RedirectResponse;
+
 interface Recursively
 {
     /** Get the current folder children ids (comprende anche l'id della folder corrente)
@@ -16,12 +18,13 @@ interface Recursively
 
     /** Copy the current folder inside another folder
      *  - di default, la folder viene duplicata all'interno della stessa cartella
+     * @param int|null $destinationFolderId
      * @return void
      */
     public function copyFolder(int $destinationFolderId = null): void;
 
     /** Get current folder ancestors
-     * @return void
+     * @return array
      */
     public function getAncestors(): array;
 }

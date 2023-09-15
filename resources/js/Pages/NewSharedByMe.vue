@@ -2,8 +2,7 @@
     <AppLayout_new title="NewSharedByMe">
         <nav class="flex items-center justify-end mb-3 mt-1">
             <div class="flex">
-<!--                <ShareFilesButton class="mr-3"/>-->
-                <DownloadFilesButton class="mr-3"/>
+                <DownloadFilesButton />
                 <DeleteSharedButton :stop-share-file-ids="selectedFileIds"
                                     :stop-share-folder-ids="selectedFolderIds"
                                     @stop-share="onRestore"/>
@@ -219,6 +218,6 @@ function onRestore() {
     selectedFiles.value = {};
 }
 
-console.log(props);
+console.log('NewSharedByMe', props);
 
 </script>

@@ -4,13 +4,14 @@ namespace App\Traits;
 
 use App\Models\Folder;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 trait RecursivelyTrait
 {
     /**
-     * Ottiene tutti gli id delle sottocartelle a partire dall'id cartella dell'oggetto che ha chiamato la funzione
+     * Ottiene l'id della cartella corrente e delle sottocartelle
      *
      * @return array $childrenIds
      */
@@ -18,7 +19,7 @@ trait RecursivelyTrait
     {
         $childrenIds = array();
 
-        $this->getChildrenRecursive($this->id, $childrenIds);
+        $this->getChildrenIdsRecursive($this->id, $childrenIds);
 
         return $childrenIds;
     }
@@ -42,15 +43,27 @@ trait RecursivelyTrait
             $destinationFolderId = $this->folder_id;
         }
 
-        /* controllo che la cartella di destinazione non sia una cartella figlia di quella
-         * che si sta tentando di copiare */
+        /*
+         * controllo che la cartella di destinazione non sia una cartella figlia di quella
+         * che si sta tentando di copiare (rimuovo il primo elemento dell'array che è la folder che sto copiando)
+         */
         $childrenIds = $this->getChildrenIds();
+        array_shift($childrenIds);
 
         if (in_array($destinationFolderId, $childrenIds)) {
-            abort(500);
+            abort(403, 'Permission denied');
         }
 
-        $this->copyFolderRecursive($this->id, $destinationFolderId);
+        /* copia */
+
+        $newFolder = new Folder();
+        $newFolder->name = $this->name . '-copy';
+        $newFolder->folder_id = $destinationFolderId;
+        $newFolder->user_id = $this->user_id;
+        $newFolder->uuid = Str::uuid();
+        $newFolder->save();
+
+        $this->copyFolderRecursive($this, $newFolder);
     }
 
     public function getAncestors(): array
@@ -71,20 +84,21 @@ trait RecursivelyTrait
      * @param array $childrenIds
      * @return void
      */
-    private function getChildrenRecursive(int $folderId, array &$childrenIds): void
+    private function getChildrenIdsRecursive(int $folderId, array &$childrenIds): void
     {
         // aggiungo la folder nell'array da ritornare
-        array_push($childrenIds, $folderId);
+        $childrenIds[] = $folderId;
 
         // mi faccio dare le cartelle figlie di quella corrente
-        $folders = Folder::find($folderId)
+        $subFolders = Folder::query()
+            ->find($folderId)
             ->folders;
 
-        if($folders->isEmpty())
+        if($subFolders->isEmpty())
             return;
         else {
-            foreach ($folders as $subFolder) {
-                $this->getChildrenRecursive($subFolder->id, $childrenIds);
+            foreach ($subFolders as $subFolder) {
+                $this->getChildrenIdsRecursive($subFolder->id, $childrenIds);
             }
         }
     }
@@ -99,47 +113,42 @@ trait RecursivelyTrait
      */
     private function getFullPathRecursive(Folder $folder, array &$path): string
     {
+        // aggiungo la folder corrente al path
+        $path[] = $folder->name;
+
         if($folder->parent === null) {
             // sono nella root folder
-
-            // aggiungo l'ultima folder
-            array_push($path, $folder->name);
 
             // gli elementi nell'array vengono memorizzati "a ritroso" dalla cartella corrente fino alla root, quindi li inverto
             $path = array_reverse($path);
 
             return implode('/', $path);
         } else {
-            // aggiungo la folder corrente al path
-            array_push($path, $folder->name);
-
             return $this->getFullPathRecursive($folder->parent, $path);
         }
     }
 
-    private function copyFolderRecursive(int $currentFolderId, int $parentFolderId): void
+    private function copyFolderRecursive(Folder $currentFolder, Folder $destinationFolder): void
     {
-        $folder = Folder::query()
-            ->with('folders')
-            ->find($currentFolderId);
+        $folderChildren = $currentFolder->folders;
+        $folderFiles = $currentFolder->getMedia('documents');
 
-        $folderChildren = $folder->folders;
-        $folderFiles = $folder->getMedia('documents');
-
-        $newFolder = new Folder();
-        $newFolder->name = $folder->name . '_copy';
-        $newFolder->folder_id = $parentFolderId;
-        $newFolder->user_id = $folder->user_id;
-        $newFolder->uuid = Str::uuid();
-        $newFolder->save();
-
-        foreach ($folderFiles as $file) {
-            $file->copy($newFolder, 'documents');
+        if ($folderFiles->isNotEmpty()) {
+            foreach ($folderFiles as $file) {
+                $file->copy($destinationFolder, 'documents');
+            }
         }
 
         if ($folderChildren->isNotEmpty()) {
-            foreach ($folderChildren as $child) {
-                $this->copyFolderRecursive($child->id, $newFolder->id);
+            foreach ($folderChildren as $childFolder) {
+                $newChildFolder = new Folder();
+                $newChildFolder->name = $childFolder->name;
+                $newChildFolder->folder_id = $destinationFolder->id;
+                $newChildFolder->user_id = $destinationFolder->user_id;
+                $newChildFolder->uuid = Str::uuid();
+                $newChildFolder->save();
+
+                $this->copyFolderRecursive($childFolder, $newChildFolder);
             }
         }
     }

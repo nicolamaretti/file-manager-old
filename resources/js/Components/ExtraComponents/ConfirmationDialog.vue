@@ -21,10 +21,6 @@ import Modal from "@/Components/Modal.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import DangerButton from "@/Components/DangerButton.vue";
 
-// Uses
-
-// Refs
-
 // Props & Emit
 const props = defineProps({
     show: Boolean,
@@ -32,11 +28,5 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['cancel', 'confirm']);
-
-// Computed
-
-// Methods
-
-// Hooks
 
 </script>

@@ -50,24 +50,25 @@ function onDeleteCancel() {
 }
 
 function onDeleteConfirm() {
-    console.log('confirm');
+    console.log('StopSharing');
+
     router.delete(route('stopSharing', {
         stopShareFolderIds: props.stopShareFolderIds,
         stopShareFileIds: props.stopShareFileIds
     }), {
-        onSuccess: () => {
+        onSuccess: (data) => {
+            console.log('stopSharingSuccess', data);
+
             showDeleteDialog.value = false;
 
             emit('stop-share');
 
             // ToDo show success notification
         },
-        onError: (error) => {
-            console.log(error);
+        onError: (errors) => {
+            console.log('stopSharingError', errors);
 
-            // if (error.folderDeletionError) {
-            //     openFolderDeletionErrorModal();
-            // }
+            // ToDo show error dialog
         }
     });
 }

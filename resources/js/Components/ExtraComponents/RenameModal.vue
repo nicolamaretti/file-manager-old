@@ -1,23 +1,24 @@
 <template>
-    <DialogModal :show="modelValue" @show="onShow" max-width="lg">
+    <DialogModal :show="modelValue" max-width="lg">
         <template #title>
             Rename
         </template>
         <template #content>
-            <InputLabel for="newName" value="Folder Name" class="sr-only"/>
+            <InputLabel for="newName" value="New Name" class="sr-only"/>
 
             <TextInput type="text"
                        ref="newNameInput"
-                       id="newName" v-model="form.newName"
+                       id="newName"
+                       v-model="newName"
                        class="mt-1 block w-full"
-                       :class="form.errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                       :class="errorMessage ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
                        placeholder="Name"
                        autofocus
                        @keyup.enter="rename"
                        @keyup.esc="closeModal"
             />
 
-            <InputError :message="form.errors.name" class="mt-2"/>
+            <InputError :message="errorMessage" class="mt-2"/>
         </template>
         <template #footer>
             <SecondaryButton @click="closeModal">
@@ -25,9 +26,7 @@
             </SecondaryButton>
 
             <PrimaryButton class="ml-3"
-                           :class="{ 'opacity-25': form.processing }"
-                           @click="rename"
-                           :disable="form.processing">
+                           @click="rename">
                 Submit
             </PrimaryButton>
         </template>
@@ -35,8 +34,8 @@
 </template>
 
 <script setup>
-import {router, useForm, usePage} from "@inertiajs/vue3";
-import {nextTick, ref} from "vue";
+import {router} from "@inertiajs/vue3";
+import {ref} from "vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
 import InputError from "@/Components/InputError.vue";
@@ -44,6 +43,7 @@ import SecondaryButton from "@/Components/SecondaryButton.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import DialogModal from "@/Components/DialogModal.vue";
 
+// Props & Emit
 const props = defineProps({
     modelValue: Boolean,
     folderId: Number,
@@ -52,54 +52,46 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'rename']);
 
+// Refs
 const newNameInput = ref(null);
+const newName = ref('');
+const errorMessage = ref('');
 
-const form = useForm({
-    _method: 'POST',
-    newName: '',
-    folderId: null,
-    fileId: null,
-});
-
-function onShow() {
-    console.log('onShow');
-
-    nextTick(() => newNameInput.value.focus());
-}
-
+// Methods
 function rename() {
     console.log('Rename');
 
-    form.folderId = props.folderId;
-    form.fileId = props.fileId;
-
-    console.log('pippoooooooo', form.folderId, form.fileId);
-
-    form.post(route('rename'), {
-        preserveState: true,
-        onSuccess: (data) => {
-            console.log(data);
-
-            emit('rename');
-
-            closeModal();
-
-            // ToDo show success notification
+    router.post(route('rename'),
+        {
+            newName: newName.value,
+            folderId: props.folderId,
+            fileId: props.fileId,
         },
-        onError: (error) => {
-            console.log(error);
+        {
+            preserveState: true,
+            onSuccess: (data) => {
+                console.log('renameSuccess', data);
 
-            form.errors.name = error.message;
+                emit('rename');
 
-            newNameInput.value.focus();
-        }
-    });
+                closeModal();
+
+                // ToDo show success notification
+            },
+            onError: (errors) => {
+                console.log('renameError', errors);
+
+                errorMessage.value = errors.message;
+
+                newNameInput.value.focus();
+            }
+        });
 }
 
 function closeModal() {
     emit('update:modelValue');
-    form.clearErrors();
-    form.reset();
+    newName.value = '';
+    errorMessage.value = '';
 }
 
 </script>

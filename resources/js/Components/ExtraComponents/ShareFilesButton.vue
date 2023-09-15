@@ -18,21 +18,18 @@
 import {ref} from "vue";
 import ShareFilesModal from "@/Components/ExtraComponents/ShareFilesModal.vue";
 
+// Props & Emit
 const props = defineProps({
-    shareFolderIds: {
-        type: Array,
-        required: false,
-    },
-    shareFileIds: {
-        type: Array,
-        required: false,
-    },
+    shareFolderIds: Array,
+    shareFileIds: Array,
 });
 
 const emit = defineEmits(['restore']);
 
+// Refs
 const showShareModal = ref(false);
 
+// Methods
 function onClick() {
     if (!props.shareFileIds.length && !props.shareFolderIds.length) {
         return;

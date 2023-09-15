@@ -2,9 +2,7 @@
     <AppLayout_new title="NewSharedWithMe">
         <nav class="flex justify-end mb-3 mt-1">
             <div class="flex">
-<!--                <ShareFilesButton class="mr-3"/>-->
-                <DownloadFilesButton class="mr-3"
-                                     :download-file-ids="selectedFileIds"
+                <DownloadFilesButton :download-file-ids="selectedFileIds"
                                      :download-folder-ids="selectedFolderIds"
                                      @download="onRestore"/>
                 <DeleteFilesButton />
