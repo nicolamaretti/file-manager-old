@@ -112,14 +112,12 @@
 import {computed, ref} from "vue";
 import AppLayout_new from "@/Layouts/AppLayout_new.vue";
 import DownloadFilesButton from "@/Components/ExtraComponents/DownloadFilesButton.vue";
-import SharedWithMeTable from "@/Components/MyComponents/SharedWithMeTable.vue";
 import DeleteFilesButton from "@/Components/ExtraComponents/DeleteFilesButton.vue";
 import FileIcon from "@/Components/Icons/FileIcon.vue";
 import Checkbox from "@/Components/Checkbox.vue";
 import FolderIcon from "@/Components/Icons/FolderIcon.vue";
-import ShareFilesButton from "@/Components/ExtraComponents/ShareFilesButton.vue";
-import {useForm} from "@inertiajs/vue3";
-import Breadcrumb from "@/Components/MyComponents/Breadcrumb.vue";
+import {router} from "@inertiajs/vue3";
+import {showErrorDialog, showSuccessNotification} from "@/event-bus.js";
 
 const props = defineProps({
     folders: Array,
@@ -135,12 +133,6 @@ const selectedFileIds = computed(() => Object.entries(selectedFiles.value).filte
 const selectedFolders = ref({});
 const selectedFiles = ref({});
 const allSelected = ref(false);
-
-const addRemoveFavouritesForm = useForm({
-    _method: 'POST',
-    'folderId': null,
-    'fileId': null,
-});
 
 // Methods
 function onSelectAllChange() {
@@ -221,29 +213,33 @@ function onSelectFileCheckboxChange(fileId) {
 }
 
 function addRemoveFavouriteFolder(folderId) {
-    addRemoveFavouritesForm.folderId = folderId;
-
-    sendFavouriteRequest();
+    sendFavouriteRequest(folderId, null);
 }
 
 function addRemoveFavouriteFile(fileId) {
-    addRemoveFavouritesForm.fileId = fileId;
-
-    sendFavouriteRequest();
+    sendFavouriteRequest(null, fileId);
 }
 
-function sendFavouriteRequest() {
-    addRemoveFavouritesForm.post(route('addRemoveFavourites'), {
-        onSuccess: (data) => {
-            console.log(data);
-            addRemoveFavouritesForm.reset();
+function sendFavouriteRequest(folderId, fileId) {
+    console.log('addRemoveFavourite');
+
+    router.post(route('addRemoveFavourites'),
+        {
+            folderId: folderId,
+            fileId: fileId
         },
-        onError: (errors) => {
-            console.log(errors);
-            addRemoveFavouritesForm.reset();
-            addRemoveFavouritesForm.clearErrors();
-        },
-    });
+        {
+            onSuccess: (data) => {
+                console.log('addRemoveFavouriteSuccess', data);
+
+                showSuccessNotification('Selected file has been added/removed to favourites');
+            },
+            onError: (errors) => {
+                console.log('addRemoveFavouriteError', errors);
+
+                showErrorDialog('Error trying to add/remove selected file to favourites. Please try again later.')
+            },
+        });
 }
 
 function onRestore() {
@@ -251,4 +247,6 @@ function onRestore() {
     selectedFolders.value = {};
     selectedFiles.value = {};
 }
+
+console.log('SharedWithMe', props);
 </script>

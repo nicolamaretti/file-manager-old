@@ -19,6 +19,7 @@
 import {ref} from "vue";
 import ConfirmationDialog from "@/Components/ExtraComponents/ConfirmationDialog.vue";
 import {router} from "@inertiajs/vue3";
+import {showErrorDialog, showSuccessNotification} from "@/event-bus.js";
 
 const props = defineProps({
     deleteFolderIds: Array,
@@ -31,8 +32,7 @@ const showDeleteDialog = ref(false);
 
 function onDeleteClick() {
     if (!props.deleteFileIds.length && !props.deleteFolderIds.length) {
-        console.log('Please select at least one file to delete');
-        // showErrorDialog('Please select at least one file to delete');
+        showErrorDialog('Please select at least one file to delete');
 
         return;
     }
@@ -58,12 +58,20 @@ function onDeleteConfirm() {
 
             emit('delete');
 
-            // ToDo show success notification
+            showSuccessNotification('Selected files have been deleted');
         },
         onError: (errors) => {
             console.log('onDeleteError', errors);
 
-            // ToDo show error dialog
+            let message;
+
+            if (errors.message) {
+                message = errors.message;
+            } else {
+                message = 'Error during delete. Please try again later.';
+            }
+
+            showErrorDialog(message);
         }
     });
 }

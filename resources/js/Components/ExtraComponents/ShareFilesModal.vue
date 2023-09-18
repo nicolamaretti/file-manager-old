@@ -34,12 +34,12 @@
 import TextInput from "@/Components/TextInput.vue";
 import InputError from "@/Components/InputError.vue";
 import InputLabel from "@/Components/InputLabel.vue";
-import {router, useForm} from "@inertiajs/vue3";
+import {router} from "@inertiajs/vue3";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import {ref} from "vue";
 import DialogModal from "@/Components/DialogModal.vue";
-// import {showSuccessNotification} from "@/event-bus.js";
+import {showErrorNotification, showSuccessNotification} from "@/event-bus.js";
 
 // Props & Emit
 const props = defineProps({
@@ -59,6 +59,8 @@ const errorMessage = ref('');
 function share() {
     console.log('Share');
 
+    const userEmail = email.value;
+
     router.post(route('share'),
         {
             email: email.value,
@@ -68,18 +70,25 @@ function share() {
         {
             preserveScroll: true,
             onSuccess: (data) => {
-                console.log('shareSuccess', data);
+                console.log('shareSuccess', data, email.value);
 
                 closeModal();
                 emit('share');
-                // ToDo showSuccessNotification(`Selected files will be shared to "${email.value}" if the emails exists in the system`)
+                showSuccessNotification(`Selected files will be shared to ${userEmail}`);
             },
             onError: (errors) => {
                 console.log('shareError', errors);
 
-                errorMessage.value = errors.message;
+                if (errors.message) {
+                    errorMessage.value = errors.message;
 
-                emailInput.value.focus();
+                    emailInput.value.focus();
+                }
+
+                 if (errors.error)  {
+                     closeModal();
+                     showErrorNotification(errors.error);
+                 }
             }
         });
 }
@@ -89,10 +98,4 @@ function closeModal() {
     email.value = '';
     errorMessage.value = '';
 }
-
-// Hooks
 </script>
-
-<style scoped>
-
-</style>

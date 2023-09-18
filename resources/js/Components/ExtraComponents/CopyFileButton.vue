@@ -16,6 +16,7 @@
 
 <script setup>
 import {router, usePage} from "@inertiajs/vue3";
+import {showErrorDialog} from "@/event-bus.js";
 
 // Props & Emit
 const props = defineProps({
@@ -50,7 +51,15 @@ function copy() {
             onError: (errors) => {
                 console.log('copyError', errors.message);
 
-                // ToDo show error dialog
+                let message;
+
+                if (errors.message) {
+                    message = errors.message;
+                } else {
+                    message = 'Error during copy. Please try again later.';
+                }
+
+                showErrorDialog(message);
             }
         });
 }

@@ -119,6 +119,8 @@ import Checkbox from "@/Components/Checkbox.vue";
 import FolderIcon from "@/Components/Icons/FolderIcon.vue";
 import {computed, ref} from "vue";
 import ShareFilesButton from "@/Components/ExtraComponents/ShareFilesButton.vue";
+import {router} from "@inertiajs/vue3";
+import {showErrorDialog, showSuccessNotification} from "@/event-bus.js";
 
 const props = defineProps({
     folders: Array,
@@ -210,6 +212,36 @@ function onSelectFileCheckboxChange(fileId) {
 
         allSelected.value = checked;
     }
+}
+
+function addRemoveFavouriteFolder(folderId) {
+    sendFavouriteRequest(folderId, null);
+}
+
+function addRemoveFavouriteFile(fileId) {
+    sendFavouriteRequest(null, fileId);
+}
+
+function sendFavouriteRequest(folderId, fileId) {
+    console.log('addRemoveFavourite');
+
+    router.post(route('addRemoveFavourites'),
+        {
+            folderId: folderId,
+            fileId: fileId
+        },
+        {
+            onSuccess: (data) => {
+                console.log('addRemoveFavouriteSuccess', data);
+
+                showSuccessNotification('Selected file has been added/removed to favourites');
+            },
+            onError: (errors) => {
+                console.log('addRemoveFavouriteError', errors);
+
+                showErrorDialog('Error trying to add/remove selected file to favourites. Please try again later.')
+            },
+        });
 }
 
 function onRestore() {

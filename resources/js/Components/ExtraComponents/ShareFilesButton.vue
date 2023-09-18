@@ -17,6 +17,7 @@
 <script setup>
 import {ref} from "vue";
 import ShareFilesModal from "@/Components/ExtraComponents/ShareFilesModal.vue";
+import {showErrorDialog} from "@/event-bus.js";
 
 // Props & Emit
 const props = defineProps({
@@ -32,6 +33,8 @@ const showShareModal = ref(false);
 // Methods
 function onClick() {
     if (!props.shareFileIds.length && !props.shareFolderIds.length) {
+        showErrorDialog('Please select at least one file to share');
+
         return;
     }
 

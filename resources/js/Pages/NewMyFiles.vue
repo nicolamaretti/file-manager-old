@@ -166,6 +166,7 @@ import FolderIcon from "@/Components/Icons/FolderIcon.vue";
 import RenameFileButton from "@/Components/ExtraComponents/RenameFileButton.vue";
 import CopyFileButton from "@/Components/ExtraComponents/CopyFileButton.vue";
 import MoveFilesButton from "@/Components/ExtraComponents/MoveFilesButton.vue";
+import {showErrorDialog, showSuccessNotification} from "@/event-bus.js";
 
 // Props & Emit
 const props = defineProps({
@@ -302,12 +303,12 @@ function sendAddRemoveFavouriteRequest(folderId, fileId) {
             onSuccess: (data) => {
                 console.log('addRemoveFavouriteSuccess', data);
 
-                // ToDo show success notification
+                showSuccessNotification('Selected file has been added/removed to favourites');
             },
             onError: (errors) => {
                 console.log('addRemoveFavouriteError', errors);
 
-                // ToDo show error dialog
+                showErrorDialog('Error trying to add selected file to favourites. Please try again later.')
             },
         });
 }

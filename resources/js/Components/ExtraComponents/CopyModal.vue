@@ -1,7 +1,3 @@
-<!-- NON è AGGIORNATA AD UTILIZZARE INERTIA -->
-<!-- NON è AGGIORNATA AD UTILIZZARE INERTIA -->
-<!-- NON è AGGIORNATA AD UTILIZZARE INERTIA -->
-<!-- NON è AGGIORNATA AD UTILIZZARE INERTIA -->
 <template>
     <DialogModal :show="modelValue" max-width="lg">
         <template #title>

@@ -15,7 +15,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
@@ -217,7 +217,7 @@ class FileManagerController extends Controller
             ->where('fs.owner_id', $user->id)
             ->join('folders', 'fs.folder_id', '=', 'folders.id')
             ->join('users', 'fs.user_id', '=', 'users.id')
-            ->select('fs.id as id', 'folders.id as folderId', 'folders.name as name', 'users.name as username')
+            ->select('folders.id as id', 'folders.name as name', 'users.name as username')
             ->orderBy('name', 'ASC')
             ->orderBy('username', 'ASC')
             ->get();
@@ -225,7 +225,7 @@ class FileManagerController extends Controller
         /* is_favourite ? */
         foreach ($sharedFolders as $sharedFolder) {
             $starred = StarredFolder::query()
-                ->where('folder_id', $sharedFolder->folderId)
+                ->where('folder_id', $sharedFolder->id)
                 ->where('user_id', $user->id)
                 ->get();
             if ($starred->isNotEmpty()) {
@@ -240,7 +240,7 @@ class FileManagerController extends Controller
             ->where('fs.owner_id', $user->id)
             ->join('media', 'fs.file_id', '=', 'media.id')
             ->join('users', 'fs.user_id', '=', 'users.id')
-            ->select('fs.id as id', 'media.id as fileId', 'media.file_name as name', 'users.name as username')
+            ->select('media.id as id', 'media.file_name as name', 'users.name as username')
             ->orderBy('name', 'ASC')
             ->orderBy('username', 'ASC')
             ->get();
@@ -248,7 +248,7 @@ class FileManagerController extends Controller
         /* is_favourite ? */
         foreach ($sharedFiles as $sharedFile) {
             $starred = StarredFile::query()
-                ->where('file_id', $sharedFile->fileId)
+                ->where('file_id', $sharedFile->id)
                 ->where('user_id', $user->id)
                 ->get();
 
@@ -295,6 +295,8 @@ class FileManagerController extends Controller
                 $newFolder->uuid = Str::uuid();
                 $newFolder->save();
 
+                Storage::makeDirectory($newFolder->getFullPath());
+
                 return redirect()->back()->with([
                     'message' => "Folder '$newFolderName' created successfully"
                 ]);
@@ -317,6 +319,8 @@ class FileManagerController extends Controller
                     $newFolder->folder_id = null;
                     $newFolder->uuid = Str::uuid();
                     $newFolder->save();
+
+                    Storage::makeDirectory($newFolderName);
 
                     return redirect()->back()->with([
                         'message' => "Folder '$newFolderName' created successfully"
@@ -342,6 +346,7 @@ class FileManagerController extends Controller
 
         $files = $request->files->get('files');
 
+
         $currentFolderId = intval($request->input('currentFolderId'));
 
         if (!$files || !$currentFolderId) {
@@ -349,6 +354,9 @@ class FileManagerController extends Controller
         }
 
         $currentFolder = Folder::query()->find($currentFolderId);
+
+        Storage::putFileAs($currentFolder->getFullPath(), $files[0], $files[0]->getClientOriginalName());
+
 
         foreach ($files as $file) {
             $fileFullName = $file->getClientOriginalName();
@@ -358,22 +366,26 @@ class FileManagerController extends Controller
 
             if (!$fileAlreadyExists) {
                 // se non esiste, lo aggiungo normalmente alla cartella corrente
+
+                Storage::putFileAs($currentFolder->getFullPath(), $file, $fileFullName);
+
                 $currentFolder->addMedia($file)->toMediaCollection('documents');
             } else {
-                // se esiste già, aggiungo un timestamp al nome del nuovo file e lo aggiungo alla cartella corrente
+                // se esiste già, aggiungo "-copy" al nome del nuovo file e lo aggiungo alla cartella corrente
 
                 // prendo nome ed estensione del file
                 $fileName = pathinfo($fileFullName, PATHINFO_FILENAME);
                 $fileExt = pathinfo($fileFullName, PATHINFO_EXTENSION);
 
-                // aggiungo il timestamp e ricreo il nome del file
-//                $fileNameTS = $fileName . '-' . time();
-                $fileNameTS = $fileName . '-copy';
-                $fileFullNameTS = $fileNameTS . '.' . $fileExt;
+                // aggiungo "-copy" e ricreo il nome del file
+                $fileNameCopy = $fileName . '-copy';
+                $fileFullNameCopy = $fileNameCopy . '.' . $fileExt;
+
+                Storage::putFileAs($currentFolder->getFullPath(), $file, $fileFullNameCopy);
 
                 $currentFolder->addMedia($file)
-                    ->usingFileName($fileFullNameTS)
-                    ->usingName($fileNameTS)
+                    ->usingFileName($fileFullNameCopy)
+                    ->usingName($fileNameCopy)
                     ->toMediaCollection('documents');
             }
         }
@@ -393,10 +405,15 @@ class FileManagerController extends Controller
 
         /* eliminazione dei file */
         if ($deleteFileIds) {
-            Media::query()
+            $files = Media::query()
                 ->whereIn('id', $deleteFileIds)
-                ->get()
-                ->each(fn($file) => $file->delete());
+                ->get();
+
+            foreach ($files as $file) {
+                $file->delete();
+                dd($file->getPath());
+//                Storage::delete();
+            }
         }
 
         /* eliminazione delle folder */
@@ -411,6 +428,8 @@ class FileManagerController extends Controller
                     ->whereIn('id', $childrenIds)
                     ->get()
                     ->each(fn($folder) => $folder->delete());
+
+                Storage::deleteDirectory($folder->getFullPath());
             }
         }
 
@@ -419,30 +438,48 @@ class FileManagerController extends Controller
 
     public function download(Request $request)
     {
-        dd($request);
+        dd('download');
         $user = $request->user();
 
         $fileIds = $request->input('downloadFileIds');
         $folderIds = $request->input('downloadFolderIds');
-
-//        dd($fileIds, count($fileIds) === 1, $folderIds);
-
-
-        /* DOWNLOAD FILES */
-        if (!$folderIds && $fileIds && count($fileIds) === 1) {
-            // ho un solo file da scaricare
-
-            $file = Media::findOrFail($fileIds[0]);
-
-//            dd($file->getPath(), pathinfo($file->getPath()));
-
-//            $dest = 'public/' . $file->getPath();
 //
-//            dd($dest);
-
-            // il file è il suo percorso intero
-            return response()->download($file->getPath(), $file->file_name);
-        }
+////        dd($fileIds, count($fileIds) === 1, $folderIds);
+//
+//        $file = Media::query()->findOrFail(271);
+////        dd($file);
+//            return Storage::download($file->getPath());
+////        return response()->download($file->getPath(), $file->file_name)->deleteFileAfterSend();
+//
+//        /* DOWNLOAD FILES */
+//        if (!$folderIds && count($fileIds) === 1) {
+//            // ho un solo file da scaricare
+//
+////            dd('onli iiuuuuu');
+//
+//            $file = Media::query()->findOrFail($fileIds[0]);
+//
+////            dd($file);
+////            dd($file->getPath(), pathinfo($file->getPath()));
+//
+////            $dest = 'public/' . $file->getPath();
+////
+////            dd($dest);
+//
+////            dd(Storage::get($file->getPath()));
+//            // il file è il suo percorso intero
+//            return response()->download($file->getPath(), $file->file_name)->deleteFileAfterSend();
+//        }
+//
+//        if (!$fileIds && count($folderIds) === 1) {
+////            dd('onli miiiiiii');
+//
+//            $folder = Folder::query()->find($folderIds[0]);
+//
+//            $zip = $folder->getZipFolder();
+//
+//            return response()->download($zip)->deleteFileAfterSend();
+//        }
 
 
         /* FOLDERS */
@@ -552,12 +589,10 @@ class FileManagerController extends Controller
                 }
             }
 
-            return redirect()->back()->with([
-                'message' => 'Files shared successfully'
-            ]);
+            return redirect()->back();
         } else {
             return redirect()->back()->withErrors([
-                'message' => 'User not found'
+                'error' => 'User not found'
             ]);
         }
     }
@@ -570,7 +605,7 @@ class FileManagerController extends Controller
         /* eliminazione dei file */
         if ($fileIds) {
             FileShare::query()
-                ->whereIn('id', $fileIds)
+                ->whereIn('file_id', $fileIds)
                 ->get()
                 ->each(fn($file) => $file->delete());
         }
@@ -578,7 +613,7 @@ class FileManagerController extends Controller
         /* eliminazione delle folder */
         if ($folderIds) {
             FolderShare::query()
-                ->whereIn('id', $folderIds)
+                ->whereIn('folder_id', $folderIds)
                 ->get()
                 ->each(fn($folder) => $folder->delete());
         }
@@ -1068,6 +1103,8 @@ class FileManagerController extends Controller
     public function downloadFile(int $fileId): BinaryFileResponse
     {
         $file = Media::findOrFail($fileId);
+//        $file = Media::query()->findOrFail(270);
+//        dd($file);
 
         // il file è il suo percorso intero
         return response()->download($file->getPath(), $file->file_name);

@@ -12,8 +12,10 @@
 </template>
 
 <script setup>
+// Imports
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import {router} from "@inertiajs/vue3";
+import {showErrorDialog, showSuccessNotification} from "@/event-bus.js";
 
 // Props & Emit
 const props = defineProps({
@@ -26,9 +28,9 @@ const emit = defineEmits(['download']);
 // Methods
 function onDownloadClick() {
     if (!props.downloadFileIds.length && !props.downloadFolderIds.length) {
-        // ToDo showErrorDialog('Please select at least one file to delete');
+        showErrorDialog('Please select at least one file to download');
 
-        console.log('Please select at least one file to delete');
+        return;
     } else {
         console.log('Download');
 
@@ -41,11 +43,20 @@ function onDownloadClick() {
                 onSuccess: (data) => {
                     console.log('downloadSuccess', data);
                     emit('download');
-                    // TODO show success notification
+                    showSuccessNotification('Files downloaded successfully');
                 },
                 onError: (errors) => {
                     console.log('downloadError', errors);
-                    // ToDo showErrorDialog
+
+                    let message;
+
+                    if (errors.message) {
+                        message = errors.message;
+                    } else {
+                        message = 'Error during download. Please try again later.';
+                    }
+
+                    showErrorDialog(message);
                 }
             });
     }

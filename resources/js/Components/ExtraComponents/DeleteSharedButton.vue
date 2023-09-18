@@ -19,6 +19,7 @@
 import {ref} from "vue";
 import ConfirmationDialog from "@/Components/ExtraComponents/ConfirmationDialog.vue";
 import {router} from "@inertiajs/vue3";
+import {showErrorDialog, showSuccessNotification} from "@/event-bus.js";
 
 const props = defineProps({
     stopShareFolderIds: {
@@ -37,8 +38,7 @@ const showDeleteDialog = ref(false);
 
 function onDeleteClick() {
     if (!props.stopShareFileIds.length && !props.stopShareFolderIds.length) {
-        // showErrorDialog('Please select at least one file to delete');
-        console.log('Please select at least one file');
+        showErrorDialog('Please select at least one file to delete');
 
         return;
     }
@@ -63,12 +63,20 @@ function onDeleteConfirm() {
 
             emit('stop-share');
 
-            // ToDo show success notification
+            showSuccessNotification('Selected files are no longer shared');
         },
         onError: (errors) => {
             console.log('stopSharingError', errors);
 
-            // ToDo show error dialog
+            let message;
+
+            if (errors.message) {
+                message = errors.message;
+            } else {
+                message = 'Error during stop sharing. Please try again later.';
+            }
+
+            showErrorDialog(message);
         }
     });
 }

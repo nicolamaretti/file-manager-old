@@ -6,11 +6,11 @@
         <Navigation/>
 
         <!-- Sezione centrale -->
-        <main @drop.prevent="handleDrop"
-              @dragover.prevent="onDragOver"
-              @dragleave.prevent="onDragLeave"
+        <main :class="dragOver ? 'dropzone' : ''"
               class="flex flex-col flex-1 ml-10 overflow-hidden"
-              :class="dragOver ? 'dropzone' : ''">
+              @drop.prevent="handleDrop"
+              @dragover.prevent="onDragOver"
+              @dragleave.prevent="onDragLeave">
 
             <!-- Se l'utente sta facendo un drag dentro all'applicazione -->
             <template v-if="dragOver" class="text-gray-500 text-center py-8 text-sm">
@@ -33,18 +33,20 @@
         </main>
     </div>
 
-    <!--    <ErrorDialog />-->
+    <ErrorDialog/>
     <!--    <FormProgress :form="fileUploadForm"/>-->
-    <!--    <Notification />-->
+    <Notification/>
 </template>
 
 <script setup>
 import {onMounted, ref} from 'vue';
 import {Head, router, usePage} from '@inertiajs/vue3';
-import {emitter, FILE_UPLOAD_STARTED} from "@/event-bus.js";
+import {emitter, FILE_UPLOAD_STARTED, showErrorDialog} from "@/event-bus.js";
 import Navigation from "@/Components/ExtraComponents/Navigation.vue";
 import SearchForm from "@/Components/ExtraComponents/SearchForm.vue";
 import UserSettingsDropdown from "@/Components/ExtraComponents/UserSettingsDropdown.vue";
+import ErrorDialog from "@/Components/ExtraComponents/ErrorDialog.vue";
+import Notification from "@/Components/ExtraComponents/Notification.vue";
 
 // Props & Emit
 defineProps({
@@ -54,6 +56,7 @@ defineProps({
 // Refs
 const dragOver = ref(false);
 
+// Uses
 const page = usePage();
 
 // Methods
@@ -92,6 +95,9 @@ function uploadFiles(files) {
             },
             onError: (errors) => {
                 console.log('uploadError', errors.message);
+
+                // let message = errors.message
+                showErrorDialog(errors.message);
             }
         });
 }
