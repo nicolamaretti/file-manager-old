@@ -6,6 +6,7 @@ use App\Models\Folder;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 trait RecursivelyTrait
@@ -60,8 +61,11 @@ trait RecursivelyTrait
         $newFolder->name = $this->name . '-copy';
         $newFolder->folder_id = $destinationFolderId;
         $newFolder->user_id = $this->user_id;
+        $newFolder->path = $newFolder->getFullPath();
         $newFolder->uuid = Str::uuid();
         $newFolder->save();
+
+        Storage::createDirectory($newFolder->path);
 
         $this->copyFolderRecursive($this, $newFolder);
     }
@@ -133,20 +137,33 @@ trait RecursivelyTrait
         $folderChildren = $currentFolder->folders;
         $folderFiles = $currentFolder->getMedia('documents');
 
+        /* copy files */
         if ($folderFiles->isNotEmpty()) {
             foreach ($folderFiles as $file) {
-                $file->copy($destinationFolder, 'documents');
+                $fileName = $file->file_name;
+                $currentPath = $file->getCustomProperty('path');
+                $newPath = $destinationFolder->path . '/' . $fileName;
+
+                $copiedFile = $file->copy($destinationFolder, 'documents');
+                $copiedFile->setCustomProperty('path', $newPath);
+                $copiedFile->save();
+
+                Storage::copy($currentPath, $newPath);
             }
         }
 
+        /* copy folders */
         if ($folderChildren->isNotEmpty()) {
             foreach ($folderChildren as $childFolder) {
                 $newChildFolder = new Folder();
                 $newChildFolder->name = $childFolder->name;
                 $newChildFolder->folder_id = $destinationFolder->id;
                 $newChildFolder->user_id = $destinationFolder->user_id;
+                $newChildFolder->path = $newChildFolder->getFullPath();
                 $newChildFolder->uuid = Str::uuid();
                 $newChildFolder->save();
+
+                Storage::makeDirectory($newChildFolder->path);
 
                 $this->copyFolderRecursive($childFolder, $newChildFolder);
             }

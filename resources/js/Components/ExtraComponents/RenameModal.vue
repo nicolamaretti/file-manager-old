@@ -42,6 +42,7 @@ import InputError from "@/Components/InputError.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import DialogModal from "@/Components/DialogModal.vue";
+import {showSuccessNotification} from "@/event-bus.js";
 
 // Props & Emit
 const props = defineProps({
@@ -76,7 +77,7 @@ function rename() {
 
                 closeModal();
 
-                // ToDo show success notification
+                showSuccessNotification('File renamed correctly');
             },
             onError: (errors) => {
                 console.log('renameError', errors);

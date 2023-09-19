@@ -12,8 +12,10 @@ use App\Models\FolderShare;
 use App\Models\StarredFile;
 use App\Models\StarredFolder;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -292,17 +294,16 @@ class FileManagerController extends Controller
                 $newFolder->name = $newFolderName;
                 $newFolder->user_id = $userId;
                 $newFolder->folder_id = $currentFolderId;
+                $newFolder->path = $newFolder->getFullPath();
                 $newFolder->uuid = Str::uuid();
                 $newFolder->save();
 
-                Storage::makeDirectory($newFolder->getFullPath());
+                Storage::makeDirectory($newFolder->path);
 
-                return redirect()->back()->with([
-                    'message' => "Folder '$newFolderName' created successfully"
-                ]);
+                return redirect()->back();
             } else {
                 return redirect()->back()->withErrors([
-                    'message' => "Folder '$newFolderName' already exists"
+                    'message' => "Folder '$newFolderName' already exists. Please select another name."
                 ]);
             }
         } else {
@@ -317,17 +318,16 @@ class FileManagerController extends Controller
                     $newFolder->name = $newFolderName;
                     $newFolder->user_id = $userId;
                     $newFolder->folder_id = null;
+                    $newFolder->path = $newFolder->getFullPath();
                     $newFolder->uuid = Str::uuid();
                     $newFolder->save();
 
                     Storage::makeDirectory($newFolderName);
 
-                    return redirect()->back()->with([
-                        'message' => "Folder '$newFolderName' created successfully"
-                    ]);
+                    return redirect()->back();
                 } else {
                     return redirect()->back()->withErrors([
-                        'message' => "Folder '$newFolderName' already exists"
+                        'message' => "Folder '$newFolderName' already exists. Please select another name."
                     ]);
                 }
             } else {
@@ -346,7 +346,6 @@ class FileManagerController extends Controller
 
         $files = $request->files->get('files');
 
-
         $currentFolderId = intval($request->input('currentFolderId'));
 
         if (!$files || !$currentFolderId) {
@@ -355,8 +354,7 @@ class FileManagerController extends Controller
 
         $currentFolder = Folder::query()->find($currentFolderId);
 
-        Storage::putFileAs($currentFolder->getFullPath(), $files[0], $files[0]->getClientOriginalName());
-
+        $path = $currentFolder->path;
 
         foreach ($files as $file) {
             $fileFullName = $file->getClientOriginalName();
@@ -367,9 +365,11 @@ class FileManagerController extends Controller
             if (!$fileAlreadyExists) {
                 // se non esiste, lo aggiungo normalmente alla cartella corrente
 
-                Storage::putFileAs($currentFolder->getFullPath(), $file, $fileFullName);
+                Storage::putFileAs($path, $file, $fileFullName);
 
-                $currentFolder->addMedia($file)->toMediaCollection('documents');
+                $currentFolder->addMedia($file)
+                    ->withCustomProperties(['path' => $path . '/' . $fileFullName])
+                    ->toMediaCollection('documents');
             } else {
                 // se esiste già, aggiungo "-copy" al nome del nuovo file e lo aggiungo alla cartella corrente
 
@@ -381,11 +381,12 @@ class FileManagerController extends Controller
                 $fileNameCopy = $fileName . '-copy';
                 $fileFullNameCopy = $fileNameCopy . '.' . $fileExt;
 
-                Storage::putFileAs($currentFolder->getFullPath(), $file, $fileFullNameCopy);
+                Storage::putFileAs($path, $file, $fileFullNameCopy);
 
                 $currentFolder->addMedia($file)
                     ->usingFileName($fileFullNameCopy)
                     ->usingName($fileNameCopy)
+                    ->withCustomProperties(['path' => $path . '/' . $fileFullNameCopy])
                     ->toMediaCollection('documents');
             }
         }
@@ -410,9 +411,9 @@ class FileManagerController extends Controller
                 ->get();
 
             foreach ($files as $file) {
+                Storage::delete($file->getCustomProperty('path'));
+
                 $file->delete();
-                dd($file->getPath());
-//                Storage::delete();
             }
         }
 
@@ -429,7 +430,7 @@ class FileManagerController extends Controller
                     ->get()
                     ->each(fn($folder) => $folder->delete());
 
-                Storage::deleteDirectory($folder->getFullPath());
+                Storage::deleteDirectory($folder->path);
             }
         }
 
@@ -438,38 +439,37 @@ class FileManagerController extends Controller
 
     public function download(Request $request)
     {
-        dd('download');
         $user = $request->user();
 
         $fileIds = $request->input('downloadFileIds');
         $folderIds = $request->input('downloadFolderIds');
-//
-////        dd($fileIds, count($fileIds) === 1, $folderIds);
-//
+
+//        dd($fileIds, count($fileIds) === 1, $folderIds);
+
 //        $file = Media::query()->findOrFail(271);
 ////        dd($file);
 //            return Storage::download($file->getPath());
-////        return response()->download($file->getPath(), $file->file_name)->deleteFileAfterSend();
+//        return response()->download($file->getPath(), $file->file_name)->deleteFileAfterSend();
+
+        /* DOWNLOAD FILES */
+        if (!$folderIds && count($fileIds) === 1) {
+            // ho un solo file da scaricare
+
+//            dd('onli iiuuuuu');
+
+            $file = Media::query()->findOrFail($fileIds[0]);
+
+//            dd($file);
+//            dd($file->getPath(), pathinfo($file->getPath()));
+
+//            $dest = 'public/' . $file->getPath();
 //
-//        /* DOWNLOAD FILES */
-//        if (!$folderIds && count($fileIds) === 1) {
-//            // ho un solo file da scaricare
-//
-////            dd('onli iiuuuuu');
-//
-//            $file = Media::query()->findOrFail($fileIds[0]);
-//
-////            dd($file);
-////            dd($file->getPath(), pathinfo($file->getPath()));
-//
-////            $dest = 'public/' . $file->getPath();
-////
-////            dd($dest);
-//
-////            dd(Storage::get($file->getPath()));
-//            // il file è il suo percorso intero
-//            return response()->download($file->getPath(), $file->file_name)->deleteFileAfterSend();
-//        }
+//            dd($dest);
+
+//            return response()->download($file->getPath(), $file->file_name);
+            return Storage::download($file->getCustomProperty('path'), $file->file_name);
+//            return $file;
+        }
 //
 //        if (!$fileIds && count($folderIds) === 1) {
 ////            dd('onli miiiiiii');
@@ -641,34 +641,38 @@ class FileManagerController extends Controller
         if ($fileId != 0) {
             /* RENAME FILE */
 
-            /* controllo se all'interno della cartella in cui si trova il file esiste già un
-             * altro file con lo stesso nome */
             $file = Media::query()->find($fileId);
             $fileFolderId = $file->model_id;
+            $fileFolder = Folder::query()->find($fileFolderId);
 
-            // mi serve il fullname per fare il controllo dell'esistenza
+            /* controllo se all'interno della cartella in cui si trova il file esiste già un
+             * altro file con lo stesso nome */
             $fileExt = pathinfo($file->file_name, PATHINFO_EXTENSION);
-            $fileFullName = $newName . '.' . $fileExt;
+            $newFileFullName = $newName . '.' . $fileExt;
 
-            $fileAlreadyExists = FileManagerHelper::checkFileExistence($fileFullName, $fileFolderId);
+            $fileAlreadyExists = FileManagerHelper::checkFileExistence($newFileFullName, $fileFolderId);
 
             if ($fileAlreadyExists) {
                 return redirect()->back()->withErrors([
-                    'message' => 'There is already another file with this name',
+                    'message' => 'A file with this name already exists in this folder. Please choose another one.',
                 ]);
             }
 
-            // se non esiste, modifico il nome del file selezionato (sia name che file_name)
+            $newPath = $fileFolder->path . '/' . $newFileFullName;
+
+            // se non esiste, modifico la posizione nello storage
+            Storage::move($file->getCustomProperty('path'), $newPath);
+
+            // modifico il nome del file selezionato (sia name che file_name) e il path
             $file->name = $newName;
-            $file->file_name = $fileFullName;
+            $file->file_name = $newFileFullName;
+            $file->setCustomProperty('path', $newPath);
             $file->save();
 
-            return redirect()->back()->with([
-                'message' => 'File renamed correctly'
-            ]);
+            return redirect()->back();
         } else {
             /* RENAME FOLDER */
-            $folder = Folder::query()->find($folderId);
+            $folder = Folder::find($folderId);
             $parent = $folder->parent;
 
             if (!$parent) {
@@ -691,17 +695,24 @@ class FileManagerController extends Controller
 
             if ($folderAlreadyExists) {
                 return redirect()->back()->withErrors([
-                    'message' => 'There is already another folder with this name',
+                    'message' => 'A folder with this name already exists. Please choose another one.',
                 ]);
             }
 
+            $oldPath = $folder->path;
+
             // salvo la cartella rinominata
             $folder->name = $newName;
+            $folder->path = $folder->getFullPath();
             $folder->save();
 
-            return redirect()->back()->with([
-                'message' => 'Folder renamed correctly'
-            ]);
+            // salvo la nuova posizione nello storage
+            Storage::move($oldPath, $folder->path);
+            $this->moveStorageRecursive($folder);
+
+            Storage::deleteDirectory($oldPath);
+
+            return redirect()->back();
         }
     }
 
@@ -716,6 +727,7 @@ class FileManagerController extends Controller
             abort(403, 'Missing parameters');
         }
 
+        /* copy folders and subfolders/subfiles */
         if ($folderIds) {
             Folder::query()
                 ->whereIn('id', $folderIds)
@@ -725,6 +737,7 @@ class FileManagerController extends Controller
                 });
         }
 
+        /* duplicate files of the current folder */
         if ($fileIds) {
             Media::query()
                 ->whereIn('id', $fileIds)
@@ -732,11 +745,17 @@ class FileManagerController extends Controller
                 ->each(function ($file) use($currentFolder) {
                     $fileExt = pathinfo($file->file_name, PATHINFO_EXTENSION);
                     $newFileName = $file->name . '-copy';
+                    $newFileFullName = $newFileName . '.' . $fileExt;
+                    $filePath = $currentFolder->path . '/' . $newFileFullName;
 
-                    $file->name = $newFileName;
-                    $file->file_name = $newFileName . '.' . $fileExt;
+                    $copiedFile = $file->copy($currentFolder, 'documents');
+                    $copiedFile->name = $newFileName;
+                    $copiedFile->file_name = $newFileFullName;
+                    $copiedFile->uuid = Str::uuid();
+                    $copiedFile->setCustomProperty('path', $filePath);
+                    $copiedFile->save();
 
-                    $file->copy($currentFolder, 'documents');
+                    Storage::putFileAs($currentFolder->path, $copiedFile->getPath(), $newFileFullName);
                 });
         }
 
@@ -764,6 +783,39 @@ class FileManagerController extends Controller
         return Inertia::render('MoveFilesModalTable', [
             'folders' => $folders,
         ]);
+    }
+
+    private function moveStorageRecursive(Folder $currentFolder): void
+    {
+        $folders = $currentFolder->folders;
+        $files = $currentFolder->getMedia('documents');
+
+        if ($files->isNotEmpty()) {
+            foreach ($files as $file) {
+                $oldPath = $file->getCustomProperty('path');
+
+                $newPath = $currentFolder->path . '/' . $file->file_name;
+
+                $file->setCustomProperty('path', $newPath);
+                $file->save();
+
+                Storage::move($oldPath, $newPath);
+            }
+        }
+
+        if ($folders->isNotEmpty()) {
+            foreach ($folders as $folder) {
+                $oldPath = $folder->path;
+                $newPath = $folder->getFullPath();
+
+                $folder->path = $newPath;
+                $folder->save();
+
+                Storage::move($oldPath, $newPath);
+
+                $this->moveStorageRecursive($folder);
+            }
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

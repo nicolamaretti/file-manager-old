@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('media', function (Blueprint $table) {
-            $table->boolean('is_favourite')->default(false);
+        Schema::table('folders', function (Blueprint $table) {
+            $table->string('path')->default('')->after('folder_id');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('media', function (Blueprint $table) {
-            $table->dropColumn('is_favourite');
+        Schema::table('folders', function (Blueprint $table) {
+            $table->dropColumn('path');
         });
     }
 };

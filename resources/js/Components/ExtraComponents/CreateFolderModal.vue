@@ -41,6 +41,7 @@ import InputError from "@/Components/InputError.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import DialogModal from "@/Components/DialogModal.vue";
+import {showSuccessNotification} from "@/event-bus.js";
 
 // Props & Emit
 const props = defineProps({
@@ -54,12 +55,15 @@ const folderNameInput = ref(null);
 const folderName = ref('');
 const errorMessage = ref('');
 
+// Uses
 // prendo il currentFolderId dalle props della pagina base
 const page = usePage();
 
 // Methods
 function createFolder() {
     console.log('Create Folder',folderName.value);
+
+    const name = folderName.value;
 
     router.post(route('createFolder'),
         {
@@ -73,7 +77,7 @@ function createFolder() {
 
                 closeModal();
 
-                // ToDo show success notification
+                showSuccessNotification(`Folder '${name}' created successfully`);
             },
             onError: (errors) => {
                 console.log('createFolderErrors', errors);
