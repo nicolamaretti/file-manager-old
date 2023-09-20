@@ -442,10 +442,10 @@ import DownloadIcon from '@/Components/Icons/DownloadIcon.vue';
 import ActionIconEdit from '@/Components/Icons/ActionIconEdit.vue';
 import ChevronLeftIcon from '@/Components/Icons/ChevronLeftIcon.vue';
 import ManageFolderIcon from "@/Components/Icons/ManageFolderIcon.vue";
-import RenameFolderModal from '@/Components/MyComponents/RenameFolderModal.vue';
-import RenameFileModal from '@/Components/MyComponents/RenameFileModal.vue';
-import ShareFolderModal from "@/Components/MyComponents/ShareFolderModal.vue";
-import ShareFileModal from "@/Components/MyComponents/ShareFileModal.vue";
+import RenameFolderModal from '@/Components/__OldComponents/RenameFolderModal.vue';
+import RenameFileModal from '@/Components/__OldComponents/RenameFileModal.vue';
+import ShareFolderModal from "@/Components/__OldComponents/ShareFolderModal.vue";
+import ShareFileModal from "@/Components/__OldComponents/ShareFileModal.vue";
 import ActionIconShare from "@/Components/Icons/ActionIconShare.vue";
 
 // Shared props

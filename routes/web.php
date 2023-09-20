@@ -51,6 +51,10 @@ Route::middleware([
     Route::get('/move/select', [FileManagerController::class, 'selectFoldersToMove'])->name('select-folders-to-move');
     Route::post('/move/', [FileManagerController::class, 'move'])->name('move');
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //    Route::get('/dashboard', [FileManagerController::class, 'myFiles'])->name('dashboard');
     Route::get('/__old-my-files/{folderId?}', [FileManagerController::class, '__oldMyFiles'])->name('__old-my-files');
     Route::post('/create/root-folder', [FileManagerController::class, 'createRootFolder'])->name('folder.create-root');

@@ -16,7 +16,7 @@
 
 <script setup>
 import {ref} from "vue";
-import ShareFilesModal from "@/Components/ExtraComponents/ShareFilesModal.vue";
+import ShareFilesModal from "@/Components/MyComponents/ShareFilesModal.vue";
 import {showErrorDialog} from "@/event-bus.js";
 
 // Props & Emit

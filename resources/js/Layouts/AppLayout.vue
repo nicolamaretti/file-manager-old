@@ -42,11 +42,11 @@
 import {onMounted, ref} from 'vue';
 import {Head, router, usePage} from '@inertiajs/vue3';
 import {emitter, FILE_UPLOAD_STARTED, showErrorDialog} from "@/event-bus.js";
-import Navigation from "@/Components/ExtraComponents/Navigation.vue";
-import SearchForm from "@/Components/ExtraComponents/SearchForm.vue";
-import UserSettingsDropdown from "@/Components/ExtraComponents/UserSettingsDropdown.vue";
-import ErrorDialog from "@/Components/ExtraComponents/ErrorDialog.vue";
-import Notification from "@/Components/ExtraComponents/Notification.vue";
+import Navigation from "@/Components/MyComponents/Navigation.vue";
+import SearchForm from "@/Components/MyComponents/SearchForm.vue";
+import UserSettingsDropdown from "@/Components/MyComponents/UserSettingsDropdown.vue";
+import ErrorDialog from "@/Components/MyComponents/ErrorDialog.vue";
+import Notification from "@/Components/MyComponents/Notification.vue";
 
 // Props & Emit
 defineProps({

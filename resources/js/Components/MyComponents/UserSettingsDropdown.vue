@@ -47,5 +47,5 @@
 <script setup>
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {ChevronDownIcon} from '@heroicons/vue/20/solid'
-import ResponsiveNavLink from "@/Components/ExtraComponents/ResponsiveNavLink.vue";
+import ResponsiveNavLink from "@/Components/MyComponents/ResponsiveNavLink.vue";
 </script>

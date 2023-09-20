@@ -20,7 +20,7 @@
 
 <script setup>
 import {ref} from "vue";
-import RenameModal from "@/Components/ExtraComponents/RenameModal.vue";
+import RenameModal from "@/Components/MyComponents/RenameModal.vue";
 
 const props = defineProps({
     folderId: Number,

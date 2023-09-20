@@ -66,7 +66,7 @@
 import {router, usePage} from "@inertiajs/vue3";
 import {computed, ref} from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
-import Breadcrumb from "@/Components/ExtraComponents/Breadcrumb.vue";
+import Breadcrumb from "@/Components/MyComponents/Breadcrumb.vue";
 import FolderIcon from "@/Components/Icons/FolderIcon.vue";
 import Checkbox from "@/Components/Checkbox.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";

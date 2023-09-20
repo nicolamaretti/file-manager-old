@@ -111,8 +111,8 @@
 <script setup>
 import {computed, ref} from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
-import DownloadFilesButton from "@/Components/ExtraComponents/DownloadFilesButton.vue";
-import DeleteFilesButton from "@/Components/ExtraComponents/DeleteFilesButton.vue";
+import DownloadFilesButton from "@/Components/MyComponents/DownloadFilesButton.vue";
+import DeleteFilesButton from "@/Components/MyComponents/DeleteFilesButton.vue";
 import FileIcon from "@/Components/Icons/FileIcon.vue";
 import Checkbox from "@/Components/Checkbox.vue";
 import FolderIcon from "@/Components/Icons/FolderIcon.vue";

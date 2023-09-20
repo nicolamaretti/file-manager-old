@@ -149,15 +149,15 @@
 import {computed, ref} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import AppLayout from "@/Layouts/AppLayout.vue";
-import ShareFilesButton from "@/Components/ExtraComponents/ShareFilesButton.vue";
-import DownloadFilesButton from "@/Components/ExtraComponents/DownloadFilesButton.vue";
-import DeleteFilesButton from "@/Components/ExtraComponents/DeleteFilesButton.vue";
+import ShareFilesButton from "@/Components/MyComponents/ShareFilesButton.vue";
+import DownloadFilesButton from "@/Components/MyComponents/DownloadFilesButton.vue";
+import DeleteFilesButton from "@/Components/MyComponents/DeleteFilesButton.vue";
 import Checkbox from "@/Components/Checkbox.vue";
 import FileIcon from "@/Components/Icons/FileIcon.vue";
 import FolderIcon from "@/Components/Icons/FolderIcon.vue";
-import RenameFileButton from "@/Components/ExtraComponents/RenameFileButton.vue";
-import CopyFileButton from "@/Components/ExtraComponents/CopyFileButton.vue";
-import MoveFilesButton from "@/Components/ExtraComponents/MoveFilesButton.vue";
+import RenameFileButton from "@/Components/MyComponents/RenameFileButton.vue";
+import CopyFileButton from "@/Components/MyComponents/CopyFileButton.vue";
+import MoveFilesButton from "@/Components/MyComponents/MoveFilesButton.vue";
 import {showErrorDialog, showSuccessNotification} from "@/event-bus.js";
 
 // Props & Emit

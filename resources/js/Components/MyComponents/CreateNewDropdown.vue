@@ -39,9 +39,9 @@
 <script setup>
 import {ref} from "vue";
 import {Menu, MenuButton, MenuItems, MenuItem} from "@headlessui/vue";
-import CreateFolderModal from "@/Components/ExtraComponents/CreateFolderModal.vue"
-import FileUploadMenuItem from "@/Components/ExtraComponents/FileUploadMenuItem.vue";
-import FolderUploadMenuItem from "@/Components/ExtraComponents/FolderUploadMenuItem.vue";
+import CreateFolderModal from "@/Components/MyComponents/CreateFolderModal.vue"
+import FileUploadMenuItem from "@/Components/MyComponents/FileUploadMenuItem.vue";
+import FolderUploadMenuItem from "@/Components/MyComponents/FolderUploadMenuItem.vue";
 
 const createFolderModal = ref(false);
 

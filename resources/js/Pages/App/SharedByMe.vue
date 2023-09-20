@@ -110,8 +110,8 @@
 
 <script setup>
 import AppLayout from "@/Layouts/AppLayout.vue";
-import DownloadFilesButton from "@/Components/ExtraComponents/DownloadFilesButton.vue";
-import DeleteSharedButton from "@/Components/ExtraComponents/DeleteSharedButton.vue";
+import DownloadFilesButton from "@/Components/MyComponents/DownloadFilesButton.vue";
+import DeleteSharedButton from "@/Components/MyComponents/DeleteSharedButton.vue";
 import FileIcon from "@/Components/Icons/FileIcon.vue";
 import Checkbox from "@/Components/Checkbox.vue";
 import FolderIcon from "@/Components/Icons/FolderIcon.vue";

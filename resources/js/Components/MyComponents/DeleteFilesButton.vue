@@ -1,7 +1,7 @@
 <template>
     <button class="mr-1 inline-flex items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700"
             type="button"
-            @click="onDeleteClick">
+            @click="onDeleteClick()">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
              class="w-4 h-4 mr-2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
@@ -10,39 +10,34 @@
     </button>
 
     <ConfirmationDialog :show="showDeleteDialog"
-                        message="Are you sure you want to stop sharing selected files?"
-                        @cancel="onDeleteCancel"
-                        @confirm="onDeleteConfirm" />
+                        message="Are you sure you want to delete selected files?"
+                        @cancel="onDeleteCancel()"
+                        @confirm="onDeleteConfirm()" />
 </template>
 
 <script setup>
 import {ref} from "vue";
-import ConfirmationDialog from "@/Components/ExtraComponents/ConfirmationDialog.vue";
+import ConfirmationDialog from "@/Components/MyComponents/ConfirmationDialog.vue";
 import {router} from "@inertiajs/vue3";
 import {showErrorDialog, showSuccessNotification} from "@/event-bus.js";
 
 const props = defineProps({
-    stopShareFolderIds: {
-        type: Array,
-        required: false,
-    },
-    stopShareFileIds: {
-        type: Array,
-        required: false,
-    },
+    deleteFolderIds: Array,
+    deleteFileIds: Array,
 });
 
-const emit = defineEmits(['stop-share']);
+const emit = defineEmits(['delete']);
 
 const showDeleteDialog = ref(false);
 
 function onDeleteClick() {
-    if (!props.stopShareFileIds.length && !props.stopShareFolderIds.length) {
+    if (!props.deleteFileIds.length && !props.deleteFolderIds.length) {
         showErrorDialog('Please select at least one file to delete');
 
         return;
     }
-        showDeleteDialog.value = true;
+
+    showDeleteDialog.value = true;
 }
 
 function onDeleteCancel() {
@@ -50,30 +45,30 @@ function onDeleteCancel() {
 }
 
 function onDeleteConfirm() {
-    console.log('StopSharing');
+    console.log('Delete');
 
-    router.delete(route('stopSharing', {
-        stopShareFolderIds: props.stopShareFolderIds,
-        stopShareFileIds: props.stopShareFileIds
+    router.delete(route('delete', {
+        deleteFolderIds: props.deleteFolderIds,
+        deleteFileIds: props.deleteFileIds
     }), {
         onSuccess: (data) => {
-            console.log('stopSharingSuccess', data);
+            console.log('onDeleteSuccess', data);
 
             showDeleteDialog.value = false;
 
-            emit('stop-share');
+            emit('delete');
 
-            showSuccessNotification('Selected files are no longer shared');
+            showSuccessNotification('Selected files have been deleted');
         },
         onError: (errors) => {
-            console.log('stopSharingError', errors);
+            console.log('onDeleteError', errors);
 
             let message;
 
             if (errors.message) {
                 message = errors.message;
             } else {
-                message = 'Error during stop sharing. Please try again later.';
+                message = 'Error during delete. Please try again later.';
             }
 
             showErrorDialog(message);
