@@ -1,26 +1,21 @@
 <template>
-    <AppLayout_new title="NewMyFiles">
+    <AppLayout title="Favourites">
         <nav class="flex justify-end mb-3 mt-1">
             <!-- Bottoni -->
             <div class="flex">
-                <RenameFileButton class="mr-3"
-                                  v-if="(selectedFolderIds.length === 1 && selectedFileIds.length === 0) || (selectedFolderIds.length === 0 && selectedFileIds.length === 1)"
+                <RenameFileButton v-if="(selectedFolderIds.length === 1 && selectedFileIds.length === 0) || (selectedFolderIds.length === 0 && selectedFileIds.length === 1)"
                                   :folder-id="Number(selectedFolderIds[0])"
                                   :file-id="Number(selectedFileIds[0])"
                                   @restore="onRestore"/>
-                <CopyFileButton class="mr-3"
-                                v-if="(selectedFolderIds.length === 1 && selectedFileIds.length === 0) || (selectedFolderIds.length === 0 && selectedFileIds.length === 1)"
+                <CopyFileButton v-if="(selectedFolderIds.length === 1 && selectedFileIds.length === 0) || (selectedFolderIds.length === 0 && selectedFileIds.length === 1)"
                                 @restore="onRestore"/>
-                <MoveFilesButton class="mr-3"
-                                 v-if="(selectedFolderIds.length > 0 || selectedFileIds.length > 0)"
+                <MoveFilesButton v-if="(selectedFolderIds.length > 0 || selectedFileIds.length > 0)"
                                  :move-file-ids="selectedFileIds"
-                                 :move-folder-ids="selectedFolderIds"
-                                 @restore="onRestore"/>
+                                 :move-folder-ids="selectedFolderIds"/>
                 <ShareFilesButton :share-file-ids="selectedFileIds"
                                   :share-folder-ids="selectedFolderIds"
                                   @restore="onRestore"/>
-                <DownloadFilesButton class="mr-3"
-                                     :download-file-ids="selectedFileIds"
+                <DownloadFilesButton :download-file-ids="selectedFileIds"
                                      :download-folder-ids="selectedFolderIds"
                                      @download="onRestore"/>
                 <DeleteFilesButton :delete-file-ids="selectedFileIds"
@@ -47,6 +42,9 @@
                         Owner
                     </th>
                     <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
+                        Path
+                    </th>
+                    <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
                         Last Modified
                     </th>
                     <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
@@ -61,10 +59,10 @@
                     :key="folder.id"
                     :class="(selectedFolders[folder.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
                     class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
-                    @click="$event => toggleSelectFolder(folder.id)">
+                    @click="toggleSelectFolder(folder.id)">
 <!--                    @dblclick.prevent="openFolder(folder.id)"-->
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[30px] max-w-[30px] pr-0">
-                        <Checkbox @change="$event => onSelectFolderCheckboxChange(folder.id)"
+                        <Checkbox @change="onSelectFolderCheckboxChange(folder.id)"
                                   v-model="selectedFolders[folder.id]"
                                   :checked="selectedFolders[folder.id] || allSelected"
                                   class="mr-4"/>
@@ -82,7 +80,10 @@
                         {{ folder.name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ folder.owner }}
+                        {{ folder.owner === page.props.auth.user.name ? 'me' : folder.owner }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ folder.path }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {{ folder.updated_at }}
@@ -98,9 +99,9 @@
                     :key="file.id"
                     :class="(selectedFiles[file.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
                     class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
-                    @click="$event => toggleSelectFile(file.id)">
+                    @click="toggleSelectFile(file.id)">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[30px] max-w-[30px] pr-0">
-                        <Checkbox @change="$event => onSelectFileCheckboxChange(file.id)"
+                        <Checkbox @change="onSelectFileCheckboxChange(file.id)"
                                   v-model="selectedFiles[file.id]"
                                   :checked="selectedFiles[file.id] || allSelected"
                                   class="mr-4"/>
@@ -118,7 +119,10 @@
                         {{ file.file_name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ file.owner }}
+                        {{ file.owner === page.props.auth.user.name ? 'me' : file.owner }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ file.path }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {{ file.updated_at }}
@@ -138,13 +142,13 @@
                 </div>
             </div>
         </div>
-    </AppLayout_new>
+    </AppLayout>
 </template>
 
 <script setup>
 import {computed, ref} from "vue";
-import {router} from "@inertiajs/vue3";
-import AppLayout_new from "@/Layouts/AppLayout_new.vue";
+import {router, usePage} from "@inertiajs/vue3";
+import AppLayout from "@/Layouts/AppLayout.vue";
 import ShareFilesButton from "@/Components/ExtraComponents/ShareFilesButton.vue";
 import DownloadFilesButton from "@/Components/ExtraComponents/DownloadFilesButton.vue";
 import DeleteFilesButton from "@/Components/ExtraComponents/DeleteFilesButton.vue";
@@ -162,9 +166,13 @@ const props = defineProps({
     files: Object,
 });
 
+// Uses
+const page = usePage();
+
 // Computed
 const selectedFolderIds = computed(() => Object.entries(selectedFolders.value).filter(a => a[1]).map(a => a[0]));
 const selectedFileIds = computed(() => Object.entries(selectedFiles.value).filter(a => a[1]).map(a => a[0]));
+const owner = computed(() => props.currentFolder.data.owner === page.props.auth.user.name ? 'me' : props.currentFolder.data.owner);
 
 // Refs
 const selectedFolders = ref({});
@@ -280,7 +288,7 @@ function addRemoveFavouriteFile(fileId) {
 function sendFavouriteRequest(folderId, fileId) {
     console.log('addRemoveFavourite');
 
-    router.post(route('addRemoveFavourites'),
+    router.post(route('add-remove-favourites'),
         {
             folderId: folderId,
             fileId: fileId
@@ -304,5 +312,7 @@ function onRestore() {
     selectedFolders.value = {};
     selectedFiles.value = {};
 }
+
+console.log('Favourites', props);
 
 </script>

@@ -1,8 +1,8 @@
 <template>
-    <AppLayout title="My files">
+    <oldAppLayout title="My Files">
         <template #header>
             <h2 class="font-bold text-xl text-gray-800 leading-tight">
-                My files
+                My Files
             </h2>
         </template>
 
@@ -12,7 +12,7 @@
                 <!-- 1.1) Creazione nuova cartella root (se Admin) -->
                 <div v-if="rootFolderId == null"
                      class="basis-1/2 px-6">
-                    <h3 class="text-base font-semibold leading-6 text-gray-900">Create root folder</h3>
+                    <h3 class="text-base font-semibold leading-6 text-gray-900">Create Root Folder</h3>
 
                     <form @submit.prevent="submitRootFolderForm"
                           class="mt-5 sm:flex sm:items-center">
@@ -36,7 +36,7 @@
                     <div v-if="userFolderPermission.write"
                          class="grid grid-cols-2 sm:flex">
                         <div class="sm:basis-1/2">
-                            <h3 class="text-base font-semibold leading-6 text-gray-900">Create folder</h3>
+                            <h3 class="text-base font-semibold leading-6 text-gray-900">Create Folder</h3>
 
                             <form @submit.prevent="submitFolderForm"
                                   class="mt-5 sm:flex sm:items-center">
@@ -60,14 +60,15 @@
 
                 <!-- 1.3) Upload file -->
                 <div class="basis-1/2 px-6">
-                    <h3 class="text-base font-semibold leading-6 text-gray-900">Upload file</h3>
+                    <h3 class="text-base font-semibold leading-6 text-gray-900">Upload File</h3>
 
                     <form @submit.prevent="submitFileUploadForm" class="mt-5 sm:flex sm:items-center">
                         <div class="w-full sm:max-w-xs">
                             <label for="file" class="sr-only"></label>
 
-                            <input type="file" name="file" id="file" ref="file" @change="uploadFile"
-                                   class="block text-sm w-11/12 file:bg-asblue-200 file:hover:bg-asblue-100 file:font-regular file:text-sm file:py-1.5 file:ring-0 file:text-asblue-800 break-all file:px-3 file:mr-4 text-gray-900">
+                            <input type="file" name="file" id="file" ref="file" @change="onChange"
+                                   multiple
+                                   class=" block text-sm w-11/12 file:bg-asblue-200 file:hover:bg-asblue-100 file:font-regular file:text-sm file:py-1.5 file:ring-0 file:text-asblue-800 break-all file:px-3 file:mr-4 text-gray-900">
                         </div>
                         <button type="submit"
                                 class="mt-3 inline-flex w-full items-center justify-center rounded-md bg-gray-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-gray-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:ml-3 sm:mt-0 sm:w-auto">
@@ -423,14 +424,14 @@
                         :show="shareFileModal"
                         @close="closeShareFileModal()"
         />
-    </AppLayout>
+    </oldAppLayout>
 </template>
 
 <script setup>
 // Imports
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import {computed, ref} from 'vue';
-import AppLayout from '@/Layouts/__oldAppLayout.vue';
+import oldAppLayout from '@/Layouts/__oldAppLayout.vue';
 import JetConfirmationModal from '@/Components/ConfirmationModal.vue';
 import JetButton from '@/Components/PrimaryButton.vue';
 import ActionIconDelete from '@/Components/Icons/ActionIconDelete.vue';
@@ -474,12 +475,12 @@ const props = defineProps({
 const openFolder = (folderId = null) => {
     if (folderId != null) {
         // ritorna la cartella selezionata
-        router.get(route('dashboard'), {
+        router.get(route('__old-my-files'), {
             folderId: folderId
         });
     } else {
         // ritorna le cartelle di root
-        router.get(route('dashboard'));
+        router.get(route('__old-my-files'));
     }
 }
 
@@ -516,7 +517,7 @@ const manageFolder = (folder) => {
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // AZIONI FILE
 const deleteFile = () => {
-    router.delete(route('backend.file-manager.delete-file', fileToDelete.value.id), {
+    router.delete(route('file.delete', fileToDelete.value.id), {
         onSuccess: () => {
             closeDeleteFileModal();
         },
@@ -602,20 +603,20 @@ const submitFolderForm = () => {
 /* 3) file upload form */
 const fileUploadForm = useForm({
     _method: 'POST',
-    file: null,
+    files: null,
     currentFolderId: props.currentFolderId
 });
 
 const submitFileUploadForm = () => {
-    fileUploadForm.post(route('file.upload'));
+    fileUploadForm.post(route('upload'));
 }
 
-const uploadFile = (event) => {
-    console.log('event', event.target.files[0]);
+const onChange = (event) => {
+    console.log('event', event.target.files);
     // aggiornamento della variabile che contiene il file (dentro al form) con il file caricato
-    fileUploadForm.file = event.target.files[0];
+    fileUploadForm.files = event.target.files;
 
-    console.log("uploadFile: ", fileUploadForm.file);
+    console.log("uploadFiles: ", fileUploadForm.files);
 }
 
 

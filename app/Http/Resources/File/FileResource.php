@@ -32,9 +32,10 @@ class FileResource extends JsonResource
             'file_name'     => $this->file_name,
             'size'          => FileManagerHelper::getFileSize($this),
             'mime_type'     => $this->mime_type,
-            'updated_at'    => $this->updated_at,
+            'updated_at'    => $this->updated_at->diffForHumans(),
             'owner'         => $owner->name,
             'is_favourite'  => FileManagerHelper::fileIsFavourite($this->id),
+            'path'          => $this->getCustomProperty('path'),
         ];
     }
 }

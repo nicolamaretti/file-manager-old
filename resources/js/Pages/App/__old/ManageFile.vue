@@ -2,57 +2,15 @@
     <AppLayout title="Manage Folder">
         <template #header>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Manage Folder
+                Manage File
             </h2>
         </template>
 
         <div class="py-8">
-            <!-- Azioni cartella -->
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-8">
-                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
-                    <h3 class="font-bold text-lg">
-                        Selected folder -
-                        <span class="text-cyan-600 font-light font-mono">{{ originalFolderPath }}</span>
-                    </h3>
-
-                    <!--                    <h3 v-if="selectedFolder" class="font-bold">-->
-                    <!--                        Copia in: {{ selectedFolder.folderPath }}-->
-                    <!--                    </h3>-->
-
-                    <fieldset class="mt-7">
-                        <span>
-                            <label for="move">Move</label>
-                            <input v-model="selectedAction" type="radio" id="move" value="move"
-                                   class="ml-2 mb-0. cursor-pointer">
-                        </span>
-                        <span class="ml-10">
-                            <label for="copy">Copy</label>
-                            <input v-model="selectedAction" type="radio" id="copy" value="copy"
-                                   class="ml-2 mb-0.5 cursor-pointer">
-                        </span>
-                    </fieldset>
-                    <div class="mt-7">
-                        <JetButton class="bg-red-400"
-                                   @click.prevent="goBack('my-files')"
-                        >
-                            Cancel
-                        </JetButton>
-
-                        <JetButton :disabled="buttonDisabled"
-                                   class="ml-4 bg-green-400 disabled:bg-gray-400"
-                                   @click.prevent="openConfirmModal()"
-                        >
-                            Confirm
-                        </JetButton>
-                    </div>
-                </div>
-            </div>
-
             <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-8">
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
                     <h3 class="font-bold text-lg">Folders list:</h3>
-                    <div class="pl-4">
-
+                    <div class="pt-1 pl-4">
                         <!-- Riga con back button -->
                         <div v-if="!folderIsRoot"
                              class="text-blue-600 font-semibold pl-5 cursor-pointer hover:text-blue-400">
@@ -110,13 +68,50 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Azioni cartella -->
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 mb-8">
+                <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-6">
+                    <h3 class="font-bold text-lg">
+                        Selected file -
+                        <span class="text-cyan-600 font-light font-mono">{{ originalFilePath }}</span>
+                    </h3>
+
+                    <fieldset class="mt-7">
+                        <span>
+                            <label for="move">Move</label>
+                            <input v-model="selectedAction" type="radio" id="move" value="move"
+                                   class="ml-2 mb-0. cursor-pointer">
+                        </span>
+                        <span class="ml-10">
+                            <label for="copy">Copy</label>
+                            <input v-model="selectedAction" type="radio" id="copy" value="copy"
+                                   class="ml-2 mb-0.5 cursor-pointer">
+                        </span>
+                    </fieldset>
+                    <div class="mt-7">
+                        <JetButton class="bg-red-400"
+                                   @click.prevent="goBack('my-files')"
+                        >
+                            Cancel
+                        </JetButton>
+
+                        <JetButton :disabled="buttonDisabled"
+                                   class="ml-4 bg-green-400 disabled:bg-gray-400"
+                                   @click.prevent="openConfirmModal()"
+                        >
+                            Confirm
+                        </JetButton>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- modale conferma azione -->
         <JetConfirmationModal :show="confirmModal" @close.prevent="closeConfirmModal()">
             <template #title>
             <span class="text-center">
-                Are you sure you want to {{ selectedAction }} {{ originalFolderPath }} into {{ selectedFolder.folderFullPath }} ?
+                Are you sure you want to {{ selectedAction }} {{ originalFilePath }} into {{ selectedFolder.folderFullPath }} ?
             </span>
             </template>
             <template #footer>
@@ -135,7 +130,7 @@
         <JetConfirmationModal :show="errorModal" @close.prevent="closeErrorModal">
             <template #title>
             <span class="text-center">
-                Error
+                Errore
             </span>
             </template>
             <template #content>
@@ -153,7 +148,7 @@
 </template>
 
 <script setup>
-import AppLayout from "@/Layouts/AppLayout.vue";
+import AppLayout from "@/Layouts/__oldAppLayout.vue";
 import {router} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import JetButton from '@/Components/PrimaryButton.vue';
@@ -166,9 +161,9 @@ const props = defineProps({
     folders: Object,
     folder: Object,
     folderIsRoot: Boolean,
+    originalFileId: Number,
+    originalFilePath: String,
     originalFolderId: Number,
-    originalFolderPath: String,
-    originalFolderParent: Object, // per il redirect
 });
 
 const selectedFolder = ref(null);
@@ -182,23 +177,25 @@ const buttonDisabled = computed(() => {
 const goBack = (backRoute) => {
     // torno indietro aprendo la cartella padre di quella selezionata
     router.get(route(backRoute), {
-        folderId: props.originalFolderParent.id,
+        folderId: props.originalFolderId,
     });
 }
 
 const openFolder = (folderId = null) => {
     if (folderId != null) {
-        router.get(route('backend.file-system.manage-folder'), {
+        router.get(route('backend.file-system.manage-file'), {
             folderId: folderId,
+            originalFileId: props.originalFileId,
+            originalFileFullPath: props.originalFilePath,
             originalFolderId: props.originalFolderId,
-            originalFolderPath: props.originalFolderPath
         }, {
             only: ['parent', 'folders', 'folderIsRoot'],
         });
     } else {
-        router.get(route('backend.file-system.manage-folder'), {
+        router.get(route('backend.file-system.manage-file'), {
+            originalFileId: props.originalFileId,
+            originalFileFullPath: props.originalFilePath,
             originalFolderId: props.originalFolderId,
-            originalFolderPath: props.originalFolderPath
         }, {
             only: ['parent', 'folders', 'folderIsRoot'],
         });
@@ -213,13 +210,13 @@ const selectFolder = (folder) => {
 }
 
 const confirmSelection = () => {
-    router.post(route('backend.file-system.move-or-copy-folder'), {
+    router.post(route('backend.file-system.move-or-copy-file'), {
         selectedAction: selectedAction.value,
+        selectedFileId: props.originalFileId,
         selectedFolderId: selectedFolder.value.folderId,
-        originalFolderId: props.originalFolderId,
     }, {
         onError: (error) => {
-            if (error.manageFolderError) {
+            if (error.manageFileError) {
                 errorMessage.value = error.message;
                 openErrorModal();
             }
@@ -238,7 +235,7 @@ const closeConfirmModal = () => {
     confirmModal.value = false;
 }
 
-/* modale errore */
+/* modale errori */
 let errorModal = ref(false);
 let errorMessage = ref('');
 
@@ -250,6 +247,6 @@ const closeErrorModal = () => {
     errorModal.value = false;
 }
 
-console.log(props);
+// console.log(props);
 
 </script>

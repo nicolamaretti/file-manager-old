@@ -1,5 +1,5 @@
 <script setup>
-import AppLayout from '@/Layouts/AppLayout.vue';
+import AppLayout from '@/Layouts/__oldAppLayout.vue';
 import {router, useForm, usePage} from "@inertiajs/vue3";
 import {computed, ref} from 'vue';
 import JetConfirmationModal from '@/Components/ConfirmationModal.vue';

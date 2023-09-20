@@ -26,11 +26,11 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class FileManagerController extends Controller
 {
-    public function newMyFiles(Request $request): InertiaResponse
+    public function myFiles(Request $request): InertiaResponse
     {
         $user = $request->user();
         $rootFolderId = $user->root_folder_id;
-        $isUserAdmin = (bool) $user->is_admin;
+        $isUserAdmin = (bool)$user->is_admin;
         $files = null;
         $parent = null;
         $currentFolder = null;
@@ -89,7 +89,7 @@ class FileManagerController extends Controller
 //            }
         }
 
-        return Inertia::render('NewMyFiles', [
+        return Inertia::render('App/MyFiles', [
             'currentFolder' => $currentFolder,
             'rootFolderId' => $rootFolderId,
             'isUserAdmin' => $isUserAdmin,
@@ -145,13 +145,13 @@ class FileManagerController extends Controller
         $folders = FolderResource::collection($folders);
         $files = FileResource::collection($files);
 
-        return Inertia::render('Favourites', [
-            'folders'       => $folders,
-            'files'         => $files,
+        return Inertia::render('App/Favourites', [
+            'folders' => $folders,
+            'files' => $files,
         ]);
     }
 
-    public function newSharedWithMe(Request $request): InertiaResponse
+    public function sharedWithMe(Request $request): InertiaResponse
     {
         $user = $request->user();
 
@@ -204,13 +204,13 @@ class FileManagerController extends Controller
             }
         }
 
-        return Inertia::render('NewSharedWithMe', [
+        return Inertia::render('App/SharedWithMe', [
             'folders' => $sharedFolders,
             'files' => $sharedFiles,
         ]);
     }
 
-    public function newSharedByMe(Request $request): InertiaResponse
+    public function sharedByMe(Request $request): InertiaResponse
     {
         $user = $request->user();
 
@@ -261,7 +261,7 @@ class FileManagerController extends Controller
             }
         }
 
-        return Inertia::render('NewSharedByMe', [
+        return Inertia::render('App/SharedByMe', [
             'folders' => $sharedFolders,
             'files' => $sharedFiles,
         ]);
@@ -439,6 +439,7 @@ class FileManagerController extends Controller
 
     public function download(Request $request)
     {
+        dd('download');
         $user = $request->user();
 
         $fileIds = $request->input('downloadFileIds');
@@ -467,7 +468,8 @@ class FileManagerController extends Controller
 //            dd($dest);
 
 //            return response()->download($file->getPath(), $file->file_name);
-            return Storage::download($file->getCustomProperty('path'), $file->file_name);
+            return Storage::disk('public')->download($file->getPath());
+//            return Storage::download($file->getCustomProperty('path'), $file->file_name);
 //            return $file;
         }
 //
@@ -555,7 +557,7 @@ class FileManagerController extends Controller
         $userId = data_get($user, 'id');
 
         if ($userId) {
-            if($fileIds) {
+            if ($fileIds) {
                 foreach ($fileIds as $fileId) {
                     $sharedFile = FileShare::query()
                         ->where('file_id', $fileId)
@@ -742,7 +744,7 @@ class FileManagerController extends Controller
             Media::query()
                 ->whereIn('id', $fileIds)
                 ->get()
-                ->each(function ($file) use($currentFolder) {
+                ->each(function ($file) use ($currentFolder) {
                     $fileExt = pathinfo($file->file_name, PATHINFO_EXTENSION);
                     $newFileName = $file->name . '-copy';
                     $newFileFullName = $newFileName . '.' . $fileExt;
@@ -764,24 +766,93 @@ class FileManagerController extends Controller
         ]);
     }
 
-    public function move()
+    public function selectFoldersToMove(Request $request): InertiaResponse
     {
-        dd('move');
-    }
-
-    public function getFoldersForMoveModal(Request $request) {
         $user = $request->user();
-        $moveFileIds = $request->input('moveFileIds');
-        $moveFolderIds = $request->input('moveFolderIds');
+        $fileIds = $request->input('moveFileIds');
+        $folderIds = $request->input('moveFolderIds');
+        $currentFolderId = $request->input('currentFolderId');
+
+        if ($currentFolderId) {
+            /* se non è null significa che non è una root folder, quindi lo converto in numero */
+            $currentFolderId = intval($currentFolderId);
+        }
+
+        // escludo la cartella corrente come destinazione
+        $excludedFolderIds[] = $currentFolderId;
+
+        if ($folderIds) {
+            /* Cerco gli id delle sottocartelle delle cartelle selezionate
+             * (non posso muovere una cartella padre in una figlia)
+             */
+            foreach ($folderIds as $folderId) {
+                $folder = Folder::query()->find($folderId);
+
+                $childrenFolderIds = $folder->getChildrenIds();
+
+                $excludedFolderIds = array_merge($excludedFolderIds, $childrenFolderIds);
+            }
+        }
 
         $folders = Folder::query()
             ->where('user_id', $user->id)
-            ->whereNotNull('folder_id')
-            ->whereNotIn('id', $moveFolderIds)
+            ->whereNotIn('id', $excludedFolderIds)
             ->get();
 
-        return Inertia::render('MoveFilesModalTable', [
+        return Inertia::render('App/MoveFiles', [
             'folders' => $folders,
+            'moveFolderIds' => $folderIds,
+            'moveFileIds' => $fileIds,
+            'currentFolderId' => $currentFolderId
+        ]);
+    }
+
+    public function move(Request $request): RedirectResponse
+    {
+        $moveIntoFolderId = intval($request->input('moveIntoFolderId'));
+        $fileIds = $request->input('moveFileIds');
+        $folderIds = $request->input('moveFolderIds');
+
+//        dd($moveIntoFolderId, $fileIds, $folderIds);
+
+        if ($folderIds) {
+            Folder::query()
+                ->whereIn('id', $folderIds)
+                ->get()
+                ->each(function ($folder) use ($moveIntoFolderId) {
+                    $oldPath = $folder->path;
+
+                    $folder->folder_id = $moveIntoFolderId;
+                    $folder->path = $folder->getFullPath();
+                    $folder->save();
+
+                    Storage::move($oldPath, $folder->path);
+                    $this->moveStorageRecursive($folder);
+
+                    Storage::deleteDirectory($oldPath);
+                });
+        }
+
+        if ($fileIds) {
+            Media::query()
+                ->whereIn('id', $fileIds)
+                ->get()
+                ->each(function ($media) use ($moveIntoFolderId) {
+                    $moveIntoFolder = Folder::query()->find($moveIntoFolderId);
+
+                    $oldPath = $media->getCustomProperty('path');
+                    $newPath = $moveIntoFolder->getFullPath() . '/' . $media->file_name;
+
+                    $media->model_id = $moveIntoFolderId;
+                    $media->setCustomProperty('path', $newPath);
+                    $media->save();
+
+                    Storage::move($oldPath, $newPath);
+                });
+        }
+
+        return to_route('my-files', [
+            'folderId' => $moveIntoFolderId
         ]);
     }
 
@@ -823,7 +894,7 @@ class FileManagerController extends Controller
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public function myFiles(Request $request): InertiaResponse
+    public function __oldMyFiles(Request $request): InertiaResponse
     {
         $user = $request->user();
         $rootFolderId = $user->root_folder_id;
@@ -914,7 +985,7 @@ class FileManagerController extends Controller
             }
         }
 
-        return Inertia::render('App/MyFiles', [
+        return Inertia::render('App/__old/__oldMyFiles', [
             'currentFolderId' => $currentFolderId,
             'currentFolderName' => $currentFolderName,
             'currentFolderFullPath' => $currentFolderFullPath,
@@ -928,7 +999,7 @@ class FileManagerController extends Controller
         ]);
     }
 
-    public function sharedWithMe(Request $request): InertiaResponse
+    public function __oldSharedWithMe(Request $request): InertiaResponse
     {
         $user = $request->user();
 
@@ -958,13 +1029,13 @@ class FileManagerController extends Controller
 
 //        dd($sharedFolders, $sharedFiles);
 
-        return Inertia::render('App/SharedWithMe', [
+        return Inertia::render('App/__old/__oldSharedWithMe', [
             'folders' => $sharedFolders,
             'files' => $sharedFiles,
         ]);
     }
 
-    public function sharedByMe(Request $request): InertiaResponse
+    public function __oldSharedByMe(Request $request): InertiaResponse
     {
         $user = $request->user();
 
@@ -997,7 +1068,7 @@ class FileManagerController extends Controller
             ->orderBy('userName', 'ASC')
             ->get();
 
-        return Inertia::render('App/SharedByMe', [
+        return Inertia::render('App/__old/__oldSharedByMe', [
             'folders' => $sharedFolders,
             'files' => $sharedFiles,
         ]);

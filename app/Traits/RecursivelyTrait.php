@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 trait RecursivelyTrait
 {
     /**
-     * Ottiene l'id della cartella corrente e delle sottocartelle
+     * Ritorna un array contenente l'id della cartella corrente e delle sottocartelle
      *
      * @return array $childrenIds
      */

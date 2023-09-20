@@ -3,8 +3,8 @@
         <ol role="list" class="flex items-center space-x-1">
             <li>
                 <div>
-                    <NavLink v-if="pathname === '/newMyFiles'"
-                             :href="route('newMyFiles')" class="text-gray-400 hover:text-gray-500">
+                    <NavLink v-if="pathname === '/my-files'"
+                             :href="route('my-files')" class="text-gray-400 hover:text-gray-500">
                         <HomeIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
                         <span class="ml-2">My Files</span>
                     </NavLink>
@@ -14,8 +14,8 @@
 <!--                        <span class="ml-2">Favourites-->
 <!--                        </span>-->
 <!--                    </NavLink>-->
-<!--                    <NavLink v-if="pathname === '/newSharedWithMe'"-->
-<!--                             :href="route('newSharedWithMe')" class="text-gray-400 hover:text-gray-500">-->
+<!--                    <NavLink v-if="pathname === '/shared-with-me'"-->
+<!--                             :href="route('shared-with-me')" class="text-gray-400 hover:text-gray-500">-->
 <!--                        <HomeIcon class="h-5 w-5 sflex-shrink-0" aria-hidden="true"/>-->
 <!--                        <span class="ml-2">Shared With Me-->
 <!--                        </span>-->
@@ -23,8 +23,8 @@
                 </div>
             </li>
             <li v-for="ancestor in ancestors" :key="ancestor.id">
-                <NavLink v-if="pathname === '/newMyFiles'"
-                         :href="route('newMyFiles', {folderId: ancestor.id})" class="text-gray-400 hover:text-gray-500 flex items-center">
+                <NavLink v-if="pathname === '/my-files'"
+                         :href="route('my-files', {folderId: ancestor.id})" class="text-gray-400 hover:text-gray-500 flex items-center">
                     <ChevronRightIcon class="h-5 w-5 flex-shrink-0 text-gray-400" aria-hidden="true"/>
                     <span class="ml-2 text-sm font-medium text-gray-500 hover:text-gray-700">{{ ancestor.name }}</span>
                 </NavLink>
@@ -33,8 +33,8 @@
 <!--                    <ChevronRightIcon class="h-5 w-5 flex-shrink-0 text-gray-400" aria-hidden="true"/>-->
 <!--                    <span class="ml-2 text-sm font-medium text-gray-500 hover:text-gray-700">{{ ancestor.name }}</span>-->
 <!--                </NavLink>-->
-<!--                <NavLink v-if="pathname === '/newSharedWithMe'"-->
-<!--                         :href="route('newSharedWithMe', {folderId: ancestor.id})" class="text-gray-400 hover:text-gray-500 flex items-center">-->
+<!--                <NavLink v-if="pathname === '/shared-with-me'"-->
+<!--                         :href="route('shared-with-me', {folderId: ancestor.id})" class="text-gray-400 hover:text-gray-500 flex items-center">-->
 <!--                    <ChevronRightIcon class="h-5 w-5 flex-shrink-0 text-gray-400" aria-hidden="true"/>-->
 <!--                    <span class="ml-2 text-sm font-medium text-gray-500 hover:text-gray-700">{{ ancestor.name }}</span>-->
 <!--                </NavLink>-->

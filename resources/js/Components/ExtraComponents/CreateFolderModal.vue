@@ -65,7 +65,7 @@ function createFolder() {
 
     const name = folderName.value;
 
-    router.post(route('createFolder'),
+    router.post(route('create-folder'),
         {
             newFolderName: folderName.value,
             currentFolderId: page.props.currentFolder ? page.props.currentFolder.data.id : page.props.auth.user.root_folder_id

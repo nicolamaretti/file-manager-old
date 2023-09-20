@@ -16,6 +16,7 @@
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import {router} from "@inertiajs/vue3";
 import {showErrorDialog, showSuccessNotification} from "@/event-bus.js";
+import {httpGet} from "@/Helper/http-helper.js";
 
 // Props & Emit
 const props = defineProps({
@@ -32,33 +33,83 @@ function onDownloadClick() {
 
         return;
     } else {
-        console.log('Download');
+        const params = new URLSearchParams();
 
-        router.get(route('download'),
-            {
-                downloadFileIds: props.downloadFileIds,
-                downloadFolderIds: props.downloadFolderIds
-            },
-            {
-                onSuccess: (data) => {
-                    console.log('downloadSuccess', data);
-                    emit('download');
-                    showSuccessNotification('Files downloaded successfully');
-                },
-                onError: (errors) => {
-                    console.log('downloadError', errors);
+        console.log(props.downloadFolderIds)
+        console.log(props.downloadFileIds)
 
-                    let message;
+        for (let id of props.downloadFolderIds) {
+            params.append('folderIds', id);
+        }
 
-                    if (errors.message) {
-                        message = errors.message;
-                    } else {
-                        message = 'Error during download. Please try again later.';
-                    }
+        for (let id of props.downloadFileIds) {
+            params.append('fileIds', id);
+        }
 
-                    showErrorDialog(message);
-                }
-            });
+        console.log(params.toString())
+
+        let url = route('download');
+        // if (props.sharedWithMe) {
+        //     url = route('file.downloadSharedWithMe')
+        // } else if (props.sharedByMe) {
+        //     url = route('file.downloadSharedByMe')
+        // }
+
+        httpGet(url + '?' + params.toString())
+            .then(res => {
+                console.log(res);
+                if (!res.url) return;
+
+                const a = document.createElement('a');
+                a.download = res.filename;
+                a.href = res.url;
+                a.click();
+            })
+
+        /////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////
+        /////////////////////////////////////////////////////
+        // console.log('Download');
+        //
+        // router.get(route('download'),
+        //     {
+        //         downloadFileIds: props.downloadFileIds,
+        //         downloadFolderIds: props.downloadFolderIds
+        //     },
+        //     {
+        //         onSuccess: (data) => {
+        //             console.log('downloadSuccess', data);
+        //             emit('download');
+        //             showSuccessNotification('Files downloaded successfully');
+        //         },
+        //         onError: (errors) => {
+        //             console.log('downloadError', errors);
+        //
+        //             let message;
+        //
+        //             if (errors.message) {
+        //                 message = errors.message;
+        //             } else {
+        //                 message = 'Error during download. Please try again later.';
+        //             }
+        //
+        //             showErrorDialog(message);
+        //         }
+        //     });
     }
 }
+
+// axios({
+//     url: route('download'),
+//     method: "GET",
+//     responseType: "arraybuffer",
+// }).then((response) => {
+//     console.log('Download', response)
+//     // let blob = new Blob([response.data]);
+//     // let link = document.createElement('a')
+//     // link.href = window.URL.createObjectURL(blob)
+//     // link.download = 'test.pdf'
+//     // link.click()
+// });
 </script>

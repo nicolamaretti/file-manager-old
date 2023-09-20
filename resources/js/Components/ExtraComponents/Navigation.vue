@@ -1,6 +1,6 @@
 <template>
     <nav class="min-w-[200px]">
-        <Link :href="route('newMyFiles')" class="h-[80px] px-3 flex items-center gap-2 font-medium">
+        <Link :href="route('my-files')" class="h-[80px] px-3 flex items-center gap-2 font-medium">
             <ApplicationMark
                 class="block h-9 w-auto fill-current text-gray-800"
             />
@@ -11,10 +11,11 @@
             <CreateNewDropdown/>
 
             <div class="py-3">
-                <NavLink :href="route('newMyFiles')" :active="route().current('newMyFiles')">My Files</NavLink>
+                <NavLink :href="route('my-files')" :active="route().current('my-files')">My Files</NavLink>
                 <NavLink :href="route('favourites')" :active="route().current('favourites')">Favourites</NavLink>
-                <NavLink :href="route('newSharedWithMe')" :active="route().current('newSharedWithMe')">Shared With Me</NavLink>
-                <NavLink :href="route('newSharedByMe')" :active="route().current('newSharedByMe')">Shared By Me</NavLink>
+                <NavLink :href="route('shared-with-me')" :active="route().current('shared-with-me')">Shared With Me</NavLink>
+                <NavLink :href="route('shared-by-me')" :active="route().current('shared-by-me')">Shared By Me</NavLink>
+                <NavLink :href="route('__old-my-files')" :active="route().current('__old-my-files')">__oldVersion</NavLink>
             </div>
         </div>
     </nav>

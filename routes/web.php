@@ -35,25 +35,24 @@ Route::middleware([
 ])->group(function () {
 
     // NEW
-    Route::get('/newMyFiles', [FileManagerController::class, 'newMyFiles'])->name('newMyFiles');
+    Route::get('/my-files', [FileManagerController::class, 'myFiles'])->name('my-files');
     Route::get('/favourites', [FileManagerController::class, 'favourites'])->name('favourites');
-    Route::get('/newSharedWithMe', [FileManagerController::class, 'newSharedWithMe'])->name('newSharedWithMe');
-    Route::get('/newSharedByMe', [FileManagerController::class, 'newSharedByMe'])->name('newSharedByMe');
-    Route::post('/create/folder', [FileManagerController::class, 'createFolder'])->name('createFolder');
+    Route::get('/shared-with-me', [FileManagerController::class, 'sharedWithMe'])->name('shared-with-me');
+    Route::get('/shared-by-me', [FileManagerController::class, 'sharedByMe'])->name('shared-by-me');
+    Route::post('/create/folder', [FileManagerController::class, 'createFolder'])->name('create-folder');
     Route::delete('/delete/', [FileManagerController::class, 'delete'])->name('delete');
     Route::post('/upload/', [FileManagerController::class, 'upload'])->name('upload');
     Route::get('/download/', [FileManagerController::class, 'download'])->name('download');
-    Route::post('/add-remove-favourites/', [FileManagerController::class, 'addRemoveFavourites'])->name('addRemoveFavourites');
+    Route::post('/add-remove-favourites/', [FileManagerController::class, 'addRemoveFavourites'])->name('add-remove-favourites');
     Route::post('/share/', [FileManagerController::class, 'share'])->name('share');
-    Route::delete('/share/stop', [FileManagerController::class, 'stopSharing'])->name('stopSharing');
-    Route::post('/move/', [FileManagerController::class, 'move'])->name('move');
+    Route::delete('/share/stop', [FileManagerController::class, 'stopSharing'])->name('stop-sharing');
     Route::post('/copy/', [FileManagerController::class, 'copy'])->name('copy');
     Route::post('/rename/', [FileManagerController::class, 'rename'])->name('rename');
-    Route::get('/get/folders', [FileManagerController::class, 'getFoldersForMoveModal'])->name('getFoldersForMoveModal');
-
+    Route::get('/move/select', [FileManagerController::class, 'selectFoldersToMove'])->name('select-folders-to-move');
+    Route::post('/move/', [FileManagerController::class, 'move'])->name('move');
 
 //    Route::get('/dashboard', [FileManagerController::class, 'myFiles'])->name('dashboard');
-    Route::get('/my-files/{folderId?}', [FileManagerController::class, 'myFiles'])->name('my-files');
+    Route::get('/__old-my-files/{folderId?}', [FileManagerController::class, '__oldMyFiles'])->name('__old-my-files');
     Route::post('/create/root-folder', [FileManagerController::class, 'createRootFolder'])->name('folder.create-root');
 //    Route::post('/create/folder', [FileManagerController::class, 'createFolder'])->name('folder.create');
 //    Route::post('/upload/file', [FileManagerController::class, 'uploadFile'])->name('file.upload');
@@ -68,10 +67,10 @@ Route::middleware([
     Route::post('/share/file/{fileId}', [FileManagerController::class, 'shareFile'])->name('file.share');
 
     /* shared */
-    Route::get('/shared-with-me', [FileManagerController::class, 'sharedWithMe'])->name('shared-with-me');
-    Route::get('/shared-by-me', [FileManagerController::class, 'sharedByMe'])->name('shared-by-me');
-    Route::delete('/shared-by-me/stop-sharing-folder/{folderId}', [FileManagerController::class, 'stopSharingFolder'])->name('shared-by-me.stop-sharing-folder');
-    Route::delete('/shared-by-me/stop-sharing-file/{fileId}', [FileManagerController::class, 'stopSharingFile'])->name('shared-by-me.stop-sharing-file');
+    Route::get('/__old-shared-with-me', [FileManagerController::class, '__oldSharedWithMe'])->name('__old-shared-with-me');
+    Route::get('/__old-shared-by-me', [FileManagerController::class, '__oldSharedByMe'])->name('__old-shared-by-me');
+    Route::delete('/__old-shared-by-me/stop-sharing-folder/{folderId}', [FileManagerController::class, 'stopSharingFolder'])->name('__old-shared-by-me.stop-sharing-folder');
+    Route::delete('/__old-shared-by-me/stop-sharing-file/{fileId}', [FileManagerController::class, 'stopSharingFile'])->name('__old-shared-by-me.stop-sharing-file');
 
     /* copia/spostamento cartelle */
     Route::get('/file-system/manage-folder', [ManageFolderController::class, 'index'])->name('backend.file-system.manage-folder');
