@@ -34,7 +34,6 @@ class FolderResource extends JsonResource
             'parent'        => $this->folder_id,
             'uuid'          => $this->uuid,
             'folders'       => FolderResource::collection($this->folders),
-            'fullPath'      => $this->getFullPath(),
             'updated_at'    => $this->updated_at->diffForHumans(),
             'owner'         => $user->userName,
             'is_favourite'  => $this->isFavourite(),

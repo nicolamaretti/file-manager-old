@@ -12,6 +12,8 @@ use App\Models\FolderShare;
 use App\Models\StarredFile;
 use App\Models\StarredFolder;
 use App\Models\User;
+use http\Env\Response;
+use http\Params;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,8 +23,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
+use Spatie\MediaLibrary\MediaCollections\MediaCollection;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use ZipArchive;
 
 class FileManagerController extends Controller
 {
@@ -437,59 +441,41 @@ class FileManagerController extends Controller
         return redirect()->back();
     }
 
-    public function download(Request $request)
+    public function download(Request $request): array|BinaryFileResponse
     {
-        dd('download');
-        $user = $request->user();
+        $fileIds = $request->get('fileIds');
+        $folderIds = $request->get('folderIds');
 
-        $fileIds = $request->input('downloadFileIds');
-        $folderIds = $request->input('downloadFolderIds');
-
-//        dd($fileIds, count($fileIds) === 1, $folderIds);
-
-//        $file = Media::query()->findOrFail(271);
-////        dd($file);
-//            return Storage::download($file->getPath());
-//        return response()->download($file->getPath(), $file->file_name)->deleteFileAfterSend();
-
-        /* DOWNLOAD FILES */
-        if (!$folderIds && count($fileIds) === 1) {
-            // ho un solo file da scaricare
-
-//            dd('onli iiuuuuu');
-
-            $file = Media::query()->findOrFail($fileIds[0]);
-
-//            dd($file);
-//            dd($file->getPath(), pathinfo($file->getPath()));
-
-//            $dest = 'public/' . $file->getPath();
-//
-//            dd($dest);
-
-//            return response()->download($file->getPath(), $file->file_name);
-            return Storage::disk('public')->download($file->getPath());
-//            return Storage::download($file->getCustomProperty('path'), $file->file_name);
-//            return $file;
+        if (empty($folderIds) && empty($fileIds)) {
+            return [
+                'message' => 'Please select at least one file to download'
+            ];
         }
-//
-//        if (!$fileIds && count($folderIds) === 1) {
-////            dd('onli miiiiiii');
-//
-//            $folder = Folder::query()->find($folderIds[0]);
-//
-//            $zip = $folder->getZipFolder();
-//
-//            return response()->download($zip)->deleteFileAfterSend();
-//        }
 
+        if (empty($folderIds) && count($fileIds) === 1) {
+            // ho solo un file da scaricare
+            $file = Media::query()->find($fileIds[0]);
 
-        /* FOLDERS */
-//        $folder = Folder::findOrFail($folderId);
-//
-//        $zip = $folder->getZipFolder();
-//
-//        return response()->download($zip)->deleteFileAfterSend();
+            return response()->download($file->getPath(), $file->file_name);
+        } else {
+            // ho più file da scaricare o una/più folders
+            $folders = null;
+            $files = null;
+
+            if (!empty($folderIds)) {
+                $folders = Folder::query()->whereIn('id', $folderIds)
+                    ->with('folders')
+                    ->get();
+            }
+
+            if (!empty($fileIds)) {
+                $files = Media::query()->whereIn('id', $fileIds)->get();
+            }
+
+            $zip = $this->createZip($folders, $files);
+
+            return response()->download($zip);
+        }
     }
 
     public function addRemoveFavourites(Request $request): RedirectResponse
@@ -854,6 +840,69 @@ class FileManagerController extends Controller
         return to_route('my-files', [
             'folderId' => $moveIntoFolderId
         ]);
+    }
+
+    private function createZip(Collection $folders = null, Collection $files = null): string
+    {
+        $zipFile = 'Zip.zip';
+
+        $zipArchive = new ZipArchive();
+
+        if ($zipArchive->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            if ($files) {
+                foreach ($files as $file) {
+                    $zipArchive->addFile($file->getPath(), $file->file_name);
+                }
+            }
+            if ($folders) {
+                foreach ($folders as $folder) {
+                    $path = array($folder->name);
+
+                    $this->zipFolder($folder, $zipArchive, $path);
+                }
+            }
+        }
+
+        $zipArchive->close();
+
+        return $zipFile;
+    }
+
+    private function zipFolder(Folder $folder, ZipArchive &$zipArchive, array $path): void
+    {
+        $folders = $folder->folders;
+        $files = $folder->getMedia('documents');
+
+        if ($files->isNotEmpty()) {
+            $this->addFilesToZip($files, $zipArchive, $path);
+        }
+
+        if($folders->isNotEmpty()) {
+            foreach ($folders as $subFolder) {
+                // copia locale del path per arrivare al file
+                $myPath = $path;
+
+                // aggiungo la cartella corrente al path
+                $myPath[] = $subFolder->name;
+
+                $this->zipFolder($subFolder, $zipArchive, $myPath);
+            }
+        }
+
+        if ($folders->isEmpty() && $files->isEmpty()) {
+            // aggiunta di una cartella vuota
+            $zipArchive->addEmptyDir(implode('/', $path));
+        }
+    }
+
+    private function addFilesToZip(Collection $files, ZipArchive &$zipArchive, array $path): void
+    {
+        foreach ($files as $file) {
+            $filePath = $file->getPath();
+            $myPath = implode('/', $path) . '/' . $file->file_name;
+
+            $zipArchive->addFile($filePath, $myPath);
+        }
     }
 
     private function moveStorageRecursive(Folder $currentFolder): void
@@ -1251,14 +1300,14 @@ class FileManagerController extends Controller
 //        }
 //    }
 
-    public function zipFolder(int $folderId): BinaryFileResponse
-    {
-        $folder = Folder::findOrFail($folderId);
-
-        $zip = $folder->getZipFolder();
-
-        return response()->download($zip)->deleteFileAfterSend();
-    }
+//    public function zipFolder(int $folderId): BinaryFileResponse
+//    {
+//        $folder = Folder::findOrFail($folderId);
+//
+//        $zip = $folder->getZipFolder();
+//
+//        return response()->download($zip)->deleteFileAfterSend();
+//    }
 
     public function renameFolder(int $folderId, Request $request): RedirectResponse
     {
@@ -1485,71 +1534,4 @@ class FileManagerController extends Controller
             return redirect()->back()->dangerBanner('An error occurred when trying to stop sharing this file');
         }
     }
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///  PRIVATE HELPERS
-//    private function getZipFolder(): string
-//    {
-//        // $this è l'oggetto Folder su cui è stato chiamato getZipFolder()
-//
-//        // primo elemento del path è la cartella corrente
-//        $path = array($this->name);
-//
-//        $zip_file = $this->name . '.zip';
-//
-//        // creo (o sovrascrivo) l'archivio e lo apro
-//        $zipArchive = new ZipArchive();
-//        $zipArchive->open($zip_file, ZipArchive::CREATE | ZipArchive::OVERWRITE);
-//
-//        $this->zipFolderRecursive($this, $zipArchive, $path);
-//
-//        $zipArchive->close();
-//
-//        return $zip_file;
-//    }
-//
-//    /**
-//     * $path è passato per copia perché per ogni sottocartella il percorso cambia
-//     *
-//     * @param Folder $folder
-//     * @param ZipArchive $zipArchive
-//     * @param array $path
-//     * @return void
-//     */
-//    private function zipFolderRecursive(Folder $folder, ZipArchive &$zipArchive, array $path): void
-//    {
-//        $folders = $folder->folders;
-//        $files = $folder->getMedia('documents');
-//
-//        if ($files->isNotEmpty()) {
-//            $this->zipFiles($files, $zipArchive, $path);
-//        }
-//
-//        if($folders->isNotEmpty()) {
-//            foreach ($folders as $subFolder) {
-//                // copia locale del path per arrivare al file
-//                $myPath = $path;
-//
-//                // aggiungo la cartella corrente al path
-//                array_push($myPath, $subFolder->name);
-//
-//                $this->zipFolderRecursive($subFolder, $zipArchive, $myPath);
-//            }
-//        }
-//
-//        if ($folders->isEmpty() && $files->isEmpty()) {
-//            // aggiunta di una cartella vuota
-//            $zipArchive->addEmptyDir(implode('/', $path));
-//        }
-//    }
-//    private function zipFiles(MediaCollection $files, ZipArchive &$zipArchive, array $path): void
-//    {
-//        foreach ($files as $file) {
-//            $filePath = $file->getPath();
-//            $myPath = implode('/', $path) . '/' . $file->file_name;
-//
-//            $zipArchive->addFile($filePath, $myPath);
-//        }
-//    }
 }

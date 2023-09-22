@@ -54,7 +54,7 @@ trait ZipableTrait
                 $myPath = $path;
 
                 // aggiungo la cartella corrente al path
-                array_push($myPath, $subFolder->name);
+                $myPath[] = $subFolder->name;
 
                 $this->zipFolderRecursive($subFolder, $zipArchive, $myPath);
             }

@@ -43,6 +43,7 @@ Route::middleware([
     Route::delete('/delete/', [FileManagerController::class, 'delete'])->name('delete');
     Route::post('/upload/', [FileManagerController::class, 'upload'])->name('upload');
     Route::get('/download/', [FileManagerController::class, 'download'])->name('download');
+//    Route::get('/download/', [FileManagerController::class, 'download'])->name('download');
     Route::post('/add-remove-favourites/', [FileManagerController::class, 'addRemoveFavourites'])->name('add-remove-favourites');
     Route::post('/share/', [FileManagerController::class, 'share'])->name('share');
     Route::delete('/share/stop', [FileManagerController::class, 'stopSharing'])->name('stop-sharing');
