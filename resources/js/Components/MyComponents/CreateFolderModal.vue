@@ -13,7 +13,7 @@
                        class="mt-1 block w-full"
                        :class="errorMessage ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
                        placeholder="Folder Name"
-                       @keyup.enter="createFolder"
+                       @keyup.enter.prevent="createFolder"
                        @keyup.esc="closeModal"
             />
 

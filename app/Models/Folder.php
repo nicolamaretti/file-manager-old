@@ -28,6 +28,8 @@ class Folder extends Model implements HasMedia, Zipable, Recursively
         'name',
         'user_id',
         'folder_id',
+        'is_root_folder',
+        'path',
         'uuid',
     ];
 

@@ -16,7 +16,7 @@
                 <MoveFilesButton v-if="(selectedFolderIds.length > 0 || selectedFileIds.length > 0)"
                                  :move-file-ids="selectedFileIds"
                                  :move-folder-ids="selectedFolderIds"
-                                 :current-folder-id="currentFolder.data.id"/>
+                                 :current-folder-id="currentFolder ? currentFolder.data.id : null"/>
                 <ShareFilesButton :share-file-ids="selectedFileIds"
                                   :share-folder-ids="selectedFolderIds"
                                   @restore="onRestore"/>
@@ -30,7 +30,7 @@
         </nav>
 
         <!-- Tabella -->
-        <div class="flex-1 overflow-auto">
+        <div class="flex-1 overflow-auto mb-1">
             <table class="min-w-full shadow ring-1 ring-black ring-opacity-5 border sm:rounded-lg">
                 <thead class="bg-gray-100 border-b sm:rounded-lg">
                 <tr>
@@ -46,9 +46,9 @@
                     <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
                         Owner
                     </th>
-<!--                    <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">-->
-<!--                        Path-->
-<!--                    </th>-->
+                    <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
+                        Path
+                    </th>
                     <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
                         Last Modified
                     </th>
@@ -92,9 +92,9 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {{ owner }}
                     </td>
-<!--                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">-->
-<!--                        {{ folder.path }}-->
-<!--                    </td>-->
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ folder.path }}
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {{ folder.updated_at }}
                     </td>
@@ -136,9 +136,9 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {{ owner }}
                     </td>
-<!--                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">-->
-<!--                        {{ file.path }}-->
-<!--                    </td>-->
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ file.path }}
+                    </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {{ file.updated_at }}
                     </td>
@@ -156,12 +156,14 @@
                     There is no data in this folder
                 </div>
             </div>
+
+            <div ref="loadMoreIntersect"></div>
         </div>
     </AppLayout>
 </template>
 
 <script setup>
-import {computed, ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import ShareFilesButton from "@/Components/MyComponents/ShareFilesButton.vue";
@@ -191,13 +193,17 @@ const page = usePage();
 // Computed
 const selectedFolderIds = computed(() => Object.entries(selectedFolders.value).filter(a => a[1]).map(a => a[0]));
 const selectedFileIds = computed(() => Object.entries(selectedFiles.value).filter(a => a[1]).map(a => a[0]));
-// const owner = computed(() => props.currentFolder.data.owner === page.props.auth.user.name ? 'me' : props.currentFolder.data.owner);
-const owner = 'me';
+const owner = computed(() => {
+    if (props.currentFolder) {
+        return props.currentFolder.data.owner === page.props.auth.user.name ? 'me' : props.currentFolder.data.owner
+    }
+});
 
 // Refs
 const selectedFolders = ref({});
 const selectedFiles = ref({});
 const allSelected = ref(false);
+const loadMoreIntersect = ref(null);
 
 // Methods
 function openFolder(folderId = null) {
@@ -221,9 +227,11 @@ function onSelectAllChange() {
         selectedFolders.value[f.id] = allSelected.value;
     });
 
-    props.files.data.forEach(f => {
-        selectedFiles.value[f.id] = allSelected.value;
-    });
+    if (props.files) {
+        props.files.data.forEach(f => {
+            selectedFiles.value[f.id] = allSelected.value;
+        });
+    }
 
     console.log(selectedFolders.value)
     console.log(selectedFiles.value)
@@ -256,10 +264,12 @@ function onSelectFolderCheckboxChange(folderId) {
         }
 
         // controllo se almeno un file è false
-        for (let file of props.files.data) {
-            if (!selectedFiles.value[file.id]) {
-                checked = false;
-                break;
+        if (props.files) {
+            for (let file of props.files.data) {
+                if (!selectedFiles.value[file.id]) {
+                    checked = false;
+                    break;
+                }
             }
         }
 
@@ -330,6 +340,31 @@ function onRestore() {
     selectedFolders.value = {};
     selectedFiles.value = {};
 }
+
+// function loadMore() {
+//     console.log("load more");
+//     console.log(props);
+//
+//     if (props.files.links.next === null) {
+//         return;
+//     }
+//
+//     router.get(props.files.links.next);
+//     //
+//     // httpGet(allFiles.value.next)
+//     //     .then(res => {
+//     //         allFiles.value.data = [...allFiles.value.data, ...res.data]
+//     //         allFiles.value.next = res.links.next
+//     //     })
+// }
+//
+// onMounted(() => {
+//     const observer = new IntersectionObserver((entries) => entries.forEach(entry => entry.isIntersecting && loadMore()), {
+//         rootMargin: '-250px 0px 0px 0px'
+//     });
+//
+//     observer.observe(loadMoreIntersect.value)
+// })
 
 console.log('MyFiles', props)
 </script>

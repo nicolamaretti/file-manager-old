@@ -177,10 +177,10 @@ trait RecursivelyTrait
 
             if ($userIsAdmin) {
                 // se sono admin aggiungo anche l'ultima folder
-                array_push($ancestors, [
+                $ancestors[] = [
                     'id' => $folder->id,
                     'name' => $folder->name,
-                ]);
+                ];
             }
 
             // gli elementi nell'array vengono memorizzati "a ritroso" dalla cartella corrente fino alla root, quindi li inverto
@@ -189,10 +189,10 @@ trait RecursivelyTrait
             return $ancestors;
         } else {
             // aggiungo la folder corrente al path
-            array_push($ancestors, [
+            $ancestors[] = [
                 'id' => $folder->id,
                 'name' => $folder->name,
-            ]);
+            ];
 
             return $this->getAncestorsRecursive($userIsAdmin, $folder->parent, $ancestors);
         }

@@ -34,6 +34,7 @@ class CreateNewUser implements CreatesNewUsers
 //            'password' => Hash::make($input['password']),
 //            'email_verified_at' => now(),
 //            'remember_token' => Str::random(10),
+//            'can_write_folder' => true
 //        ]);
 
         $user = new User();
@@ -48,6 +49,8 @@ class CreateNewUser implements CreatesNewUsers
         $folder = Folder::create([
             'name' => $input['name'] . 'Folder',
             'user_id' => $user->id,
+            'path' => $input['name'] . 'Folder',
+            'is_root_folder' => true,
             'uuid' => Str::uuid(),
         ]);
 

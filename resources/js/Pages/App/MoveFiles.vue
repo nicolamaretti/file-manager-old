@@ -1,9 +1,9 @@
 <template>
     <AppLayout title="Move">
-        <h2 class="mt-1">
-            Move into...
-        </h2>
         <nav class="flex items-center justify-between mb-3 mt-2 border-b">
+            <h2 class="mt-1 mb-1">
+                Move into...
+            </h2>
             <Breadcrumb :ancestors="ancestors"/>
         </nav>
 

@@ -1,8 +1,7 @@
 <template>
     <a :href="route('download', { fileIds: props.downloadFileIds, folderIds: props.downloadFolderIds })"
        class="flex">
-        <PrimaryButton :disable="props.downloadFileIds.length === 0 && props.downloadFolderIds.length === 0"
-                       :class="{ 'opacity-25': props.downloadFileIds.length === 0 && props.downloadFolderIds.length === 0 }">
+        <PrimaryButton>
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"
                  xmlns="http://www.w3.org/2000/svg">
                 <path

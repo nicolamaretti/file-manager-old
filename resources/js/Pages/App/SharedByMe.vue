@@ -2,7 +2,9 @@
     <AppLayout title="SharedByMe">
         <nav class="flex items-center justify-end mb-3 mt-1">
             <div class="flex">
-                <DownloadFilesButton />
+                <DownloadFilesButton :download-file-ids="selectedFileIds"
+                                     :download-folder-ids="selectedFolderIds"
+                                     @download="onRestore"/>
                 <DeleteSharedButton :stop-share-file-ids="selectedFileIds"
                                     :stop-share-folder-ids="selectedFolderIds"
                                     @stop-share="onRestore"/>
@@ -35,6 +37,7 @@
                     :key="folder.id"
                     :class="(selectedFolders[folder.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
                     class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
+                    @dblclick.prevent="openFolder(folder.id)"
                     @click="toggleSelectFolder(folder.id)">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[30px] max-w-[30px] pr-0">
                         <Checkbox @change="onSelectFolderCheckboxChange(folder.id)"
@@ -134,6 +137,22 @@ const selectedFiles = ref({});
 const allSelected = ref(false);
 
 // Methods
+function openFolder(folderId = null) {
+    console.log('openFolder');
+
+    router.get(route('my-files'), {
+        'folderId': folderId,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            console.log('openFolderSuccess', props.currentFolder);
+        },
+        onError: (errors) => {
+            console.log('openFolderErrors', errors);
+        }
+    });
+}
+
 function onSelectAllChange() {
     props.folders.forEach(f => {
         selectedFolders.value[f.id] = allSelected.value;

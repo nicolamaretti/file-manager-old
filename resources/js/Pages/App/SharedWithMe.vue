@@ -35,7 +35,8 @@
                     :key="folder.id"
                     :class="(selectedFolders[folder.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
                     class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
-                    @click="toggleSelectFolder(folder.id)">
+                    @click="toggleSelectFolder(folder.id)"
+                    @dblclick.prevent="openFolder(folder.id)">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[30px] max-w-[30px] pr-0">
                         <Checkbox @change="onSelectFolderCheckboxChange(folder.id)"
                                   v-model="selectedFolders[folder.id]"
@@ -135,6 +136,22 @@ const selectedFiles = ref({});
 const allSelected = ref(false);
 
 // Methods
+function openFolder(folderId = null) {
+    console.log('openFolder');
+
+    router.get(route('my-files'), {
+        'folderId': folderId,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            console.log('openFolderSuccess', props.currentFolder);
+        },
+        onError: (errors) => {
+            console.log('openFolderErrors', errors);
+        }
+    });
+}
+
 function onSelectAllChange() {
     props.folders.forEach(f => {
         selectedFolders.value[f.id] = allSelected.value;
