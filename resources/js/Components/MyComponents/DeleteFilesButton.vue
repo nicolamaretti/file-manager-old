@@ -51,6 +51,9 @@ function onDeleteConfirm() {
         deleteFolderIds: props.deleteFolderIds,
         deleteFileIds: props.deleteFileIds
     }), {
+        preserveState: true,
+        preserveScroll: true,
+        only: ['folders', 'files'],
         onSuccess: (data) => {
             console.log('onDeleteSuccess', data);
 

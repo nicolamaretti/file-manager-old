@@ -1,5 +1,9 @@
 export function isImage(file) {
-    return /^image\/\w+$/.test(file.mime)
+    return [
+        'image/png',
+        'image/svg+xml',
+        'image/jpeg'
+    ].includes(file.mime_type)
 }
 
 export function isPDF(file) {
@@ -10,7 +14,7 @@ export function isPDF(file) {
         'application/vnd.pdf',
         'text/pdf',
         'text/x-pdf',
-    ].includes(file.mime)
+    ].includes(file.mime_type)
 }
 
 export function isAudio(file) {
@@ -19,7 +23,7 @@ export function isAudio(file) {
         'audio/wav',
         'audio/x-m4a',
         'audio/webm',
-    ].includes(file.mime)
+    ].includes(file.mime_type)
 }
 
 export function isVideo(file) {
@@ -29,7 +33,7 @@ export function isVideo(file) {
         'video/ogg',
         'video/quicktime',
         'video/webm',
-    ].includes(file.mime)
+    ].includes(file.mime_type)
 }
 
 export function isWord(file) {
@@ -38,7 +42,7 @@ export function isWord(file) {
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'application/vnd.ms-word.document.macroEnabled.12',
         'application/vnd.ms-word.template.macroEnabled.12',
-    ].includes(file.mime)
+    ].includes(file.mime_type)
 }
 
 export function isExcel(file) {
@@ -47,13 +51,13 @@ export function isExcel(file) {
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'application/vnd.ms-excel.sheet.macroEnabled.12',
         'application/vnd.ms-excel.template.macroEnabled.12',
-    ].includes(file.mime)
+    ].includes(file.mime_type)
 }
 
 export function isZip(file) {
     return [
         'application/zip',
-    ].includes(file.mime)
+    ].includes(file.mime_type)
 }
 
 export function isText(file) {
@@ -63,5 +67,5 @@ export function isText(file) {
         'text/css',
         'text/javascript',
         'text/csv',
-    ].includes(file.mime)
+    ].includes(file.mime_type)
 }

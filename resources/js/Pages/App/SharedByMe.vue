@@ -94,7 +94,7 @@
                         </svg>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
-                        <FileIcon class="mr-3"/>
+                        <FileIcon :file="file" class="mr-3"/>
                         {{ file.name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -143,6 +143,7 @@ function openFolder(folderId = null) {
     router.get(route('my-files'), {
         'folderId': folderId,
     }, {
+        preserveState: true,
         preserveScroll: true,
         onSuccess: () => {
             console.log('openFolderSuccess', props.currentFolder);
@@ -247,6 +248,9 @@ function sendFavouriteRequest(folderId, fileId) {
             fileId: fileId
         },
         {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['folders', 'files'],
             onSuccess: (data) => {
                 console.log('addRemoveFavouriteSuccess', data);
 

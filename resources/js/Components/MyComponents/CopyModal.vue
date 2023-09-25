@@ -72,6 +72,8 @@ function copy() {
         },
         {
             preserveState: true,
+            preserveScroll: true,
+            only: ['folders', 'files'],
             onSuccess: (data) => {
                 console.log('copySuccess', data);
 

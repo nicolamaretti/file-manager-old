@@ -27,8 +27,9 @@ function onSearch() {
             'searchValue' : search.value
         },
         {
-            only: ['folders', 'files'],
             preserveState: true,
+            preserveScroll: true,
+            only: ['folders', 'files'],
             onSuccess: (data) => {
                 console.log('onSearchSuccess', data);
             }

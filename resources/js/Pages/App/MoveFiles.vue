@@ -4,7 +4,7 @@
             <h2 class="mt-1 mb-1">
                 Move into...
             </h2>
-            <Breadcrumb :ancestors="ancestors"/>
+<!--            <Breadcrumb :ancestors="ancestors"/>-->
         </nav>
 
         <!-- Tabella -->
@@ -121,6 +121,9 @@ function move() {
             'moveFileIds': props.moveFileIds,
         },
         {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['folders', 'files'],
             onSuccess: () => {
                 console.log('onMoveSuccess')
 

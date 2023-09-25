@@ -52,10 +52,13 @@ function onDeleteCancel() {
 function onDeleteConfirm() {
     console.log('StopSharing');
 
-    router.delete(route('stopSharing', {
+    router.delete(route('stop-sharing', {
         stopShareFolderIds: props.stopShareFolderIds,
         stopShareFileIds: props.stopShareFileIds
     }), {
+        preserveState: true,
+        preserveScroll: true,
+        only: ['folders', 'files'],
         onSuccess: (data) => {
             console.log('stopSharingSuccess', data);
 

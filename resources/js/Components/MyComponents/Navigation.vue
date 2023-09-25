@@ -22,7 +22,7 @@
 </template>
 
 <script setup>
-import {Link, usePage} from "@inertiajs/vue3"
+import {Link} from "@inertiajs/vue3"
 import ApplicationMark from "@/Components/ApplicationMark.vue";
 import CreateNewDropdown from "@/Components/MyComponents/CreateNewDropdown.vue";
 import NavLink from "@/Components/MyComponents/NavLink.vue";

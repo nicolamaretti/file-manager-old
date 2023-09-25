@@ -115,7 +115,7 @@
                         </svg>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
-                        <FileIcon class="mr-3"/>
+                        <FileIcon :file="file" class="mr-3"/>
                         {{ file.file_name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -292,6 +292,8 @@ function sendFavouriteRequest(folderId, fileId) {
             fileId: fileId
         },
         {
+            preserveState: true,
+            only: ['folders', 'files'],
             onSuccess: (data) => {
                 console.log('addRemoveFavouriteSuccess', data);
 
@@ -312,5 +314,4 @@ function onRestore() {
 }
 
 console.log('Favourites', props);
-
 </script>

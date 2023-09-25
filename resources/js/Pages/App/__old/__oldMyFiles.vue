@@ -247,7 +247,7 @@
                                  class="grid grid-cols-8 gap-3 py-1 px-4 sm:px-6 text-sm border-b">
                                 <div
                                     class="overflow-hidden col-span-3 whitespace-nowrap align-middle my-auto font-medium text-gray-900 inline-flex">
-                                    <FileIcon class="inline-block my-auto mr-3"/>
+                                    <FileIcon :file="file" class="inline-block my-auto mr-3"/>
                                     <!--                                @click.prevent="openFile(file.id)"-->
                                     <p class="m-0 pt-0.5">
                                         <!--                                    @click.prevent="openFile(file.id)"-->

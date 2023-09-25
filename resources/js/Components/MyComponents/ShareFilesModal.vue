@@ -68,7 +68,9 @@ function share() {
             shareFolderIds: props.shareFolderIds
         },
         {
+            preserveState: true,
             preserveScroll: true,
+            only: [],
             onSuccess: (data) => {
                 console.log('shareSuccess', data, email.value);
 

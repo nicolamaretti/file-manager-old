@@ -70,6 +70,8 @@ function rename() {
         },
         {
             preserveState: true,
+            preserveScroll: true,
+            only: ['folders', 'files'],
             onSuccess: (data) => {
                 console.log('renameSuccess', data);
 

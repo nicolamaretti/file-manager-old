@@ -72,6 +72,7 @@ function createFolder() {
         },
         {
             preserveState: true,
+            only: ['folders'],
             onSuccess: (data) => {
                 console.log('createFolderSuccess', data);
 

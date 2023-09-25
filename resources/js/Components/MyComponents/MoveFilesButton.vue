@@ -38,6 +38,8 @@ function openMoveSelection() {
         },
         {
             preserveState: true,
+            preserveScroll: true,
+            only: ['folders'],
             onSuccess: () => {
                 console.log('openMoveSelectionSuccess');
             },
