@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('shared_folders');
+        Schema::dropIfExists('folder_shares');
     }
 };
