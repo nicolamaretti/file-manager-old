@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,18 +14,19 @@ return new class extends Migration
     {
         Schema::create('folders', function (Blueprint $table) {
             $table->id();
+            $table->foreignIdFor(User::class);
             $table->string('name');
-            $table->foreignId('user_id')
-                ->constrained()
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
             $table->unsignedBigInteger('folder_id')->nullable();
             $table->foreign('folder_id')
                 ->references('id')
                 ->on('folders')
-                ->nullOnDelete();
+                ->onDelete('cascade');
+            $table->boolean('is_root_folder')
+                ->default(false);
+            $table->string('storage_path')->default('');
             $table->uuid()->nullable()->unique();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
