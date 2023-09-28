@@ -26,6 +26,32 @@ trait RecursivelyTrait
     }
 
     /**
+     * Funzione helper - calcola ricorsivamente tutti gli id delle sottocartelle della cartella passata come argomento
+     *
+     * @param integer $folderId
+     * @param array $childrenIds
+     * @return void
+     */
+    private function getChildrenIdsRecursive(int $folderId, array &$childrenIds): void
+    {
+        // aggiungo la folder nell'array da ritornare
+        $childrenIds[] = $folderId;
+
+        // mi faccio dare le cartelle figlie di quella corrente
+        $subFolders = Folder::query()
+            ->find($folderId)
+            ->folders;
+
+        if($subFolders->isEmpty())
+            return;
+        else {
+            foreach ($subFolders as $subFolder) {
+                $this->getChildrenIdsRecursive($subFolder->id, $childrenIds);
+            }
+        }
+    }
+
+    /**
      * Ottiene il percorso completo (emulato) della cartella che chiama la funzione
      *
      * @return string
@@ -35,6 +61,31 @@ trait RecursivelyTrait
         $path = array();
 
         return $this->getFullPathRecursive($this, $path);
+    }
+
+    /**
+     * Funzione helper - calcola ricorsivamente il percoso completo (emulato) della cartella passata come argomento
+     * (che PUO' ESSERE NULL se entro in questa funzione passando il parent di una cartella root)
+     *
+     * @param Folder $folder
+     * @param array $path
+     * @return string
+     */
+    private function getFullPathRecursive(Folder $folder, array &$path): string
+    {
+        // aggiungo la folder corrente al path
+        $path[] = $folder->name;
+
+        if($folder->parent === null) {
+            // sono nella root folder
+
+            // gli elementi nell'array vengono memorizzati "a ritroso" dalla cartella corrente fino alla root, quindi li inverto
+            $path = array_reverse($path);
+
+            return implode('/', $path);
+        } else {
+            return $this->getFullPathRecursive($folder->parent, $path);
+        }
     }
 
     public function copyFolder(int $destinationFolderId = null): void
@@ -68,68 +119,6 @@ trait RecursivelyTrait
         Storage::createDirectory($newFolder->path);
 
         $this->copyFolderRecursive($this, $newFolder);
-    }
-
-    public function getAncestors(): array
-    {
-        $userIsAdmin = Auth::user()->is_admin;
-
-        $ancestors = array();
-
-        return $this->getAncestorsRecursive($userIsAdmin, $this, $ancestors);
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///  PRIVATE HELPERS
-    /**
-     * Funzione helper - calcola ricorsivamente tutti gli id delle sottocartelle della cartella passata come argomento
-     *
-     * @param integer $folderId
-     * @param array $childrenIds
-     * @return void
-     */
-    private function getChildrenIdsRecursive(int $folderId, array &$childrenIds): void
-    {
-        // aggiungo la folder nell'array da ritornare
-        $childrenIds[] = $folderId;
-
-        // mi faccio dare le cartelle figlie di quella corrente
-        $subFolders = Folder::query()
-            ->find($folderId)
-            ->folders;
-
-        if($subFolders->isEmpty())
-            return;
-        else {
-            foreach ($subFolders as $subFolder) {
-                $this->getChildrenIdsRecursive($subFolder->id, $childrenIds);
-            }
-        }
-    }
-
-    /**
-     * Funzione helper - calcola ricorsivamente il percoso completo (emulato) della cartella passata come argomento
-     * (che PUO' ESSERE NULL se entro in questa funzione passando il parent di una cartella root)
-     *
-     * @param Folder $folder
-     * @param array $path
-     * @return string
-     */
-    private function getFullPathRecursive(Folder $folder, array &$path): string
-    {
-        // aggiungo la folder corrente al path
-        $path[] = $folder->name;
-
-        if($folder->parent === null) {
-            // sono nella root folder
-
-            // gli elementi nell'array vengono memorizzati "a ritroso" dalla cartella corrente fino alla root, quindi li inverto
-            $path = array_reverse($path);
-
-            return implode('/', $path);
-        } else {
-            return $this->getFullPathRecursive($folder->parent, $path);
-        }
     }
 
     private function copyFolderRecursive(Folder $currentFolder, Folder $destinationFolder): void
@@ -168,6 +157,16 @@ trait RecursivelyTrait
                 $this->copyFolderRecursive($childFolder, $newChildFolder);
             }
         }
+    }
+
+
+    public function getAncestors(): array
+    {
+        $userIsAdmin = Auth::user()->is_admin;
+
+        $ancestors = array();
+
+        return $this->getAncestorsRecursive($userIsAdmin, $this, $ancestors);
     }
 
     private function getAncestorsRecursive(bool $userIsAdmin, Folder $folder, array &$ancestors): array

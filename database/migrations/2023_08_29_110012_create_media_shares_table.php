@@ -13,10 +13,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('file_shares', function (Blueprint $table) {
+        Schema::create('media_shares', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Media::class);
-            $table->foreignIdFor(User::class);
+            $table->foreignId('media_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('file_shares');
+        Schema::dropIfExists('media_shares');
     }
 };

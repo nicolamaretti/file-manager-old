@@ -26,5 +26,4 @@ const props = defineProps({
 
 const emit = defineEmits(['download']);
 
-console.log('Download', props.downloadFileIds, props.downloadFolderIds)
 </script>

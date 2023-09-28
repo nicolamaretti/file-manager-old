@@ -16,30 +16,24 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        $super_admin = User::create([
+        $admin = User::create([
             'name'      => 'Admin',
             'email'     => 'admin@admin.it',
             'password'  => Hash::make('Value1234!'),
             'is_admin' => true,
         ]);
 
-        $super_admin->markEmailAsVerified();
-        $super_admin->assignRole('super_administrator');
+        $admin->markEmailAsVerified();
+        $admin->assignRole('super_administrator');
 
         /* creazione root folder */
         $folder = Folder::create([
-            'name' => 'AdminFolder',
-            'user_id' => $super_admin->id,
-            'storage_path' =>'AdminFolder',
-            'is_root_folder' => true,
+            'name' => 'admin',
+            'user_id' => $admin->id,
+            'storage_path' => 'admin',
             'uuid' => Str::uuid(),
         ]);
 
         Storage::makeDirectory($folder->storage_path);
-
-        if ($folder) {
-            $super_admin->root_folder_id = $folder->id;
-            $super_admin->save();
-        }
     }
 }

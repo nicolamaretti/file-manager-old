@@ -6,16 +6,16 @@ use App\Interfaces\Recursively;
 use App\Interfaces\Zipable;
 use App\Traits\RecursivelyTrait;
 use App\Traits\ZipableTrait;
-use Hamcrest\AssertionError;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use function PHPUnit\Framework\isEmpty;
 
 class Folder extends Model implements HasMedia, Zipable, Recursively
 {
@@ -28,52 +28,58 @@ class Folder extends Model implements HasMedia, Zipable, Recursively
         'name',
         'user_id',
         'folder_id',
-        'is_root_folder',
-        'path',
+        'storage_path',
         'uuid',
     ];
 
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('documents');
+        $this->addMediaCollection('files');
+        $this->addMediaCollection('trash');
+    }
+
+    public function isRoot(): bool
+    {
+        return $this->folder_id === null;
     }
 
     public function folders(): HasMany
     {
-        return $this->hasMany(Folder::class, 'folder_id', 'id')->with('folders');
+        return $this->hasMany(Folder::class);
+    }
+
+    public function media(): MorphMany
+    {
+        return $this->morphMany(Media::class, 'model')
+            ->where('collection_name', 'files');
+    }
+
+    public function trash(): MorphMany
+    {
+        return $this->morphMany(Media::class, 'model')
+            ->where('collection_name', 'trash');
     }
 
     public function parent(): BelongsTo
     {
-        return $this->belongsTo(Folder::class, 'folder_id', 'id');
+        return $this->belongsTo(Folder::class, 'folder_id');
     }
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'id', 'user_id');
+        return $this->belongsTo(User::class);
     }
 
-    public function isFavourite(): bool
+    public function starred(): HasOne
     {
-        $folderIsFavourite = StarredFolder::query()
-            ->where('user_id', Auth::id())
+        return $this->hasOne(StarredFolder::class)
             ->where('folder_id', $this->id)
-            ->first();
-
-        if ($folderIsFavourite) {
-            return true;
-        }
-
-        return false;
+            ->where('user_id', Auth::id());
     }
 
-//    public function starred() {
-//        return $this->hasOne(StarredFolder::class, 'folder_id', 'id')
-//            ->where('user_id', Auth::id());
-//    }
-//
-//    public function shared(): HasMany
-//    {
-//        return $this->hasMany(FolderShare::class, 'folder_id', 'id');
-//    }
+    public function shared(): HasMany
+    {
+        return $this->hasMany(FolderShare::class);
+    }
 }

@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use App\Models\Folder;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
@@ -28,36 +29,23 @@ class CreateNewUser implements CreatesNewUsers
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
         ])->validate();
 
-//        $user = User::create([
-//            'name' => $input['name'],
-//            'email' => $input['email'],
-//            'password' => Hash::make($input['password']),
-//            'email_verified_at' => now(),
-//            'remember_token' => Str::random(10),
-//            'can_write_folder' => true
-//        ]);
+        $user = User::create([
+            'name' => $input['name'],
+            'email' => $input['email'],
+            'password' => Hash::make($input['password']),
+            'email_verified_at' => now(),
+            'remember_token' => Str::random(10),
+        ]);
 
-        $user = new User();
-        $user->name = $input['name'];
-        $user->email = $input['email'];
-        $user->password = Hash::make($input['password']);
-        $user->email_verified_at = now();
-        $user->remember_token = Str::random(10);
-        $user->can_write_folder = true;
-        $user->save();
-
+        /* creazione root folder dell'utente appena creato */
         $folder = Folder::create([
-            'name' => $input['name'] . 'Folder',
+            'name' => strtolower($input['name']),
             'user_id' => $user->id,
-            'path' => $input['name'] . 'Folder',
-            'is_root_folder' => true,
+            'storage_path' => strtolower($input['name']),
             'uuid' => Str::uuid(),
         ]);
 
-        if ($folder) {
-            $user->root_folder_id = $folder->id;
-            $user->save();
-        }
+        Storage::makeDirectory($folder->storage_path);
 
         return $user;
     }

@@ -63,7 +63,7 @@
                         {{ folder.name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ folder.username }}
+                        {{ folder.shared_with }}
                     </td>
                 </tr>
 
@@ -98,7 +98,7 @@
                         {{ file.name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ file.username }}
+                        {{ file.shared_with }}
                     </td>
                 </tr>
                 </tbody>

@@ -4,86 +4,62 @@ namespace App\Http\Controllers\Backend;
 
 use App\Helpers\FileManagerHelper;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\File\FileResource;
-use App\Http\Resources\Folder\FolderResource;
+use App\Http\Resources\FolderResource;
+use App\Http\Resources\MediaResource;
 use App\Jobs\UploadFiles;
 use App\Models\Folder;
-use App\Models\FileShare;
 use App\Models\FolderShare;
-use App\Models\StarredFile;
+use App\Models\MediaShare;
 use App\Models\StarredFolder;
+use App\Models\StarredMedia;
 use App\Models\User;
-use http\Env\Response;
-use http\Params;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
-use Spatie\MediaLibrary\MediaCollections\MediaCollection;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use ZipArchive;
 
-class FileManagerController extends Controller
+class FileController extends Controller
 {
     public function myFiles(Request $request): InertiaResponse
     {
-        $user = $request->user();
-        $rootFolderId = $user->root_folder_id;
+        $user = Auth::user();
+        $rootFolder = $user->rootFolder;
         $isUserAdmin = (bool)$user->is_admin;
-        $files = null;
+        $rootFolders = null;
         $parent = null;
         $currentFolder = null;
-
-        // array dei nomi delle cartelle per il breadcrumb
-        $ancestors = [];
+        $ancestors = [];    // array dei nomi delle cartelle per il breadcrumb
         $folderId = intval($request->input('folderId'));
 
-        if (!$folderId) {
-            /* non è stata selezionata una folder da aprire, quindi ritorno la root folder dell'utente */
-            $folderToOpenId = $rootFolderId;
-        } else {
-            $folderToOpenId = $folderId;
-        }
+        /* se non è stata selezionata una folder da aprire ritorno la root folder dell'utente */
+        $folderToOpen = $folderId
+            ? Folder::with(['folders', 'parent', 'media'])->find($folderId)
+            : $rootFolder;
 
         if ($isUserAdmin && !$folderId) {
             /* se sono admin visualizzo tutte le cartelle root */
-            $folders = Folder::query()
+            $rootFolders = Folder::query()
                 ->whereNull('folder_id')
-                ->orderBy('name', 'ASC')
+                ->orderBy('name')
                 ->get();
 //                ->paginate(10);
 
-            $folders = FolderResource::collection($folders);
+            $rootFolders = FolderResource::collection($rootFolders);
         } else {
             /* se è utente normale ritorno la folder di root con le sue cartelle e i suoi file */
-            $currentFolder = Folder::query()->findOrFail($folderToOpenId);
-            $parent = $currentFolder->parent;
-
-            /* folders */
-            $folders = Folder::query()
-                ->where('folder_id', $folderToOpenId)
-                ->orderBy('name', 'ASC')
-//                ->get();
-                ->paginate(10);
-
-            /* files */
-            $files = Media::query()
-                ->where('model_id', $folderToOpenId)
-                ->orderBy('file_name', 'ASC')
-//                ->get();
-                ->paginate(10);
-
-            $currentFolder = FolderResource::make($currentFolder);
-            $folders = FolderResource::collection($folders);
-            $files = FileResource::collection($files);
-
-            $ancestors = $currentFolder->getAncestors();
+            $parent = $folderToOpen->parent;
+            $ancestors = $folderToOpen->getAncestors();
+            $currentFolder = FolderResource::make($folderToOpen);
 
             /* se un utente sta tentando di accedere ad una cartella che non gli appartiene, ritorno errore */
 //            if (!$isUserAdmin) {
@@ -100,37 +76,33 @@ class FileManagerController extends Controller
 
         return Inertia::render('App/MyFiles', [
             'currentFolder' => $currentFolder,
-            'rootFolderId' => $rootFolderId,
             'isUserAdmin' => $isUserAdmin,
-            'folders' => $folders,
-            'files' => $files,
+            'rootFolders' => $rootFolders,
             'parent' => $parent,
             'ancestors' => $ancestors,
         ]);
     }
 
-    public function favourites(Request $request): InertiaResponse
+    public function favourites(): InertiaResponse
     {
-        $user = $request->user();
+        $folders = StarredFolder::query()
+            ->with('folder')
+            ->where('user_id', Auth::id())
+            ->get()
+            ->map(function (StarredFolder $starredFolder) {
+                return $starredFolder->folder;
+            });
 
-        /* favourite folders */
-        $folders = Folder::query()
-            ->select('folders.*')
-            ->join('starred_folders', 'starred_folders.folder_id', '=', 'folders.id')
-            ->where('starred_folders.user_id', $user->id)
-            ->orderBy('name', 'ASC')
-            ->get();
-
-        /* favourite files */
-        $files = Media::query()
-            ->select('media.*')
-            ->join('starred_files', 'starred_files.file_id', '=', 'media.id')
-            ->where('starred_files.user_id', $user->id)
-            ->orderBy('file_name', 'ASC')
-            ->get();
+        $files = StarredMedia::query()
+            ->with('media')
+            ->where('user_id', Auth::id())
+            ->get()
+            ->map(function (StarredMedia $starredMedia) {
+                return $starredMedia->media;
+            });
 
         $folders = FolderResource::collection($folders);
-        $files = FileResource::collection($files);
+        $files = MediaResource::collection($files);
 
         return Inertia::render('App/Favourites', [
             'folders' => $folders,
@@ -138,132 +110,112 @@ class FileManagerController extends Controller
         ]);
     }
 
-    public function sharedWithMe(Request $request): InertiaResponse
+    public function sharedWithMe(): InertiaResponse
     {
-        $user = $request->user();
+        $folders = FolderShare::query()
+            ->where('user_id', Auth::id())
+            ->with('folder')
+            ->with('folder.user')
+            ->whereRelation('folder', 'user_id', '!=', Auth::id())
+            ->get()
+            ->map(function (FolderShare $sharedFolder) {
+                $folder['id'] = $sharedFolder->folder->id;
+                $folder['name'] = $sharedFolder->folder->name;
+                $folder['is_favourite'] = !!$sharedFolder->folder->starred;
+                $folder['owner'] = $sharedFolder->folder->user->name;
+                return $folder;
+            });
 
-        /* cerco le folders */
-        $sharedFolders = FolderShare::query()
-            ->from('folder_shares as fs')
-            ->join('folders', 'fs.folder_id', '=', 'folders.id')
-            ->join('users', 'fs.user_id', '=', 'users.id')
-            ->join('users as users_owner', 'fs.owner_id', '=', 'users_owner.id')
-            ->where('folders.user_id', '!=', $user->id)
-            ->where('fs.user_id', $user->id)
-            ->select('folders.id as id', 'folders.name as name', 'users_owner.name as owner')
-            ->orderBy('name', 'ASC')
-            ->orderBy('owner', 'ASC')
-            ->get();
-
-        foreach ($sharedFolders as $sharedFolder) {
-            $starred = StarredFolder::query()
-                ->where('folder_id', $sharedFolder->id)
-                ->where('user_id', $user->id)
-                ->get();
-            if ($starred->isNotEmpty()) {
-                $sharedFolder->is_favourite = true;
-            } else {
-                $sharedFolder->is_favourite = false;
-            }
-        }
-
-        /* cerco i files */
-        $sharedFiles = FileShare::query()
-            ->from('file_shares as fs')
-            ->join('media', 'fs.file_id', '=', 'media.id')
-            ->join('users', 'fs.owner_id', '=', 'users.id')
-            ->where('fs.user_id', $user->id)
-            ->select('media.id as id', 'media.file_name as name', 'users.name as owner', 'media.mime_type as mime_type')
-            ->orderBy('name', 'ASC')
-            ->orderBy('owner', 'ASC')
-            ->get();
-
-        foreach ($sharedFiles as $sharedFile) {
-            $starred = StarredFile::query()
-                ->where('file_id', $sharedFile->id)
-                ->where('user_id', $user->id)
-                ->get();
-
-            if ($starred->isNotEmpty()) {
-                $sharedFile->is_favourite = true;
-            } else {
-                $sharedFile->is_favourite = false;
-            }
-        }
+        $files = MediaShare::query()
+            ->where('user_id', Auth::id())
+            ->with('media')
+            ->with('media.folder.user')
+            ->whereRelation('media.folder', 'user_id', '!=', Auth::id())
+            ->get()
+            ->map(function (MediaShare $sharedMedia) {
+                $file['id'] = $sharedMedia->media->id;
+                $file['name'] = $sharedMedia->media->file_name;
+                $file['mime_type'] = $sharedMedia->media->mime_type;
+                $file['is_favourite'] = !!$sharedMedia->media->starred;
+                $file['owner'] = $sharedMedia->media->folder->user->name;
+                return $file;
+            });
 
         return Inertia::render('App/SharedWithMe', [
-            'folders' => $sharedFolders,
-            'files' => $sharedFiles,
+            'folders' => $folders,
+            'files' => $files,
         ]);
     }
 
-    public function sharedByMe(Request $request): InertiaResponse
+    public function sharedByMe(): InertiaResponse
     {
-        $user = $request->user();
-
-        $sharedFolders = FolderShare::query()
-            ->from('folder_shares as fs')
-            ->where('fs.owner_id', $user->id)
-            ->join('folders', 'fs.folder_id', '=', 'folders.id')
-            ->join('users', 'fs.user_id', '=', 'users.id')
-            ->select('folders.id as id', 'folders.name as name', 'users.name as username')
-            ->orderBy('name', 'ASC')
-            ->orderBy('username', 'ASC')
+        $folders = FolderShare::query()
+            ->with('folder.user')
+            ->with('user')
+            ->whereRelation('folder.user', 'id', Auth::id())
             ->get()
-            ->each(function ($sharedFolder) use ($user) {
-                $starred = StarredFolder::query()
-                    ->where('folder_id', $sharedFolder->id)
-                    ->where('user_id', $user->id)
-                    ->get();
-                if ($starred->isNotEmpty()) {
-                    $sharedFolder->is_favourite = true;
-                } else {
-                    $sharedFolder->is_favourite = false;
-                }
+            ->map(function (FolderShare $sharedFolder) {
+                $folder['id'] = $sharedFolder->folder->id;
+                $folder['name'] = $sharedFolder->folder->name;
+                $folder['is_favourite'] = !!$sharedFolder->folder->starred;
+                $folder['shared_with'] = $sharedFolder->user->name;
+                return $folder;
             });
 
-        $sharedFiles = FileShare::query()
-            ->from('file_shares as fs')
-            ->where('fs.owner_id', $user->id)
-            ->join('media', 'fs.file_id', '=', 'media.id')
-            ->join('users', 'fs.user_id', '=', 'users.id')
-            ->select('media.id as id', 'media.file_name as name', 'users.name as username', 'media.mime_type as mime_type')
-            ->orderBy('name', 'ASC')
-            ->orderBy('username', 'ASC')
+        $files = MediaShare::query()
+            ->with('user')
+            ->with('media.folder.user')
+            ->whereRelation('media.folder.user', 'id', Auth::id())
             ->get()
-            ->each(function ($sharedFile) use ($user) {
-                $starred = StarredFile::query()
-                    ->where('file_id', $sharedFile->id)
-                    ->where('user_id', $user->id)
-                    ->get();
-
-                if ($starred->isNotEmpty()) {
-                    $sharedFile->is_favourite = true;
-                } else {
-                    $sharedFile->is_favourite = false;
-                }
+            ->map(function (MediaShare $sharedMedia) {
+                $file['id'] = $sharedMedia->media->id;
+                $file['name'] = $sharedMedia->media->file_name;
+                $file['mime_type'] = $sharedMedia->media->mime_type;
+                $file['is_favourite'] = !!$sharedMedia->media->starred;
+                $file['shared_with'] = $sharedMedia->user->name;
+                return $file;
             });
+
+//        $sharedFiles = FileShare::query()
+//            ->from('file_shares as fs')
+//            ->where('fs.owner_id', $user->id)
+//            ->join('media', 'fs.file_id', '=', 'media.id')
+//            ->join('users', 'fs.user_id', '=', 'users.id')
+//            ->select('media.id as id', 'media.file_name as name', 'users.name as username', 'media.mime_type as mime_type')
+//            ->orderBy('name', 'ASC')
+//            ->orderBy('username', 'ASC')
+//            ->get()
+//            ->each(function ($sharedFile) use ($user) {
+//                $starred = StarredFile::query()
+//                    ->where('file_id', $sharedFile->id)
+//                    ->where('user_id', $user->id)
+//                    ->get();
+//
+//                if ($starred->isNotEmpty()) {
+//                    $sharedFile->is_favourite = true;
+//                } else {
+//                    $sharedFile->is_favourite = false;
+//                }
+//            });
 
         return Inertia::render('App/SharedByMe', [
-            'folders' => $sharedFolders,
-            'files' => $sharedFiles,
+            'folders' => $folders,
+            'files' => $files,
         ]);
     }
 
-    public function createFolder(Request $request)
+    public function createFolder(Request $request): RedirectResponse
     {
         $user = $request->user();
-
-        if (!($user->can_write_folder))
-            abort(403);
 
         $userId = intval($user->id);
         $newFolderName = $request->input('newFolderName');
         $currentFolderId = intval($request->input('currentFolderId'));
+        $currentFolder = Folder::query()->find($currentFolderId);
 
         /* || !$currentFolderId */
         if (!$newFolderName || $newFolderName == '') {
-            return redirect()->back()->with([
+            return back()->withErrors([
                 'message' => 'Folder name can\'t be empty',
             ]);
         }
@@ -273,17 +225,21 @@ class FileManagerController extends Controller
 
             /* se non esiste, creo una nuova folder normale */
             if (!$folderAlreadyExists) {
-                $newFolder = new Folder();
-                $newFolder->name = $newFolderName;
-                $newFolder->user_id = $userId;
-                $newFolder->folder_id = $currentFolderId;
-                $newFolder->path = $newFolder->getFullPath();
-                $newFolder->uuid = Str::uuid();
-                $newFolder->save();
+                $newFolder = Folder::create([
+                    'name' => $newFolderName,
+                    'user_id' => $userId,
+                    'folder_id' => $currentFolderId,
+                    'storage_path' => $currentFolder->storage_path . "/$newFolderName",
+                    'uuid' => Str::uuid(),
+                ]);
 
-                Storage::makeDirectory($newFolder->path);
+                Storage::makeDirectory($newFolder->storage_path);
+
+                return to_route('my-files', [
+                    'folderId' => $currentFolder->id
+                ]);
             } else {
-                return redirect()->back()->withErrors([
+                return back()->withErrors([
                     'message' => "Folder '$newFolderName' already exists. Please select another name."
                 ]);
             }
@@ -295,16 +251,16 @@ class FileManagerController extends Controller
 
                 /* se non esiste, cerco di creare una nuova ROOT folder */
                 if (!$folderAlreadyExists) {
-                    $newFolder = new Folder();
-                    $newFolder->name = $newFolderName;
-                    $newFolder->user_id = $userId;
-                    $newFolder->folder_id = null;
-                    $newFolder->is_root_folder = true;
-                    $newFolder->path = $newFolder->getFullPath();
-                    $newFolder->uuid = Str::uuid();
-                    $newFolder->save();
+                    Folder::create([
+                        'name' => $newFolderName,
+                        'user_id' => $userId,
+                        'storage_path' => $newFolderName,
+                        'uuid' => Str::uuid(),
+                    ]);
 
                     Storage::makeDirectory($newFolderName);
+
+                    return to_route('my-files');
                 } else {
                     return redirect()->back()->withErrors([
                         'message' => "Folder '$newFolderName' already exists. Please select another name."
@@ -317,13 +273,8 @@ class FileManagerController extends Controller
         }
     }
 
-    public function upload(Request $request): RedirectResponse
+    public function upload(Request $request): void
     {
-        $user = $request->user();
-
-        if (!($user->can_write_folder))
-            abort(403);
-
         $files = $request->files->get('files');
         $currentFolderId = intval($request->input('currentFolderId'));
 
@@ -332,28 +283,24 @@ class FileManagerController extends Controller
         }
 
         $currentFolder = Folder::query()->find($currentFolderId);
-
-//        $path = $currentFolder->path;
+        $path = $currentFolder->storage_path;
 
         foreach ($files as $file) {
-//            $media = new Media($file);
-//            dd($media);
+//            UploadFiles::dispatch($file, $currentFolder);
+            $fileFullName = $file->getClientOriginalName();
 
-            UploadFiles::dispatch($file, $currentFolder);
-//            $fileFullName = $file->getClientOriginalName();
-//
-//            // verifico se all'interno della cartella esiste già un file con lo stesso nome
-//            $fileAlreadyExists = FileManagerHelper::checkFileExistence($fileFullName, $currentFolderId);
-//
-//            if (!$fileAlreadyExists) {
-//                // se non esiste, lo aggiungo normalmente alla cartella corrente
-//
-//                Storage::putFileAs($path, $file, $fileFullName);
-//
-//                $currentFolder->addMedia($file)
-//                    ->withCustomProperties(['path' => $path . '/' . $fileFullName])
-//                    ->toMediaCollection('documents');
-//            } else {
+            /* verifico se all'interno della cartella esiste già un file con lo stesso nome */
+            $fileAlreadyExists = FileManagerHelper::checkFileExistence($fileFullName, $currentFolderId);
+
+            if (!$fileAlreadyExists) {
+                /* se non esiste, lo aggiungo normalmente alla cartella corrente */
+                Storage::putFileAs($path, $file, $fileFullName);
+
+                $currentFolder->addMedia($file)
+                    ->withCustomProperties(['path' => $path . '/' . $fileFullName])
+                    ->toMediaCollection('files');
+            }
+//            else {
 //                // se esiste già, aggiungo "-copy" al nome del nuovo file e lo aggiungo alla cartella corrente
 //
 //                // prendo nome ed estensione del file
@@ -373,49 +320,40 @@ class FileManagerController extends Controller
 //                    ->toMediaCollection('documents');
 //            }
         }
-
-        return redirect()->back();
     }
 
-    public function delete(Request $request)
+    /** Move files to trash
+     * @param Request $request
+     * @return RedirectResponse
+     */
+    public function delete(Request $request): RedirectResponse
     {
-        $user = $request->user();
-
-        if (!($user->can_write_folder))
-            abort(403);
-
-        $deleteFileIds = $request->input('deleteFileIds');
-        $deleteFolderIds = $request->input('deleteFolderIds');
+        $fileIds = $request->input('deleteFileIds');
+        $folderIds = $request->input('deleteFolderIds');
 
         /* eliminazione dei file */
-        if ($deleteFileIds) {
-            $files = Media::query()
-                ->whereIn('id', $deleteFileIds)
-                ->get();
-
-            foreach ($files as $file) {
-                Storage::delete($file->getCustomProperty('path'));
-
-                $file->delete();
-            }
+        if ($fileIds) {
+            Media::query()
+                ->whereIn('id', $fileIds)
+                ->get()
+                ->each(function (Media $media) {
+                    Storage::delete($media->getCustomProperty('path'));
+                    $media->delete();
+                });
         }
 
         /* eliminazione delle folder */
-        if ($deleteFolderIds) {
-            foreach ($deleteFolderIds as $id) {
-                $folder = Folder::query()->findOrFail($id);
-
-                // recupero gli id delle cartelle figlie (comprende anche l'id della cartella padre)
-                $childrenIds = $folder->getChildrenIds();
-
-                Folder::query()
-                    ->whereIn('id', $childrenIds)
-                    ->get()
-                    ->each(fn($folder) => $folder->delete());
-
-                Storage::deleteDirectory($folder->path);
-            }
+        if ($folderIds) {
+            Folder::query()
+                ->whereIn('id', $folderIds)
+                ->get()
+                ->each(function (Folder $folder) {
+                    Storage::deleteDirectory($folder->storage_path);
+                    $folder->delete();
+                });
         }
+
+        return back();
     }
 
     public function download(Request $request): BinaryFileResponse
@@ -438,13 +376,16 @@ class FileManagerController extends Controller
             $files = null;
 
             if (!empty($folderIds)) {
-                $folders = Folder::query()->whereIn('id', $folderIds)
+                $folders = Folder::query()
+                    ->whereIn('id', $folderIds)
                     ->with('folders')
                     ->get();
             }
 
             if (!empty($fileIds)) {
-                $files = Media::query()->whereIn('id', $fileIds)->get();
+                $files = Media::query()
+                    ->whereIn('id', $fileIds)
+                    ->get();
             }
 
             $zip = $this->createZip($folders, $files);
@@ -464,41 +405,45 @@ class FileManagerController extends Controller
         if ($fileId != 0) {
             /* addRemove file */
 
-            $starredFile = StarredFile::query()
-                ->where('file_id', $fileId)
+            $starred = StarredMedia::query()
+                ->where('media_id', $fileId)
                 ->where('user_id', $userId)
                 ->first();
 
-            if (!$starredFile) {
-                $newStarredFile = new StarredFile();
-                $newStarredFile->file_id = $fileId;
-                $newStarredFile->user_id = $userId;
-                $newStarredFile->save();
+            if (!$starred) {
+                StarredMedia::create([
+                    'media_id' => $fileId,
+                    'user_id' => $userId
+                ]);
+//                $newStarredFile = new StarredFile();
+//                $newStarredFile->file_id = $fileId;
+//                $newStarredFile->user_id = $userId;
+//                $newStarredFile->save();
             } else {
-                $starredFile->delete();
+                $starred->delete();
             }
         }
 
         if ($folderId != 0) {
             /* addRemove folder */
 
-            $starredFolder = StarredFolder::query()
+            $starred = StarredFolder::query()
                 ->where('folder_id', $folderId)
                 ->where('user_id', $userId)
                 ->first();
 
-            if (!$starredFolder) {
-                $newStarredFolder = new StarredFolder();
-                $newStarredFolder->folder_id = $folderId;
-                $newStarredFolder->user_id = $userId;
-                $newStarredFolder->save();
+            if (!$starred) {
+                StarredFolder::create([
+                    'folder_id' => $folderId,
+                    'user_id' => $userId
+                ]);
             } else {
-                $starredFolder->delete();
+                $starred->delete();
             }
         }
     }
 
-    public function share(Request $request)
+    public function share(Request $request): RedirectResponse
     {
         $currentUser = $request->user();
 
@@ -512,23 +457,26 @@ class FileManagerController extends Controller
             ]);
         }
 
-        $user = User::query()->where('email', $email)->first();
+        $user = User::query()
+            ->where('email', $email)
+            ->first();
+
         $userId = data_get($user, 'id');
 
         if ($userId) {
             if ($fileIds) {
                 foreach ($fileIds as $fileId) {
-                    $sharedFile = FileShare::query()
-                        ->where('file_id', $fileId)
+                    $sharedMedia = MediaShare::query()
+                        ->where('media_id', $fileId)
                         ->where('user_id', $userId)
                         ->first();
 
-                    if (!$sharedFile) {
-                        $newSharedFile = new FileShare();
-                        $newSharedFile->file_id = $fileId;
-                        $newSharedFile->user_id = $user->id;
-                        $newSharedFile->owner_id = $currentUser->id;
-                        $newSharedFile->save();
+                    if (!$sharedMedia) {
+                        MediaShare::create([
+                            'media_id' => $fileId,
+                            'user_id' => $userId,
+                        ]);
+//                        'owner_id' => $currentUser->id;
                     }
                 }
             }
@@ -541,14 +489,16 @@ class FileManagerController extends Controller
                         ->first();
 
                     if (!$sharedFolder) {
-                        $newSharedFolder = new FolderShare();
-                        $newSharedFolder->folder_id = $folderId;
-                        $newSharedFolder->user_id = $user->id;
-                        $newSharedFolder->owner_id = $currentUser->id;
-                        $newSharedFolder->save();
+                        FolderShare::create([
+                            'folder_id' => $folderId,
+                            'user_id' => $userId,
+                        ]);
+//                        'owner_id' => $currentUser->id;
                     }
                 }
             }
+
+            return redirect()->back();
         } else {
             return redirect()->back()->withErrors([
                 'error' => 'User not found'
@@ -556,17 +506,17 @@ class FileManagerController extends Controller
         }
     }
 
-    public function stopSharing(Request $request): void
+    public function stopSharing(Request $request): RedirectResponse
     {
         $fileIds = $request->input('stopShareFileIds');
         $folderIds = $request->input('stopShareFolderIds');
 
         /* eliminazione dei file */
         if ($fileIds) {
-            FileShare::query()
-                ->whereIn('file_id', $fileIds)
+            MediaShare::query()
+                ->whereIn('media_id', $fileIds)
                 ->get()
-                ->each(fn($file) => $file->delete());
+                ->each(fn($sharedMedia) => $sharedMedia->delete());
         }
 
         /* eliminazione delle folder */
@@ -574,19 +524,21 @@ class FileManagerController extends Controller
             FolderShare::query()
                 ->whereIn('folder_id', $folderIds)
                 ->get()
-                ->each(fn($folder) => $folder->delete());
+                ->each(fn($sharedFolder) => $sharedFolder->delete());
         }
+
+        return back();
     }
 
-    public function rename(Request $request)
+    public function rename(Request $request): RedirectResponse
     {
-        $user = $request->user();
+        $user = Auth::id();
         $folderId = intval($request->input('folderId'));
         $fileId = intval($request->input('fileId'));
         $newName = $request->input('newName');
 
         if (!$newName || $newName == '') {
-            return redirect()->back()->withErrors([
+            return back()->withErrors([
                 'message' => 'Folder name can\'t be empty',
             ]);
         }
@@ -596,16 +548,17 @@ class FileManagerController extends Controller
         if ($fileId != 0) {
             /* RENAME FILE */
 
-            $file = Media::query()->find($fileId);
-            $fileFolderId = $file->model_id;
-            $fileFolder = Folder::query()->find($fileFolderId);
+            $media = Media::with('model')
+                ->find($fileId);
+
+            $mediaFolder = $media->model;
 
             /* controllo se all'interno della cartella in cui si trova il file esiste già un
              * altro file con lo stesso nome */
-            $fileExt = pathinfo($file->file_name, PATHINFO_EXTENSION);
+            $fileExt = pathinfo($media->file_name, PATHINFO_EXTENSION);
             $newFileFullName = $newName . '.' . $fileExt;
 
-            $fileAlreadyExists = FileManagerHelper::checkFileExistence($newFileFullName, $fileFolderId);
+            $fileAlreadyExists = FileManagerHelper::checkFileExistence($newFileFullName, $mediaFolder->id);
 
             if ($fileAlreadyExists) {
                 return redirect()->back()->withErrors([
@@ -613,19 +566,22 @@ class FileManagerController extends Controller
                 ]);
             }
 
-            $newPath = $fileFolder->path . '/' . $newFileFullName;
+            $newPath = $mediaFolder->storage_path . '/' . $newFileFullName;
 
-            // se non esiste, modifico la posizione nello storage
-            Storage::move($file->getCustomProperty('path'), $newPath);
+            Storage::move($media->getCustomProperty('path'), $newPath);
 
             // modifico il nome del file selezionato (sia name che file_name) e il path
-            $file->name = $newName;
-            $file->file_name = $newFileFullName;
-            $file->setCustomProperty('path', $newPath);
-            $file->save();
+            $media->name = $newName;
+            $media->file_name = $newFileFullName;
+            $media->setCustomProperty('path', $newPath);
+            $media->save();
+
+            return back();
         } else {
             /* RENAME FOLDER */
-            $folder = Folder::find($folderId);
+            $folder = Folder::with(['parent', 'folders', 'media'])
+                ->find($folderId);
+
             $parent = $folder->parent;
 
             if (!$parent) {
@@ -652,18 +608,18 @@ class FileManagerController extends Controller
                 ]);
             }
 
-            $oldPath = $folder->path;
+            $oldPath = $folder->storage_path;
 
-            // salvo la cartella rinominata
             $folder->name = $newName;
-            $folder->path = $folder->getFullPath();
+            $folder->storage_path = $folder->getFullPath(); // lo ricalcola con il nuovo nome
             $folder->save();
 
-            // salvo la nuova posizione nello storage
-            Storage::move($oldPath, $folder->path);
+            Storage::move($oldPath, $folder->storage_path);
             $this->moveStorageRecursive($folder);
 
             Storage::deleteDirectory($oldPath);
+
+            return back();
         }
     }
 
@@ -826,7 +782,7 @@ class FileManagerController extends Controller
                     ->get();
 
                 $folders = FolderResource::collection($folders);
-                $files = FileResource::collection($files);
+                $files = MediaResource::collection($files);
 
                 return Inertia::render('App/MyFiles', [
                     'folders' => $folders,
@@ -851,7 +807,7 @@ class FileManagerController extends Controller
                     ->get();
 
                 $folders = FolderResource::collection($folders);
-                $files = FileResource::collection($files);
+                $files = MediaResource::collection($files);
 
                 return Inertia::render('App/Favourites', [
                     'folders' => $folders,
@@ -968,7 +924,7 @@ class FileManagerController extends Controller
 
     private function createZip(Collection $folders = null, Collection $files = null): string
     {
-        $zipFile = 'Zip.zip';
+        $zipFile = 'zip.zip';
 
         $zipArchive = new ZipArchive();
 
@@ -1019,7 +975,7 @@ class FileManagerController extends Controller
         }
     }
 
-    private function addFilesToZip(Collection $files, ZipArchive &$zipArchive, array $path): void
+    private function addFilesToZip(Collection $files, ZipArchive $zipArchive, array $path): void
     {
         foreach ($files as $file) {
             $filePath = $file->getPath();
@@ -1029,19 +985,19 @@ class FileManagerController extends Controller
         }
     }
 
-    private function moveStorageRecursive(Folder $currentFolder): void
+    private function moveStorageRecursive(Folder|Model $currentFolder): void
     {
         $folders = $currentFolder->folders;
-        $files = $currentFolder->getMedia('documents');
+        $files = $currentFolder->media;
 
         if ($files->isNotEmpty()) {
-            foreach ($files as $file) {
-                $oldPath = $file->getCustomProperty('path');
+            foreach ($files as $media) {
+                $oldPath = $media->getCustomProperty('path');
 
-                $newPath = $currentFolder->path . '/' . $file->file_name;
+                $newPath = $currentFolder->storage_path . '/' . $media->file_name;
 
-                $file->setCustomProperty('path', $newPath);
-                $file->save();
+                $media->setCustomProperty('path', $newPath);
+                $media->save();
 
                 Storage::move($oldPath, $newPath);
             }
@@ -1049,10 +1005,10 @@ class FileManagerController extends Controller
 
         if ($folders->isNotEmpty()) {
             foreach ($folders as $folder) {
-                $oldPath = $folder->path;
+                $oldPath = $folder->storage_path;
                 $newPath = $folder->getFullPath();
 
-                $folder->path = $newPath;
+                $folder->storage_path = $newPath;
                 $folder->save();
 
                 Storage::move($oldPath, $newPath);
@@ -1109,7 +1065,7 @@ class FileManagerController extends Controller
 
             $folder = FolderResource::make($folder);
             $folders = FolderResource::collection($folders);
-            $files = FileResource::collection($files);
+            $files = MediaResource::collection($files);
 
             $currentFolderId = $folder->id;
             $currentFolderName = $folder->name;
@@ -1143,7 +1099,7 @@ class FileManagerController extends Controller
                 ->orderBy('file_name', 'ASC')
                 ->get();
 
-            $files = FileResource::collection($files);
+            $files = MediaResource::collection($files);
 
             // se si sta tentando di accedere ad una cartella che non è presente nella root folder dell'utente o in una delle sue sottocartelle, ritorno errore
             if ($rootFolderId != null) {

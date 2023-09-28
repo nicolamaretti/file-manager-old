@@ -53,7 +53,7 @@ function onDeleteConfirm() {
     }), {
         preserveState: true,
         preserveScroll: true,
-        only: ['folders', 'files'],
+        only: ['currentFolder', 'rootFolders', 'folders', 'files'],
         onSuccess: (data) => {
             console.log('onDeleteSuccess', data);
 
@@ -61,7 +61,7 @@ function onDeleteConfirm() {
 
             emit('delete');
 
-            showSuccessNotification('Selected files have been deleted');
+            showSuccessNotification('Selected files have been deleted successfully');
         },
         onError: (errors) => {
             console.log('onDeleteError', errors);

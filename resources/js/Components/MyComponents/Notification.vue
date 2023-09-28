@@ -7,7 +7,7 @@
         leave-from-class="opacity-100 translate-y-0 sm:scale-100"
         leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
     >
-        <div v-if="show" class="fixed bottom-12 left-4 text-white py-2 px-4 rounded-lg shadow-md w-[200px]"
+        <div v-if="show" class="fixed bottom-12 left-4 text-white py-2 px-4 rounded-lg shadow-md w-[220px] text-center"
              :class="{
                 'bg-emerald-500': type === 'success',
                 'bg-red-500': type === 'error'

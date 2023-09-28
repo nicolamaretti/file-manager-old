@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
@@ -32,6 +32,8 @@ class User extends Authenticatable
         'email',
         'password',
     ];
+
+    protected $table = 'users';
 
     /**
      * The attributes that should be hidden for serialization.
@@ -65,6 +67,37 @@ class User extends Authenticatable
 
     public function rootFolder(): HasOne
     {
-        return $this->hasOne(Folder::class, 'folder_id');
+        return $this->hasOne(Folder::class)
+            ->whereNull('folder_id');
+    }
+
+    public function folders(): HasMany
+    {
+        return $this->hasMany(Folder::class)
+            ->whereNotNull('folder_id');
+    }
+
+    public function starredFolder(): HasMany
+    {
+        return $this->HasMany(StarredFolder::class)
+            ->where('user_id', Auth::id());
+    }
+
+    public function starredMedia(): HasMany
+    {
+        return $this->HasMany(StarredMedia::class)
+            ->where('user_id', Auth::id());
+    }
+
+    public function sharedMedia(): HasMany
+    {
+        return $this->hasMany(MediaShare::class)
+            ->where('user_id', Auth::id());
+    }
+
+    public function sharedFolders(): HasMany
+    {
+        return $this->hasMany(FolderShare::class)
+            ->where('user_id', Auth::id());
     }
 }

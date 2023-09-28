@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('starred_folders', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Folder::class);
-            $table->foreignIdFor(User::class);
+            $table->foreignId('folder_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

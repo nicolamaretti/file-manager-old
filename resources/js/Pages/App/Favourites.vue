@@ -3,12 +3,14 @@
         <nav class="flex justify-end mb-3 mt-1">
             <!-- Bottoni -->
             <div class="flex">
-                <RenameFileButton v-if="(selectedFolderIds.length === 1 && selectedFileIds.length === 0) || (selectedFolderIds.length === 0 && selectedFileIds.length === 1)"
-                                  :folder-id="Number(selectedFolderIds[0])"
-                                  :file-id="Number(selectedFileIds[0])"
-                                  @restore="onRestore"/>
-                <CopyFileButton v-if="(selectedFolderIds.length === 1 && selectedFileIds.length === 0) || (selectedFolderIds.length === 0 && selectedFileIds.length === 1)"
-                                @restore="onRestore"/>
+                <RenameFileButton
+                    v-if="(selectedFolderIds.length === 1 && selectedFileIds.length === 0) || (selectedFolderIds.length === 0 && selectedFileIds.length === 1)"
+                    :file-id="Number(selectedFileIds[0])"
+                    :folder-id="Number(selectedFolderIds[0])"
+                    @restore="onRestore"/>
+                <CopyFileButton
+                    v-if="(selectedFolderIds.length === 1 && selectedFileIds.length === 0) || (selectedFolderIds.length === 0 && selectedFileIds.length === 1)"
+                    @restore="onRestore"/>
                 <MoveFilesButton v-if="(selectedFolderIds.length > 0 || selectedFileIds.length > 0)"
                                  :move-file-ids="selectedFileIds"
                                  :move-folder-ids="selectedFolderIds"/>
@@ -30,7 +32,7 @@
                 <thead class="bg-gray-100 border-b sm:rounded-lg">
                 <tr>
                     <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left w-[30px] max-w-[30px] pr-0">
-                        <Checkbox @change="onSelectAllChange()" v-model:checked="allSelected"/>
+                        <Checkbox v-model:checked="allSelected" @change="onSelectAllChange()"/>
                     </th>
                     <th class="text-sm font-medium text-gray-900 px-6 py-4 text-left w-[30px] max-w-[30px]">
 
@@ -54,25 +56,24 @@
                 </thead>
                 <tbody>
                 <!-- 1) visualizzazione cartelle -->
-                <tr v-if="folders"
-                    v-for="folder in folders.data"
+                <tr v-for="folder in allFiles.folders"
                     :key="folder.id"
                     :class="(selectedFolders[folder.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
                     class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
                     @click="toggleSelectFolder(folder.id)"
                     @dblclick.prevent="openFolder(folder.id)">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[30px] max-w-[30px] pr-0">
-                        <Checkbox @change="onSelectFolderCheckboxChange(folder.id)"
-                                  v-model="selectedFolders[folder.id]"
+                        <Checkbox v-model="selectedFolders[folder.id]"
                                   :checked="selectedFolders[folder.id] || allSelected"
-                                  class="mr-4"/>
+                                  class="mr-4"
+                                  @change="onSelectFolderCheckboxChange(folder.id)"/>
                     </td>
                     <td class="px-6 py-4 max-w-[30px] text-sm font-medium text-yellow-500"
                         @click.stop.prevent="addRemoveFavouriteFolder(folder.id)">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-                            <path fill-rule="evenodd"
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path clip-rule="evenodd"
                                   d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
-                                  clip-rule="evenodd"/>
+                                  fill-rule="evenodd"/>
                         </svg>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
@@ -94,29 +95,28 @@
                 </tr>
 
                 <!-- 2) visualizzazione file -->
-                <tr v-if="files"
-                    v-for="file in files.data"
+                <tr v-for="file in allFiles.files"
                     :key="file.id"
                     :class="(selectedFiles[file.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
                     class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
                     @click="toggleSelectFile(file.id)">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[30px] max-w-[30px] pr-0">
-                        <Checkbox @change="onSelectFileCheckboxChange(file.id)"
-                                  v-model="selectedFiles[file.id]"
+                        <Checkbox v-model="selectedFiles[file.id]"
                                   :checked="selectedFiles[file.id] || allSelected"
-                                  class="mr-4"/>
+                                  class="mr-4"
+                                  @change="onSelectFileCheckboxChange(file.id)"/>
                     </td>
                     <td class="px-6 py-4 max-w-[40px] text-sm font-medium text-yellow-500"
                         @click.stop.prevent="addRemoveFavouriteFile(file.id)">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-                            <path fill-rule="evenodd"
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path clip-rule="evenodd"
                                   d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
-                                  clip-rule="evenodd"/>
+                                  fill-rule="evenodd"/>
                         </svg>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
                         <FileIcon :file="file" class="mr-3"/>
-                        {{ file.file_name }}
+                        {{ file.name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {{ file.owner === page.props.auth.user.name ? 'me' : file.owner }}
@@ -134,19 +134,16 @@
                 </tbody>
             </table>
 
-            <!-- controllo per la home page dell'admin: all'inizio, files è null e fa crashare l'app -->
-            <div v-if="files && folders">
-                <div v-if="!files.data.length && !folders.data.length"
-                     class="py-8 text-center text-sm text-gray-400">
-                    There is no data in this folder
-                </div>
+            <div v-if="!files.data.length && !folders.data.length"
+                 class="py-8 text-center text-sm text-gray-400">
+                You have no favourites
             </div>
         </div>
     </AppLayout>
 </template>
 
 <script setup>
-import {computed, ref} from "vue";
+import {computed, onUpdated, ref} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import ShareFilesButton from "@/Components/MyComponents/ShareFilesButton.vue";
@@ -172,12 +169,15 @@ const page = usePage();
 // Computed
 const selectedFolderIds = computed(() => Object.entries(selectedFolders.value).filter(a => a[1]).map(a => a[0]));
 const selectedFileIds = computed(() => Object.entries(selectedFiles.value).filter(a => a[1]).map(a => a[0]));
-const owner = computed(() => props.currentFolder.data.owner === page.props.auth.user.name ? 'me' : props.currentFolder.data.owner);
 
 // Refs
 const selectedFolders = ref({});
 const selectedFiles = ref({});
 const allSelected = ref(false);
+const allFiles = ref({
+    folders: props.folders ? props.folders.data : [],
+    files: props.files ? props.files.data : [],
+});
 
 // Methods
 function openFolder(folderId = null) {
@@ -245,6 +245,9 @@ function onSelectFolderCheckboxChange(folderId) {
 
         allSelected.value = checked;
     }
+    console.log(selectedFileIds.value);
+    console.log(selectedFolders.value);
+
 }
 
 function onSelectFileCheckboxChange(fileId) {
@@ -273,6 +276,7 @@ function onSelectFileCheckboxChange(fileId) {
     }
 
     console.log(selectedFileIds.value);
+    console.log(selectedFolders.value);
 }
 
 function addRemoveFavouriteFolder(folderId) {
@@ -312,6 +316,13 @@ function onRestore() {
     selectedFolders.value = {};
     selectedFiles.value = {};
 }
+
+onUpdated(() => {
+    allFiles.value = {
+        folders: props.folders ? props.folders.data : [],
+        files: props.files ? props.files.data : []
+    }
+});
 
 console.log('Favourites', props);
 </script>

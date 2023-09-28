@@ -34,7 +34,7 @@
 
 <script setup>
 import {router, usePage} from "@inertiajs/vue3";
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
 import InputError from "@/Components/InputError.vue";
@@ -56,23 +56,26 @@ const folderName = ref('');
 const errorMessage = ref('');
 
 // Uses
-// prendo il currentFolderId dalle props della pagina base
 const page = usePage();
+
+// Computed
+const userRootFolder = computed(() => page.props.userRootFolder);
+console.log('userRootFolder', userRootFolder);
 
 // Methods
 function createFolder() {
-    console.log('Create Folder',folderName.value);
+    console.log('Create Folder', folderName.value);
 
     const name = folderName.value;
 
     router.post(route('create-folder'),
         {
             newFolderName: folderName.value,
-            currentFolderId: page.props.currentFolder ? page.props.currentFolder.data.id : page.props.auth.user.root_folder_id
+            currentFolderId: page.props.currentFolder ? page.props.currentFolder.data.id : userRootFolder.value.id
         },
         {
             preserveState: true,
-            only: ['folders'],
+            only: ['currentFolder', 'rootFolders'],
             onSuccess: (data) => {
                 console.log('createFolderSuccess', data);
 

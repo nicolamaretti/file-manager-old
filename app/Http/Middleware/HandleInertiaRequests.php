@@ -37,11 +37,8 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return array_merge(parent::share($request), [
-            'folderPermission.read' => fn() => $request->user()
-                ? $request->user()->can_read_folder
-                : null,
-            'folderPermission.write' => fn() => $request->user()
-                ? $request->user()->can_write_folder
+            'userRootFolder' => fn() => $request->user()
+                ? $request->user()->rootFolder
                 : null,
         ]);
     }

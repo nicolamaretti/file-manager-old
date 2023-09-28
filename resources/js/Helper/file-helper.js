@@ -2,7 +2,9 @@ export function isImage(file) {
     return [
         'image/png',
         'image/svg+xml',
-        'image/jpeg'
+        'image/jpeg',
+        'image/webp',
+        'application/octet-stream'
     ].includes(file.mime_type)
 }
 

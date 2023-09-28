@@ -2,11 +2,9 @@
 
 namespace App\Helpers;
 
-use App\Http\Resources\File\FileResource;
-use App\Http\Resources\Folder\FolderResource;
+use App\Http\Resources\MediaResource;
 use App\Models\Folder;
 use App\Models\StarredFile;
-use http\Env\Request;
 use Illuminate\Http\File;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
@@ -84,38 +82,29 @@ class FileManagerHelper
     }
 
     /**
-     * Calcola la dimensione di un file
+     * Private helper per calcolare il path di un file ricorsivamente
      *
-     * @param FileResource $file
-     * @return string
+     * @param int $folderId
+     * @param $path
+     * @return void
      */
-    public static function getFileSize(FileResource $file): string
+    private static function getFilePathRecursive(int $folderId, &$path): void
     {
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $folder = Folder::query()->findOrFail($folderId);
 
-        $power = $file->size > 0 ? floor(log($file->size, 1024)) : 0;
+        $path[] = $folder->id;
 
-        return number_format($file->size / pow(1024, $power), 2, '.', ',') . ' ' . $units[$power];
-    }
+        if (!($folder->parent)) {
+            // se non c'è il parent vuol dire che sono nella route
 
-    /**
-     * Calcola se un file è marcato come preferito
-     *
-     * @param int $fileId
-     * @return bool
-     */
-    public static function fileIsFavourite(int $fileId): bool
-    {
-        $fileIsFavourite = StarredFile::query()
-            ->where('user_id', Auth::id())
-            ->where('file_id', $fileId)
-            ->first();
+            // faccio il reverse dell'array calcolato perché sono partito dalla fine
+            $path = array_reverse($path);
+        } else {
+            // se c'è un parent della folder corrente, faccio la chiamata ricorsiva
+            $parentId = $folder->parent->id;
 
-        if ($fileIsFavourite) {
-            return true;
+            self::getFilePathRecursive($parentId, $path);
         }
-
-        return false;
     }
 
     /**
@@ -156,31 +145,5 @@ class FileManagerHelper
 
         // return UploadedFile object
         return $uploadedFile;
-    }
-
-    /**
-     * Private helper per calcolare il path ricorsivamente
-     *
-     * @param int $folderId
-     * @param $path
-     * @return void
-     */
-    private static function getFilePathRecursive(int $folderId, &$path): void
-    {
-        $folder = Folder::query()->findOrFail($folderId);
-
-        array_push($path, $folder->id);
-
-        if (!($folder->parent)) {
-            // se non c'è il parent vuol dire che sono nella route
-
-            // faccio il reverse dell'array calcolato perché sono partito dalla fine
-            $path = array_reverse($path);
-        } else {
-            // se c'è un parent della folder corrente, faccio la chiamata ricorsiva
-            $parentId = $folder->parent->id;
-
-            self::getFilePathRecursive($parentId, $path);
-        }
     }
 }

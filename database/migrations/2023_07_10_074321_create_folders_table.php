@@ -14,16 +14,14 @@ return new class extends Migration
     {
         Schema::create('folders', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(User::class);
             $table->string('name');
+            $table->foreignId('user_id')->constrained();
             $table->unsignedBigInteger('folder_id')->nullable();
             $table->foreign('folder_id')
                 ->references('id')
                 ->on('folders')
-                ->onDelete('cascade');
-            $table->boolean('is_root_folder')
-                ->default(false);
-            $table->string('storage_path')->default('');
+                ->cascadeOnDelete();
+            $table->string('storage_path');
             $table->uuid()->nullable()->unique();
             $table->timestamps();
             $table->softDeletes();

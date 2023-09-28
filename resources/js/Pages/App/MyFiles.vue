@@ -60,8 +60,7 @@
                 </thead>
                 <tbody>
                 <!-- 1) visualizzazione cartelle -->
-                <tr v-for="folder in folders.data"
-                    v-if="folders"
+                <tr v-for="folder in allFiles.folders"
                     :key="folder.id"
                     :class="(selectedFolders[folder.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
                     class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
@@ -94,7 +93,7 @@
                         {{ folder.name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ owner }}
+                        {{ folder.owner === page.props.auth.user.name ? 'me' : folder.owner }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {{ folder.path }}
@@ -108,8 +107,7 @@
                 </tr>
 
                 <!-- 2) visualizzazione file -->
-                <tr v-for="file in files.data"
-                    v-if="files"
+                <tr v-for="file in allFiles.files"
                     :key="file.id"
                     :class="(selectedFiles[file.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
                     class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
@@ -138,10 +136,10 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
                         <FileIcon :file="file" class="mr-3"/>
-                        {{ file.file_name }}
+                        {{ file.name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ owner }}
+                        {{ file.owner === page.props.auth.user.name ? 'me' : file.owner }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {{ file.path }}
@@ -156,12 +154,9 @@
                 </tbody>
             </table>
 
-            <!-- controllo per la home page dell'admin: all'inizio, files è null e fa crashare l'app -->
-            <div v-if="files && folders">
-                <div v-if="!files.data.length && !folders.data.length"
-                     class="py-8 text-center text-sm text-gray-400">
-                    There is no data in this folder
-                </div>
+            <div v-if="!allFiles.files.length && !allFiles.folders.length"
+                 class="py-8 text-center text-sm text-gray-400">
+                There is no data in this folder
             </div>
 
             <div ref="loadMoreIntersect"></div>
@@ -170,7 +165,7 @@
 </template>
 
 <script setup>
-import {computed, onMounted, ref} from "vue";
+import {computed, onMounted, onUpdated, ref} from "vue";
 import {router, usePage} from "@inertiajs/vue3";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import ShareFilesButton from "@/Components/MyComponents/ShareFilesButton.vue";
@@ -184,14 +179,12 @@ import RenameFileButton from "@/Components/MyComponents/RenameFileButton.vue";
 import CopyFileButton from "@/Components/MyComponents/CopyFileButton.vue";
 import MoveFilesButton from "@/Components/MyComponents/MoveFilesButton.vue";
 import {showErrorDialog, showSuccessNotification} from "@/event-bus.js";
-import {httpGet} from "@/Helper/http-helper.js";
 
 // Props & Emit
 const props = defineProps({
     currentFolder: Object,
     isUserAdmin: Boolean,
-    folders: Object,
-    files: Object,
+    rootFolders: Object,
     ancestors: Array,
 });
 
@@ -201,17 +194,17 @@ const page = usePage();
 // Computed
 const selectedFolderIds = computed(() => Object.entries(selectedFolders.value).filter(a => a[1]).map(a => a[0]));
 const selectedFileIds = computed(() => Object.entries(selectedFiles.value).filter(a => a[1]).map(a => a[0]));
-const owner = computed(() => {
-    if (props.currentFolder) {
-        return props.currentFolder.data.owner === page.props.auth.user.name ? 'me' : props.currentFolder.data.owner
-    }
-});
 
 // Refs
 const selectedFolders = ref({});
 const selectedFiles = ref({});
 const allSelected = ref(false);
 const loadMoreIntersect = ref(null);
+
+const allFiles = ref({
+    folders: props.currentFolder ? props.currentFolder.data.folders : props.rootFolders.data,
+    files: props.currentFolder ? props.currentFolder.data.files : []
+});
 
 // Methods
 function openFolder(folderId = null) {
@@ -221,7 +214,7 @@ function openFolder(folderId = null) {
         'folderId': folderId,
     }, {
         preserveScroll: true,
-        only: ['currentFolder', 'folders', 'files', 'ancestors'],
+        only: ['currentFolder', 'ancestors'],
         onSuccess: () => {
             console.log('openFolderSuccess', props.currentFolder);
         },
@@ -232,15 +225,13 @@ function openFolder(folderId = null) {
 }
 
 function onSelectAllChange() {
-    props.folders.data.forEach(f => {
+    allFiles.value.folders.forEach(f => {
         selectedFolders.value[f.id] = allSelected.value;
     });
 
-    if (props.files) {
-        props.files.data.forEach(f => {
-            selectedFiles.value[f.id] = allSelected.value;
-        });
-    }
+    allFiles.value.files.forEach(f => {
+        selectedFiles.value[f.id] = allSelected.value;
+    });
 
     console.log(selectedFolders.value)
     console.log(selectedFiles.value)
@@ -265,7 +256,7 @@ function onSelectFolderCheckboxChange(folderId) {
         let checked = true;
 
         // controllo se almeno una folder è false
-        for (let folder of props.folders.data) {
+        for (let folder of allFiles.value.folders) {
             if (!selectedFolders.value[folder.id]) {
                 checked = false;
                 break;
@@ -273,17 +264,18 @@ function onSelectFolderCheckboxChange(folderId) {
         }
 
         // controllo se almeno un file è false
-        if (props.files) {
-            for (let file of props.files.data) {
-                if (!selectedFiles.value[file.id]) {
-                    checked = false;
-                    break;
-                }
+        for (let file of allFiles.value.files) {
+            if (!selectedFiles.value[file.id]) {
+                checked = false;
+                break;
             }
         }
 
         allSelected.value = checked;
     }
+
+    console.log(selectedFolders.value)
+    console.log(selectedFiles.value)
 }
 
 function onSelectFileCheckboxChange(fileId) {
@@ -293,7 +285,7 @@ function onSelectFileCheckboxChange(fileId) {
         let checked = true;
 
         // controllo se almeno un file è false
-        for (let file of props.files.data) {
+        for (let file of allFiles.value.files) {
             if (!selectedFiles.value[file.id]) {
                 checked = false;
                 break;
@@ -301,7 +293,7 @@ function onSelectFileCheckboxChange(fileId) {
         }
 
         // controllo se almeno una folder è false
-        for (let folder of props.folders.data) {
+        for (let folder of allFiles.value.folders) {
             if (!selectedFolders.value[folder.id]) {
                 checked = false;
                 break;
@@ -311,7 +303,8 @@ function onSelectFileCheckboxChange(fileId) {
         allSelected.value = checked;
     }
 
-    console.log(selectedFileIds.value);
+    console.log(selectedFolders.value)
+    console.log(selectedFiles.value)
 }
 
 function addRemoveFavouriteFolder(folderId) {
@@ -333,7 +326,7 @@ function sendAddRemoveFavouriteRequest(folderId, fileId) {
         {
             preserveState: true,
             preserveScroll: true,
-            only: ['folders', 'files'],
+            only: ['currentFolder', 'rootFolders'],
             onSuccess: (data) => {
                 console.log('addRemoveFavouriteSuccess', data);
 
@@ -355,19 +348,19 @@ function onRestore() {
 
 function loadMore() {
     console.log("load more");
-    console.log(props.files.links.next);
-
-    if (props.files.links.next === null) {
-        return;
-    }
-
-    router.get(props.files.links.next, {}, {
-        preserveState: true,
-        only: ['files', 'folders'],
-        onSuccess: (data) => {
-            console.log(data, props)
-        }
-    });
+    // console.log(props.files.links.next);
+    //
+    // if (props.files.links.next === null) {
+    //     return;
+    // }
+    //
+    // router.get(props.files.links.next, {}, {
+    //     preserveState: true,
+    //     only: ['files', 'folders'],
+    //     onSuccess: (data) => {
+    //         console.log(data, props)
+    //     }
+    // });
 
     // httpGet(props.files.links.next)
     //     .then(res => {
@@ -378,12 +371,19 @@ function loadMore() {
     console.log('end')
 }
 
-onMounted(() => {
-    const observer = new IntersectionObserver((entries) => entries.forEach(entry => entry.isIntersecting && loadMore()), {
-        rootMargin: '-250px 0px 0px 0px'
-    });
+onUpdated(() => {
+    allFiles.value = {
+        folders: props.currentFolder ? props.currentFolder.data.folders : props.rootFolders.data,
+        files: props.currentFolder ? props.currentFolder.data.files : []
+    }
+});
 
-    observer.observe(loadMoreIntersect.value)
+onMounted(() => {
+    // const observer = new IntersectionObserver((entries) => entries.forEach(entry => entry.isIntersecting && loadMore()), {
+    //     rootMargin: '-250px 0px 0px 0px'
+    // });
+    //
+    // observer.observe(loadMoreIntersect.value)
 });
 
 console.log('MyFiles', props)

@@ -41,7 +41,7 @@
 <script setup>
 import {onMounted, ref} from 'vue';
 import {Head, router, usePage} from '@inertiajs/vue3';
-import {emitter, FILE_UPLOAD_STARTED, showErrorDialog} from "@/event-bus.js";
+import {emitter, FILE_UPLOAD_STARTED, showErrorDialog, showSuccessNotification} from "@/event-bus.js";
 import Navigation from "@/Components/MyComponents/Navigation.vue";
 import SearchForm from "@/Components/MyComponents/SearchForm.vue";
 import UserSettingsDropdown from "@/Components/MyComponents/UserSettingsDropdown.vue";
@@ -89,9 +89,11 @@ function uploadFiles(files) {
         },
         {
             preserveState: true,
-            only: ['files'],
+            only: ['currentFolder'],
             onSuccess: (data) => {
                 console.log('uploadSuccess', data);
+
+                showSuccessNotification('Files uploaded successfully');
             },
             onError: (errors) => {
                 console.log('uploadError', errors.message);

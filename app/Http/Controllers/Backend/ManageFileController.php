@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Backend;
 
 use App\Helpers\FileManagerHelper;
 use App\Http\Controllers\Controller;
-use App\Http\Resources\Folder\FolderResource;
+use App\Http\Resources\FolderResource;
 use App\Models\Folder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
