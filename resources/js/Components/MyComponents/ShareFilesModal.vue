@@ -44,11 +44,10 @@ import {showErrorNotification, showSuccessNotification} from "@/event-bus.js";
 // Props & Emit
 const props = defineProps({
     modelValue: Boolean,
-    shareFolderIds: Array,
-    shareFileIds: Array,
+    fileIds: Array,
 });
 
-const emit = defineEmits(['update:modelValue', 'share']);
+const emit = defineEmits(['update:modelValue', 'restore']);
 
 // Refs
 const emailInput = ref(null);
@@ -64,8 +63,7 @@ function share() {
     router.post(route('share'),
         {
             email: email.value,
-            shareFileIds: props.shareFileIds,
-            shareFolderIds: props.shareFolderIds
+            fileIds: props.fileIds,
         },
         {
             preserveState: true,
@@ -75,7 +73,7 @@ function share() {
                 console.log('shareSuccess', data, email.value);
 
                 closeModal();
-                emit('share');
+                emit('restore');
                 showSuccessNotification(`Selected files will be shared to ${userEmail}`);
             },
             onError: (errors) => {
@@ -89,6 +87,7 @@ function share() {
 
                  if (errors.error)  {
                      closeModal();
+                     emit('restore');
                      showErrorNotification(errors.error);
                  }
             }

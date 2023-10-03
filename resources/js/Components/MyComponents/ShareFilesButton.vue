@@ -9,9 +9,8 @@
     </button>
 
     <ShareFilesModal v-model="showShareModal"
-                     :share-file-ids="shareFileIds"
-                     :share-folder-ids="shareFolderIds"
-                     @share="onShare"/>
+                     :file-ids="fileIds"
+                     @restore="onRestore"/>
 </template>
 
 <script setup>
@@ -21,8 +20,7 @@ import {showErrorDialog} from "@/event-bus.js";
 
 // Props & Emit
 const props = defineProps({
-    shareFolderIds: Array,
-    shareFileIds: Array,
+    fileIds: Array,
 });
 
 const emit = defineEmits(['restore']);
@@ -32,7 +30,7 @@ const showShareModal = ref(false);
 
 // Methods
 function onClick() {
-    if (!props.shareFileIds.length && !props.shareFolderIds.length) {
+    if (!props.fileIds.length) {
         showErrorDialog('Please select at least one file to share');
 
         return;
@@ -41,7 +39,7 @@ function onClick() {
     showShareModal.value = true;
 }
 
-function onShare() {
+function onRestore() {
     emit('restore');
 }
 </script>
