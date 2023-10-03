@@ -160,40 +160,40 @@ trait RecursivelyTrait
     }
 
 
-    public function getAncestors(): array
-    {
-        $userIsAdmin = Auth::user()->is_admin;
-
-        $ancestors = array();
-
-        return $this->getAncestorsRecursive($userIsAdmin, $this, $ancestors);
-    }
-
-    private function getAncestorsRecursive(bool $userIsAdmin, Folder $folder, array &$ancestors): array
-    {
-        if($folder->parent === null) {
-            // sono nella root folder
-
-            if ($userIsAdmin) {
-                // se sono admin aggiungo anche l'ultima folder
-                $ancestors[] = [
-                    'id' => $folder->id,
-                    'name' => $folder->name,
-                ];
-            }
-
-            // gli elementi nell'array vengono memorizzati "a ritroso" dalla cartella corrente fino alla root, quindi li inverto
-            $ancestors = array_reverse($ancestors);
-
-            return $ancestors;
-        } else {
-            // aggiungo la folder corrente al path
-            $ancestors[] = [
-                'id' => $folder->id,
-                'name' => $folder->name,
-            ];
-
-            return $this->getAncestorsRecursive($userIsAdmin, $folder->parent, $ancestors);
-        }
-    }
+//    public function getAncestors(): array
+//    {
+//        $userIsAdmin = Auth::user()->is_admin;
+//
+//        $ancestors = array();
+//
+//        return $this->getAncestorsRecursive($userIsAdmin, $this, $ancestors);
+//    }
+//
+//    private function getAncestorsRecursive(bool $userIsAdmin, Folder $folder, array &$ancestors): array
+//    {
+//        if($folder->parent === null) {
+//            // sono nella root folder
+//
+//            if ($userIsAdmin) {
+//                // se sono admin aggiungo anche l'ultima folder
+//                $ancestors[] = [
+//                    'id' => $folder->id,
+//                    'name' => $folder->name,
+//                ];
+//            }
+//
+//            // gli elementi nell'array vengono memorizzati "a ritroso" dalla cartella corrente fino alla root, quindi li inverto
+//            $ancestors = array_reverse($ancestors);
+//
+//            return $ancestors;
+//        } else {
+//            // aggiungo la folder corrente al path
+//            $ancestors[] = [
+//                'id' => $folder->id,
+//                'name' => $folder->name,
+//            ];
+//
+//            return $this->getAncestorsRecursive($userIsAdmin, $folder->parent, $ancestors);
+//        }
+//    }
 }

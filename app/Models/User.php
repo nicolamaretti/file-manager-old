@@ -5,12 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
@@ -65,39 +68,26 @@ class User extends Authenticatable
         'profile_photo_url',
     ];
 
-    public function rootFolder(): HasOne
+    public function root(): HasOne
     {
-        return $this->hasOne(Folder::class)
-            ->whereNull('folder_id');
+        return $this->hasOne(File::class, 'created_by')
+            ->whereNull('file_id');
     }
 
-    public function folders(): HasMany
+    public function files(): HasMany
     {
-        return $this->hasMany(Folder::class)
-            ->whereNotNull('folder_id');
+        return $this->hasMany(File::class, 'created_by')->orderBy('name');
     }
 
-    public function starredFolder(): HasMany
+    public function starred(): HasMany
     {
-        return $this->HasMany(StarredFolder::class)
+        return $this->HasMany(StarredFile::class)
             ->where('user_id', Auth::id());
     }
 
-    public function starredMedia(): HasMany
+    public function shared(): HasMany
     {
-        return $this->HasMany(StarredMedia::class)
-            ->where('user_id', Auth::id());
-    }
-
-    public function sharedMedia(): HasMany
-    {
-        return $this->hasMany(MediaShare::class)
-            ->where('user_id', Auth::id());
-    }
-
-    public function sharedFolders(): HasMany
-    {
-        return $this->hasMany(FolderShare::class)
+        return $this->hasMany(FileShare::class)
             ->where('user_id', Auth::id());
     }
 }

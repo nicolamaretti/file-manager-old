@@ -20,19 +20,22 @@ class MediaResource extends JsonResource
      */
     public function toArray(Request $request): array|Arrayable|JsonSerializable
     {
-        $owner = User::with('folders.user')
-            ->whereRelation('folders', 'user_id', Auth::id())
+        $owner = User::with('media')
+            ->whereRelation('media', 'model_id', Auth::id())
             ->first();
 
         return [
             'id' => $this->id,
             'name' => $this->file_name,
-            'path' => $this->getCustomProperty('path'),
-            'size' => $this->getFileSize(),
+            'parent' => $this->media_id,
+            'files' => MediaResource::collection($this->media),
+            'path' => $this->storage_path,
+            'is_folder' => $this->is_folder,
+            'size' => $this->size ?: '-----',
             'mime_type' => $this->mime_type,
             'owner' => $owner->name,
             'updated_at' => $this->updated_at->diffForHumans(),
-            'is_favourite'  => !!$this->starred,
+            'is_favourite' => !!$this->starred,
         ];
     }
 }

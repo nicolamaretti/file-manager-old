@@ -12,18 +12,21 @@ return new class extends Migration
             $table->id();
 
             $table->morphs('model');
-            $table->uuid('uuid')->nullable()->unique();
             $table->string('collection_name');
             $table->string('name');
             $table->string('file_name');
+            $table->boolean('is_folder')->default(false);
+            $table->foreignId('media_id')->nullable()->constrained('media')->cascadeOnDelete();
             $table->string('mime_type')->nullable();
-            $table->string('disk');
+            $table->string('storage_path')->nullable();
+            $table->string('disk')->default(config('filesystems.default'));
             $table->string('conversions_disk')->nullable();
-            $table->unsignedBigInteger('size');
-            $table->json('manipulations');
-            $table->json('custom_properties');
-            $table->json('generated_conversions');
-            $table->json('responsive_images');
+            $table->unsignedBigInteger('size')->nullable();
+            $table->json('manipulations')->nullable();
+            $table->json('custom_properties')->nullable();
+            $table->uuid()->nullable()->unique();
+            $table->json('generated_conversions')->nullable();
+            $table->json('responsive_images')->nullable();
             $table->unsignedInteger('order_column')->nullable()->index();
 
             $table->nullableTimestamps();
