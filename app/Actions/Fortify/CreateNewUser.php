@@ -2,8 +2,10 @@
 
 namespace App\Actions\Fortify;
 
+use App\Models\File;
 use App\Models\Folder;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -38,14 +40,14 @@ class CreateNewUser implements CreatesNewUsers
         ]);
 
         /* creazione root folder dell'utente appena creato */
-        $folder = Folder::create([
+        $folder = File::create([
             'name' => strtolower($input['name']),
-            'user_id' => $user->id,
-            'storage_path' => strtolower($input['name']),
-            'uuid' => Str::uuid(),
+            'path' => strtolower($input['name']),
+            'is_folder' => true,
+            'created_by' => $user->id,
         ]);
 
-        Storage::makeDirectory($folder->storage_path);
+        Storage::makeDirectory($folder->path);
 
         return $user;
     }

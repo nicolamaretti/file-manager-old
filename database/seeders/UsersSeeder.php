@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Folder;
+use App\Models\File;
 use Illuminate\Database\Seeder;
-Use App\Models\User;
+use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -22,6 +22,7 @@ class UsersSeeder extends Seeder
 //                $user->assignRole('organization_administrator');
 //            });
 
+        // NM
         $user = User::create([
             'name' => 'NM',
             'email' => 'nm@example.com',
@@ -31,13 +32,57 @@ class UsersSeeder extends Seeder
         ]);
 
         /* creazione root folder dell'utente appena creato */
-        $folder = Folder::create([
-            'name' => 'nm',
-            'user_id' => $user->id,
-            'storage_path' => 'nm',
+        $folder = File::create([
+            'name' => strtolower($user->name),
+            'path' => strtolower($user->name),
+//            'storage_path' => 'files/' . strtolower($user->name),
+            'is_folder' => true,
+            'created_by' => $user->id,
             'uuid' => Str::uuid(),
         ]);
 
-        Storage::makeDirectory($folder->storage_path);
+        Storage::makeDirectory("$folder->name");
+
+        // BetaTester
+        $user = User::create([
+            'name' => 'BetaTester',
+            'email' => 'betatester@example.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+            'remember_token' => Str::random(10),
+        ]);
+
+        /* creazione root folder dell'utente appena creato */
+        $folder = File::create([
+            'name' => strtolower($user->name),
+            'path' => strtolower($user->name),
+//            'storage_path' => 'files/' . strtolower($user->name),
+            'is_folder' => true,
+            'created_by' => $user->id,
+            'uuid' => Str::uuid(),
+        ]);
+
+        Storage::makeDirectory("$folder->name");
+
+        // Test
+        $user = User::create([
+            'name' => 'Test',
+            'email' => 'test@example.com',
+            'password' => Hash::make('password'),
+            'email_verified_at' => now(),
+            'remember_token' => Str::random(10),
+        ]);
+
+        /* creazione root folder dell'utente appena creato */
+        $folder = File::create([
+            'name' => strtolower($user->name),
+            'path' => strtolower($user->name),
+//            'storage_path' => 'files/' . strtolower($user->name),
+            'is_folder' => true,
+            'created_by' => $user->id,
+            'uuid' => Str::uuid(),
+        ]);
+
+        Storage::makeDirectory("$folder->name");
     }
 }

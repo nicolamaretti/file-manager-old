@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Folder;
+use App\Models\File;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -17,23 +17,26 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         $admin = User::create([
-            'name'      => 'Admin',
-            'email'     => 'admin@admin.it',
-            'password'  => Hash::make('Value1234!'),
+            'name' => 'Admin',
+            'email' => 'admin@admin.it',
+            'password' => Hash::make('Value1234!'),
             'is_admin' => true,
+            'remember_token' => Str::random(10),
         ]);
 
         $admin->markEmailAsVerified();
         $admin->assignRole('super_administrator');
 
         /* creazione root folder */
-        $folder = Folder::create([
+        $folder = File::create([
             'name' => 'admin',
-            'user_id' => $admin->id,
-            'storage_path' => 'admin',
+            'path' => 'admin',
+//            'storage_path' => 'files/admin',
+            'is_folder' => true,
             'uuid' => Str::uuid(),
+            'created_by' => $admin->id,
         ]);
 
-        Storage::makeDirectory($folder->storage_path);
+        Storage::makeDirectory("$folder->name");
     }
 }
