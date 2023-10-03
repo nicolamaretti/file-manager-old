@@ -17,12 +17,10 @@ use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Folder extends Model implements HasMedia, Zipable, Recursively
+class Folder extends Model implements HasMedia
 {
     use HasFactory;
     use InteractsWithMedia;
-    use ZipableTrait;
-    use RecursivelyTrait;
 
     protected $fillable = [
         'name',

@@ -27,15 +27,15 @@
                 <tr v-for="folder in folders"
                     :class="(selectedFolder[folder.id]) ? 'bg-blue-50' : 'bg-white'"
                     class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
-                    @click="toggleSelectFolder(folder.id)">
+                    @click="toggleSelect(folder.id)">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[40px] max-w-[40px] pr-0">
                         <Checkbox v-model="selectedFolder[folder.id]"
                                   :checked="selectedFolder[folder.id]"
                                   class="mr-4"
-                                  @change="onSelectFolderCheckboxChange(folder.id)"/>
+                                  @change="onSelectCheckboxChange(folder.id)"/>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
-                        <FolderIcon class="mr-3"/>
+                        <FileIcon :file="folder" class="mr-3"/>
                         {{ folder.name }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-400 items-center">
@@ -67,19 +67,16 @@ import {router, usePage} from "@inertiajs/vue3";
 import {computed, ref} from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import Breadcrumb from "@/Components/MyComponents/Breadcrumb.vue";
-import FolderIcon from "@/Components/Icons/FolderIcon.vue";
 import Checkbox from "@/Components/Checkbox.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import {showErrorNotification, showSuccessNotification} from "@/event-bus.js";
+import FileIcon from "@/Components/Icons/FileIcon.vue";
 
 // Props & Emit
 const props = defineProps({
-    moveFolderIds: Array,
     moveFileIds: Array,
-    currentFolder: Object,
     folders: Object,
-    ancestors: Array,
     currentFolderId: Number,
 });
 
@@ -94,11 +91,11 @@ const selectedFolder = ref({});
 const selected = ref(false);
 
 // Methods
-function toggleSelectFolder(folderId) {
-    onSelectFolderCheckboxChange(folderId);
+function toggleSelect(folderId) {
+    onSelectCheckboxChange(folderId);
 }
 
-function onSelectFolderCheckboxChange(folderId) {
+function onSelectCheckboxChange(folderId) {
     // metto tutte le selected folders a false tranne quella selezionata
     for (let folder of props.folders) {
         selectedFolder.value[folder.id] = false;
@@ -117,7 +114,6 @@ function move() {
     router.post(route('move'),
         {
             'moveIntoFolderId': moveIntoFolderId.value[0],
-            'moveFolderIds': props.moveFolderIds,
             'moveFileIds': props.moveFileIds,
         },
         {
@@ -144,5 +140,4 @@ function goBack() {
 }
 
 console.log('MoveFiles', props);
-
 </script>

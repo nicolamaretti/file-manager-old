@@ -47,7 +47,6 @@ import {showSuccessNotification} from "@/event-bus.js";
 // Props & Emit
 const props = defineProps({
     modelValue: Boolean,
-    folderId: Number,
     fileId: Number,
 });
 
@@ -65,7 +64,6 @@ function rename() {
     router.post(route('rename'),
         {
             newName: newName.value,
-            folderId: props.folderId,
             fileId: props.fileId,
         },
         {

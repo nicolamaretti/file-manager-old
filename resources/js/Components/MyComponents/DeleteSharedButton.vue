@@ -22,14 +22,7 @@ import {router} from "@inertiajs/vue3";
 import {showErrorDialog, showSuccessNotification} from "@/event-bus.js";
 
 const props = defineProps({
-    stopShareFolderIds: {
-        type: Array,
-        required: false,
-    },
-    stopShareFileIds: {
-        type: Array,
-        required: false,
-    },
+    fileIds: Array
 });
 
 const emit = defineEmits(['stop-share']);
@@ -37,7 +30,7 @@ const emit = defineEmits(['stop-share']);
 const showDeleteDialog = ref(false);
 
 function onDeleteClick() {
-    if (!props.stopShareFileIds.length && !props.stopShareFolderIds.length) {
+    if (!props.fileIds.length) {
         showErrorDialog('Please select at least one file to delete');
 
         return;
@@ -53,12 +46,11 @@ function onDeleteConfirm() {
     console.log('StopSharing');
 
     router.delete(route('stop-sharing', {
-        stopShareFolderIds: props.stopShareFolderIds,
-        stopShareFileIds: props.stopShareFileIds
+        fileIds: props.fileIds
     }), {
         preserveState: true,
         preserveScroll: true,
-        only: ['folders', 'files'],
+        only: ['files'],
         onSuccess: (data) => {
             console.log('stopSharingSuccess', data);
 

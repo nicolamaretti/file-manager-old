@@ -60,7 +60,6 @@ const page = usePage();
 
 // Computed
 const userRootFolder = computed(() => page.props.userRootFolder);
-console.log('userRootFolder', userRootFolder);
 
 // Methods
 function createFolder() {
@@ -75,7 +74,7 @@ function createFolder() {
         },
         {
             preserveState: true,
-            only: ['currentFolder', 'rootFolders'],
+            only: ['currentFolder', 'rootFolders', 'ancestors'],
             onSuccess: (data) => {
                 console.log('createFolderSuccess', data);
 

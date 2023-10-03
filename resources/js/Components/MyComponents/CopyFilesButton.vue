@@ -15,19 +15,15 @@
 </template>
 
 <script setup>
-import {router, usePage} from "@inertiajs/vue3";
-import {showErrorDialog} from "@/event-bus.js";
+import {router} from "@inertiajs/vue3";
+import {showErrorDialog, showSuccessNotification} from "@/event-bus.js";
 
 // Props & Emit
 const props = defineProps({
-    copyFolderIds: Array,
-    copyFileIds: Array,
+    fileIds: Array,
 });
 
 const emit = defineEmits(['copy']);
-
-// prendo il currentFolderId dalle props della pagina base
-const page = usePage();
 
 // Methods
 function copy() {
@@ -35,9 +31,7 @@ function copy() {
 
     router.post(route('copy'),
         {
-            currentFolderId: page.props.currentFolder ? page.props.currentFolder.data.id : page.props.auth.user.root_folder_id,
-            copyFileIds: props.copyFileIds,
-            copyFolderIds: props.copyFolderIds
+            fileIds: props.fileIds,
         },
         {
             preserveState: true,
@@ -46,7 +40,7 @@ function copy() {
 
                 emit('copy');
 
-                // ToDo show success notification
+                showSuccessNotification("Selected files have been successfully copied");
             },
             onError: (errors) => {
                 console.log('copyError', errors.message);

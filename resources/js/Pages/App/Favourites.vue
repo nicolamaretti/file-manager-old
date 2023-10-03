@@ -3,25 +3,19 @@
         <nav class="flex justify-end mb-3 mt-1">
             <!-- Bottoni -->
             <div class="flex">
-                <RenameFileButton
-                    v-if="(selectedFolderIds.length === 1 && selectedFileIds.length === 0) || (selectedFolderIds.length === 0 && selectedFileIds.length === 1)"
-                    :file-id="Number(selectedFileIds[0])"
-                    :folder-id="Number(selectedFolderIds[0])"
-                    @restore="onRestore"/>
-                <CopyFileButton
-                    v-if="(selectedFolderIds.length === 1 && selectedFileIds.length === 0) || (selectedFolderIds.length === 0 && selectedFileIds.length === 1)"
-                    @restore="onRestore"/>
-                <MoveFilesButton v-if="(selectedFolderIds.length > 0 || selectedFileIds.length > 0)"
-                                 :move-file-ids="selectedFileIds"
-                                 :move-folder-ids="selectedFolderIds"/>
-                <ShareFilesButton :share-file-ids="selectedFileIds"
-                                  :share-folder-ids="selectedFolderIds"
+<!--                <RenameFilesButton v-if="selectedFileIds.length === 1"-->
+<!--                                   :file-id="Number(selectedFileIds[0])"-->
+<!--                                   @restore="onRestore"/>-->
+<!--                <CopyFilesButton v-if="selectedFileIds.length > 0"-->
+<!--                                 :file-ids="selectedFileIds"-->
+<!--                                 @copy="onRestore"/>-->
+<!--                <MoveFilesButton v-if="selectedFileIds.length > 0"-->
+<!--                                 :file-ids="selectedFileIds"/>-->
+                <ShareFilesButton :file-ids="selectedFileIds"
                                   @restore="onRestore"/>
                 <DownloadFilesButton :download-file-ids="selectedFileIds"
-                                     :download-folder-ids="selectedFolderIds"
                                      @download="onRestore"/>
-                <DeleteFilesButton :delete-file-ids="selectedFileIds"
-                                   :delete-folder-ids="selectedFolderIds"
+                <DeleteFilesButton :file-ids="selectedFileIds"
                                    @delete="onRestore"/>
             </div>
         </nav>
@@ -32,7 +26,7 @@
                 <thead class="bg-gray-100 border-b sm:rounded-lg">
                 <tr>
                     <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left w-[30px] max-w-[30px] pr-0">
-                        <Checkbox v-model:checked="allSelected" @change="onSelectAllChange()"/>
+                        <Checkbox v-model:checked="allSelected" @change="onSelectAllChange"/>
                     </th>
                     <th class="text-sm font-medium text-gray-900 px-6 py-4 text-left w-[30px] max-w-[30px]">
 
@@ -55,59 +49,20 @@
                 </tr>
                 </thead>
                 <tbody>
-                <!-- 1) visualizzazione cartelle -->
-                <tr v-for="folder in allFiles.folders"
-                    :key="folder.id"
-                    :class="(selectedFolders[folder.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
-                    class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
-                    @click="toggleSelectFolder(folder.id)"
-                    @dblclick.prevent="openFolder(folder.id)">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[30px] max-w-[30px] pr-0">
-                        <Checkbox v-model="selectedFolders[folder.id]"
-                                  :checked="selectedFolders[folder.id] || allSelected"
-                                  class="mr-4"
-                                  @change="onSelectFolderCheckboxChange(folder.id)"/>
-                    </td>
-                    <td class="px-6 py-4 max-w-[30px] text-sm font-medium text-yellow-500"
-                        @click.stop.prevent="addRemoveFavouriteFolder(folder.id)">
-                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path clip-rule="evenodd"
-                                  d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
-                                  fill-rule="evenodd"/>
-                        </svg>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
-                        <FolderIcon class="mr-3"/>
-                        {{ folder.name }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ folder.owner === page.props.auth.user.name ? 'me' : folder.owner }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ folder.path }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ folder.updated_at }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        -----
-                    </td>
-                </tr>
-
-                <!-- 2) visualizzazione file -->
-                <tr v-for="file in allFiles.files"
+                <tr v-for="file in allFiles.data"
                     :key="file.id"
                     :class="(selectedFiles[file.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
                     class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
-                    @click="toggleSelectFile(file.id)">
+                    @click="toggleSelectFile(file.id)"
+                    @dblclick.prevent="openFolder(file.id)">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[30px] max-w-[30px] pr-0">
                         <Checkbox v-model="selectedFiles[file.id]"
                                   :checked="selectedFiles[file.id] || allSelected"
                                   class="mr-4"
-                                  @change="onSelectFileCheckboxChange(file.id)"/>
+                                  @change="onSelectCheckboxChange(file.id)"/>
                     </td>
                     <td class="px-6 py-4 max-w-[40px] text-sm font-medium text-yellow-500"
-                        @click.stop.prevent="addRemoveFavouriteFile(file.id)">
+                        @click.stop.prevent="addRemoveFavourite(file.id)">
                         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path clip-rule="evenodd"
                                   d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
@@ -134,7 +89,7 @@
                 </tbody>
             </table>
 
-            <div v-if="!files.data.length && !folders.data.length"
+            <div v-if="!allFiles.data.length"
                  class="py-8 text-center text-sm text-gray-400">
                 You have no favourites
             </div>
@@ -151,15 +106,13 @@ import DownloadFilesButton from "@/Components/MyComponents/DownloadFilesButton.v
 import DeleteFilesButton from "@/Components/MyComponents/DeleteFilesButton.vue";
 import Checkbox from "@/Components/Checkbox.vue";
 import FileIcon from "@/Components/Icons/FileIcon.vue";
-import FolderIcon from "@/Components/Icons/FolderIcon.vue";
-import RenameFileButton from "@/Components/MyComponents/RenameFileButton.vue";
-import CopyFileButton from "@/Components/MyComponents/CopyFileButton.vue";
+import RenameFilesButton from "@/Components/MyComponents/RenameFileButton.vue";
+import CopyFilesButton from "@/Components/MyComponents/CopyFilesButton.vue";
 import MoveFilesButton from "@/Components/MyComponents/MoveFilesButton.vue";
 import {showErrorDialog, showSuccessNotification} from "@/event-bus.js";
 
 // Props & Emit
 const props = defineProps({
-    folders: Object,
     files: Object,
 });
 
@@ -167,24 +120,21 @@ const props = defineProps({
 const page = usePage();
 
 // Computed
-const selectedFolderIds = computed(() => Object.entries(selectedFolders.value).filter(a => a[1]).map(a => a[0]));
 const selectedFileIds = computed(() => Object.entries(selectedFiles.value).filter(a => a[1]).map(a => a[0]));
 
 // Refs
-const selectedFolders = ref({});
 const selectedFiles = ref({});
 const allSelected = ref(false);
 const allFiles = ref({
-    folders: props.folders ? props.folders.data : [],
-    files: props.files ? props.files.data : [],
+    data: props.files ? props.files.data : [],
 });
 
 // Methods
-function openFolder(folderId = null) {
+function openFolder(id = null) {
     console.log('openFolder');
 
     router.get(route('my-files'), {
-        'folderId': folderId,
+        'folderId': id,
     }, {
         preserveScroll: true,
         onSuccess: () => {
@@ -197,76 +147,28 @@ function openFolder(folderId = null) {
 }
 
 function onSelectAllChange() {
-    props.folders.data.forEach(f => {
-        selectedFolders.value[f.id] = allSelected.value;
-    });
-
-    props.files.data.forEach(f => {
+    allFiles.value.data.forEach(f => {
         selectedFiles.value[f.id] = allSelected.value;
     });
 
-    console.log(selectedFolders.value)
-    console.log(selectedFiles.value)
+    console.log(selectedFiles.value);
 }
 
-function toggleSelectFolder(folderId) {
-    selectedFolders.value[folderId] = !selectedFolders.value[folderId];
+function toggleSelectFile(id) {
+    selectedFiles.value[id] = !selectedFiles.value[id];
 
-    onSelectFolderCheckboxChange(folderId);
+    onSelectCheckboxChange(id);
 }
 
-function toggleSelectFile(fileId) {
-    selectedFiles.value[fileId] = !selectedFiles.value[fileId];
-
-    onSelectFileCheckboxChange(fileId);
-}
-
-function onSelectFolderCheckboxChange(folderId) {
-    if (!selectedFolders.value[folderId]) {
-        allSelected.value = false;
-    } else {
-        let checked = true;
-
-        // controllo se almeno una folder è false
-        for (let folder of props.folders.data) {
-            if (!selectedFolders.value[folder.id]) {
-                checked = false;
-                break;
-            }
-        }
-
-        // controllo se almeno un file è false
-        for (let file of props.files.data) {
-            if (!selectedFiles.value[file.id]) {
-                checked = false;
-                break;
-            }
-        }
-
-        allSelected.value = checked;
-    }
-    console.log(selectedFileIds.value);
-    console.log(selectedFolders.value);
-
-}
-
-function onSelectFileCheckboxChange(fileId) {
-    if (!selectedFiles.value[fileId]) {
+function onSelectCheckboxChange(id) {
+    if (!selectedFiles.value[id]) {
         allSelected.value = false;
     } else {
         let checked = true;
 
         // controllo se almeno un file è false
-        for (let file of props.files.data) {
+        for (let file of allFiles.value.data) {
             if (!selectedFiles.value[file.id]) {
-                checked = false;
-                break;
-            }
-        }
-
-        // controllo se almeno una folder è false
-        for (let folder of props.folders.data) {
-            if (!selectedFolders.value[folder.id]) {
                 checked = false;
                 break;
             }
@@ -276,28 +178,18 @@ function onSelectFileCheckboxChange(fileId) {
     }
 
     console.log(selectedFileIds.value);
-    console.log(selectedFolders.value);
 }
 
-function addRemoveFavouriteFolder(folderId) {
-    sendFavouriteRequest(folderId, null);
-}
-
-function addRemoveFavouriteFile(fileId) {
-    sendFavouriteRequest(null, fileId);
-}
-
-function sendFavouriteRequest(folderId, fileId) {
+function addRemoveFavourite(id) {
     console.log('addRemoveFavourite');
 
     router.post(route('add-remove-favourites'),
         {
-            folderId: folderId,
-            fileId: fileId
+            fileId: id
         },
         {
             preserveState: true,
-            only: ['folders', 'files'],
+            only: ['files'],
             onSuccess: (data) => {
                 console.log('addRemoveFavouriteSuccess', data);
 
@@ -313,14 +205,12 @@ function sendFavouriteRequest(folderId, fileId) {
 
 function onRestore() {
     allSelected.value = false;
-    selectedFolders.value = {};
     selectedFiles.value = {};
 }
 
 onUpdated(() => {
     allFiles.value = {
-        folders: props.folders ? props.folders.data : [],
-        files: props.files ? props.files.data : []
+        data: props.files ? props.files.data : []
     }
 });
 
