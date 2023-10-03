@@ -2,12 +2,9 @@
 
 namespace App\Helpers;
 
-use App\Http\Resources\MediaResource;
+use App\Models\File;
 use App\Models\Folder;
-use App\Models\StarredFile;
-use Illuminate\Http\File;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Auth;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class FileManagerHelper
@@ -20,8 +17,9 @@ class FileManagerHelper
      */
     public static function checkRootFolderExistence(string $folderName): bool
     {
-        $folder = Folder::query()
-            ->whereNull('folder_id')
+        $folder = File::query()
+            ->where('is_folder', true)
+            ->whereNull('file_id')
             ->where('name', $folderName)
             ->get();
 
@@ -37,9 +35,10 @@ class FileManagerHelper
      */
     public static function checkFolderExistence(string $folderName, int $parentFolderId): bool
     {
-        $folder = Folder::query()
+        $folder = File::query()
+            ->where('is_folder', true)
+            ->where('file_id', $parentFolderId)
             ->where('name', $folderName)
-            ->where('folder_id', $parentFolderId)
             ->get();
 
         return $folder->isNotEmpty();
@@ -54,57 +53,14 @@ class FileManagerHelper
      */
     public static function checkFileExistence(string $fileName, int $folderId): bool
     {
-        $files = Folder::query()
+        $file = File::query()
+            ->with('files')
+            ->where('is_folder', true)
             ->find($folderId)
-            ->getMedia('documents')
-            ->where('file_name', $fileName);
+            ->files
+            ->where('name', $fileName);
 
-        return $files->isNotEmpty();
-    }
-
-    /**
-     * Calcola il path di un file partendo dal file stesso fino alla route
-     *
-     * @param int $fileId
-     * @return void
-     */
-    public static function getFilePath(int $fileId): string
-    {
-        $file = Media::query()->findOrFail($fileId);
-        $parentId = $file->model_id;
-        $path = [];
-
-        self::getFilePathRecursive($parentId, $path);
-
-        /* a questo punto ho il path */
-
-        return implode('/', $path) . '/' . $file->file_name;
-    }
-
-    /**
-     * Private helper per calcolare il path di un file ricorsivamente
-     *
-     * @param int $folderId
-     * @param $path
-     * @return void
-     */
-    private static function getFilePathRecursive(int $folderId, &$path): void
-    {
-        $folder = Folder::query()->findOrFail($folderId);
-
-        $path[] = $folder->id;
-
-        if (!($folder->parent)) {
-            // se non c'è il parent vuol dire che sono nella route
-
-            // faccio il reverse dell'array calcolato perché sono partito dalla fine
-            $path = array_reverse($path);
-        } else {
-            // se c'è un parent della folder corrente, faccio la chiamata ricorsiva
-            $parentId = $folder->parent->id;
-
-            self::getFilePathRecursive($parentId, $path);
-        }
+        return $file->isNotEmpty();
     }
 
     /**
