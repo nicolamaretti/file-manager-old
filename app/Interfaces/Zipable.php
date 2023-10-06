@@ -2,9 +2,10 @@
 
 namespace App\Interfaces;
 
-use ZipArchive;
-
 interface Zipable
 {
-    public function getZipFolder(): string;
+    /** Ritorna lo zip dell'oggetto corrente
+     * @return string
+     */
+    public function getZip(): string;
 }

@@ -2,27 +2,40 @@
 
 namespace App\Interfaces;
 
+use App\Exceptions\FileAlreadyExistsException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Validation\UnauthorizedException;
+
 interface Recursively
 {
-    /** Get the current folder children ids (comprende anche l'id della folder corrente)
-     * @return array
+    /**
+     * Ritorna un array contenente gli id delle sottocartelle
+     *
+     * @return array $childrenIds
      */
     public function getChildrenIds(): array;
 
-    /** Get the current folder full path
-     * @return string
-     */
-    public function getFullPath(): string;
-
-    /** Copy the current folder inside another folder
-     *  - di default, la folder viene duplicata all'interno della stessa cartella
-     * @param int|null $destinationFolderId
-     * @return void
-     */
-    public function copyFolderRecursive(int $destinationFolderId = null): void;
-
-    /** Get current folder ancestors
-     * @return array
+    /**
+     * Ritorna un array contenente i nomi delle cartelle dalla root alla cartella corrente
+     *
+     * @return array $ancestors
      */
     public function getAncestors(): array;
+
+    /**
+     * @throws AuthenticationException
+     * @throws FileAlreadyExistsException
+     */
+    public function rename(string $newName): void;
+
+    /**
+     * @throws UnauthorizedException
+     * @throws AuthenticationException
+     */
+    public function copy(): void;
+
+    /**
+     * @throws AuthenticationException
+     */
+    public function move(int $moveIntoFolderId): void;
 }

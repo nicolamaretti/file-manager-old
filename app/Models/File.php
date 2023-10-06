@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\UnauthorizedException;
+use ZipArchive;
 
 class File extends Model
 {
@@ -79,10 +80,12 @@ class File extends Model
             throw new AuthenticationException('You don\'t have permissions to rename the selected folder');
         }
 
+        $parent = $this->parent;
+
         if ($this->is_folder) {
-            $this->renameFolder($newName);
+            $this->renameFolder($newName, $parent);
         } else {
-            $this->renameFile($newName);
+            $this->renameFile($newName, $parent);
         }
     }
 
@@ -96,10 +99,12 @@ class File extends Model
             throw new AuthenticationException('You don\'t have permissions to rename the selected folder');
         }
 
+        $parent = $this->parent;
+
         if ($this->is_folder) {
-            $this->copyFolder();
+            $this->copyFolder($parent);
         } else {
-            $this->copyFile();
+            $this->copyFile($parent);
         }
     }
 
@@ -120,7 +125,7 @@ class File extends Model
     }
 
     /**
-     * Ritorna un array contenente l'id della cartella corrente e delle sottocartelle
+     * Ritorna un array contenente gli id delle sottocartelle
      *
      * @return array $childrenIds
      */
@@ -151,24 +156,26 @@ class File extends Model
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     /// PRIVATE HELPERS
+
     /**
      * @throws FileAlreadyExistsException
      */
-    private function renameFile(string $newName): void
+    private function renameFile(string $newName, File $parent): void
     {
         /* controllo se all'interno della cartella in cui si trova il file esiste già un
          * altro file con lo stesso nome */
         $fileExt = pathinfo($this->name, PATHINFO_EXTENSION);
         $newFileFullName = $newName . '.' . $fileExt;
 
-        $fileAlreadyExists = FileManagerHelper::checkFileExistence($newFileFullName, $parentFolder->id);
+        $fileAlreadyExists = FileManagerHelper::checkFileExistence($newFileFullName, $parent->id);
 
         if ($fileAlreadyExists) {
             throw new FileAlreadyExistsException('A folder with this name already exists.');
         }
 
-        $newPath = $parentFolder->path . "/$newFileFullName";
+        $newPath = $parent->path . "/$newFileFullName";
 
         Storage::move($this->path, $newPath);
 
@@ -182,11 +189,9 @@ class File extends Model
      * @throws AuthenticationException
      * @throws FileAlreadyExistsException
      */
-    private function renameFolder(string $newName): void
+    private function renameFolder(string $newName, File $parent = null): void
     {
-        $parentFolder = $this->parent;
-
-        if (!$parentFolder) {
+        if (!$parent) {
             /* se parent è null significa che si vuole rinominare una root folder,
              * quindi controllo se esiste già una cartella che ha lo stesso nome del nome inserito */
 
@@ -199,7 +204,7 @@ class File extends Model
             /* altrimenti controllo se esiste già una cartella che ha lo stesso nome del nome inserito
              * all'interno del parent della cartella selezionata */
 
-            $folderAlreadyExists = FileManagerHelper::checkFolderExistence($newName, $parentFolder->id);
+            $folderAlreadyExists = FileManagerHelper::checkFolderExistence($newName, $parent->id);
         }
 
         if ($folderAlreadyExists) {
@@ -207,7 +212,7 @@ class File extends Model
         }
 
         $oldPath = $this->path;
-        $newPath = $parentFolder->path . "/$newName";
+        $newPath = $parent->path . "/$newName";
 
         $this->name = $newName;
         $this->path = $newPath;
@@ -219,10 +224,8 @@ class File extends Model
         Storage::deleteDirectory($oldPath);
     }
 
-    private function copyFile(): void
+    private function copyFile(File $parent): void
     {
-        $parent = $this->parent;
-
         $fileExt = pathinfo($this->name, PATHINFO_EXTENSION);
         $fileName = pathinfo($this->name, PATHINFO_FILENAME);
 
@@ -238,14 +241,13 @@ class File extends Model
 
         Storage::copy($this->path, $replicatedFile->path);
     }
+
     /**
      * @throw  UnauthorizedException
      * @return void
      */
-    private function copyFolder(): void
+    private function copyFolder(File $parent): void
     {
-        $parent = $this->parent;
-
         /* controllo che la cartella di destinazione non sia una cartella figlia di quella
          * che si sta tentando di copiare */
         $childrenIds = $this->getChildrenIds();
