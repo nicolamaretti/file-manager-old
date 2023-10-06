@@ -3,20 +3,17 @@
         <nav class="flex justify-end mb-3 mt-1">
             <!-- Bottoni -->
             <div class="flex">
-<!--                <RenameFilesButton v-if="selectedFileIds.length === 1"-->
-<!--                                   :file-id="Number(selectedFileIds[0])"-->
-<!--                                   @restore="onRestore"/>-->
-<!--                <CopyFilesButton v-if="selectedFileIds.length > 0"-->
-<!--                                 :file-ids="selectedFileIds"-->
-<!--                                 @copy="onRestore"/>-->
-<!--                <MoveFilesButton v-if="selectedFileIds.length > 0"-->
-<!--                                 :file-ids="selectedFileIds"/>-->
-                <ShareFilesButton :file-ids="selectedFileIds"
-                                  @restore="onRestore"/>
-                <DownloadFilesButton :download-file-ids="selectedFileIds"
-                                     @download="onRestore"/>
-                <DeleteFilesButton :file-ids="selectedFileIds"
-                                   @delete="onRestore"/>
+                <!--                <RenameFilesButton v-if="selectedFileIds.length === 1"-->
+                <!--                                   :file-id="Number(selectedFileIds[0])"-->
+                <!--                                   @restore="onRestore"/>-->
+                <!--                <CopyFilesButton v-if="selectedFileIds.length > 0"-->
+                <!--                                 :file-ids="selectedFileIds"-->
+                <!--                                 @copy="onRestore"/>-->
+                <!--                <MoveFilesButton v-if="selectedFileIds.length > 0"-->
+                <!--                                 :file-ids="selectedFileIds"/>-->
+                <ShareFilesButton :file-ids="selectedFileIds" @restore="onRestore" />
+                <DownloadFilesButton :download-file-ids="selectedFileIds" @download="onRestore" />
+                <DeleteFilesButton :file-ids="selectedFileIds" @delete="onRestore" />
             </div>
         </nav>
 
@@ -24,73 +21,69 @@
         <div class="flex-1 overflow-auto">
             <table class="min-w-full shadow ring-1 ring-black ring-opacity-5 border sm:rounded-lg">
                 <thead class="bg-gray-100 border-b sm:rounded-lg">
-                <tr>
-                    <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left w-[30px] max-w-[30px] pr-0">
-                        <Checkbox v-model:checked="allSelected" @change="onSelectAllChange"/>
-                    </th>
-                    <th class="text-sm font-medium text-gray-900 px-6 py-4 text-left w-[30px] max-w-[30px]">
+                    <tr>
+                        <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left w-[30px] max-w-[30px] pr-0">
+                            <Checkbox v-model:checked="allSelected" @change="onSelectAllChange" />
+                        </th>
+                        <th class="text-sm font-medium text-gray-900 px-6 py-4 text-left w-[30px] max-w-[30px]">
 
-                    </th>
-                    <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
-                        Name
-                    </th>
-                    <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
-                        Owner
-                    </th>
-                    <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
-                        Path
-                    </th>
-                    <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
-                        Last Modified
-                    </th>
-                    <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
-                        Size
-                    </th>
-                </tr>
+                        </th>
+                        <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
+                            Name
+                        </th>
+                        <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
+                            Owner
+                        </th>
+                        <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
+                            Path
+                        </th>
+                        <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
+                            Last Modified
+                        </th>
+                        <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left">
+                            Size
+                        </th>
+                    </tr>
                 </thead>
                 <tbody>
-                <tr v-for="file in allFiles.data"
-                    :key="file.id"
-                    :class="(selectedFiles[file.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
-                    class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
-                    @click="toggleSelectFile(file.id)"
-                    @dblclick.prevent="openFolder(file.id)">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[30px] max-w-[30px] pr-0">
-                        <Checkbox v-model="selectedFiles[file.id]"
-                                  :checked="selectedFiles[file.id] || allSelected"
-                                  class="mr-4"
-                                  @change="onSelectCheckboxChange(file.id)"/>
-                    </td>
-                    <td class="px-6 py-4 max-w-[40px] text-sm font-medium text-yellow-500"
-                        @click.stop.prevent="addRemoveFavourite(file.id)">
-                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path clip-rule="evenodd"
-                                  d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
-                                  fill-rule="evenodd"/>
-                        </svg>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
-                        <FileIcon :file="file" class="mr-3"/>
-                        {{ file.name }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ file.owner === page.props.auth.user.name ? 'me' : file.owner }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ file.path }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ file.updated_at }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {{ file.size }}
-                    </td>
-                </tr>
+                    <tr v-for="file in allFiles.data" :key="file.id"
+                        :class="(selectedFiles[file.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
+                        class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
+                        @click="toggleSelectFile(file.id)" @dblclick.prevent="openFolder(file)">
+                        <td
+                            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[30px] max-w-[30px] pr-0">
+                            <Checkbox v-model="selectedFiles[file.id]" :checked="selectedFiles[file.id] || allSelected"
+                                class="mr-4" @change="onSelectCheckboxChange(file.id)" />
+                        </td>
+                        <td class="px-6 py-4 max-w-[40px] text-sm font-medium text-yellow-500"
+                            @click.stop.prevent="addRemoveFavourite(file.id)">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path clip-rule="evenodd"
+                                    d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z"
+                                    fill-rule="evenodd" />
+                            </svg>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
+                            <FileIcon :file="file" class="mr-3" />
+                            {{ file.name }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ file.owner === page.props.auth.user.name ? 'me' : file.owner }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ file.path }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ file.updated_at }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ file.size }}
+                        </td>
+                    </tr>
                 </tbody>
             </table>
 
-            <div v-if="!allFiles.data.length"
-                 class="py-8 text-center text-sm text-gray-400">
+            <div v-if="!allFiles.data.length" class="py-8 text-center text-sm text-gray-400">
                 You have no favourites
             </div>
         </div>
@@ -98,8 +91,8 @@
 </template>
 
 <script setup>
-import {computed, onUpdated, ref} from "vue";
-import {router, usePage} from "@inertiajs/vue3";
+import { computed, onUpdated, ref } from "vue";
+import { router, usePage } from "@inertiajs/vue3";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import ShareFilesButton from "@/Components/MyComponents/ShareFilesButton.vue";
 import DownloadFilesButton from "@/Components/MyComponents/DownloadFilesButton.vue";
@@ -109,7 +102,7 @@ import FileIcon from "@/Components/Icons/FileIcon.vue";
 import RenameFilesButton from "@/Components/MyComponents/RenameFileButton.vue";
 import CopyFilesButton from "@/Components/MyComponents/CopyFilesButton.vue";
 import MoveFilesButton from "@/Components/MyComponents/MoveFilesButton.vue";
-import {showErrorDialog, showSuccessNotification} from "@/event-bus.js";
+import { showErrorDialog, showSuccessNotification } from "@/event-bus.js";
 
 // Props & Emit
 const props = defineProps({
@@ -130,11 +123,15 @@ const allFiles = ref({
 });
 
 // Methods
-function openFolder(id = null) {
+function openFolder(file = null) {
+    if (!file.is_folder) {
+        return;
+    }
+
     console.log('openFolder');
 
     router.get(route('my-files'), {
-        'folderId': id,
+        'folderId': file.id,
     }, {
         preserveScroll: true,
         onSuccess: () => {
@@ -147,9 +144,9 @@ function openFolder(id = null) {
 }
 
 function onSelectAllChange() {
-    allFiles.value.data.forEach(f => {
-        selectedFiles.value[f.id] = allSelected.value;
-    });
+    for (const file of allFiles.value.data) {
+        selectedFiles.value[file.id] = allSelected.value;
+    }
 
     console.log(selectedFiles.value);
 }
@@ -167,7 +164,7 @@ function onSelectCheckboxChange(id) {
         let checked = true;
 
         // controllo se almeno un file è false
-        for (let file of allFiles.value.data) {
+        for (const file of allFiles.value.data) {
             if (!selectedFiles.value[file.id]) {
                 checked = false;
                 break;
