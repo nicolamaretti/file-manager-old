@@ -30,7 +30,7 @@ class FileResource extends JsonResource
             'mime_type' => $this->mime_type,
             'owner' => $this->user->name,
             'updated_at' => $this->updated_at->diffForHumans(),
-            'is_favourite' => !!$this->starred,
+            'is_favorite' => !!$this->starred,
         ];
     }
 }

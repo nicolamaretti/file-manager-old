@@ -90,7 +90,7 @@ class FileController extends Controller
         ]);
     }
 
-    public function favourites(): InertiaResponse
+    public function favorites(): InertiaResponse
     {
         $files = StarredFile::query()
             ->with('file')
@@ -102,7 +102,7 @@ class FileController extends Controller
 
         $files = FileResource::collection($files->sortBy('name'));
 
-        return Inertia::render('App/Favourites', [
+        return Inertia::render('App/Favorites', [
             'files' => $files,
         ]);
     }
@@ -118,7 +118,7 @@ class FileController extends Controller
                 $file['id'] = $sharedFile->file->id;
                 $file['name'] = $sharedFile->file->name;
                 $file['is_folder'] = $sharedFile->file->is_folder;
-                $file['is_favourite'] = !!$sharedFile->file->starred;
+                $file['is_favorite'] = !!$sharedFile->file->starred;
                 $file['mime_type'] = $sharedFile->file->mime_type;
                 $file['owner'] = $sharedFile->file->user->name;
                 $file['shared_with'] = '';
@@ -143,7 +143,7 @@ class FileController extends Controller
                 $file['id'] = $sharedFile->file->id;
                 $file['name'] = $sharedFile->file->name;
                 $file['is_folder'] = $sharedFile->file->is_folder;
-                $file['is_favourite'] = !!$sharedFile->file->starred;
+                $file['is_favorite'] = !!$sharedFile->file->starred;
                 $file['mime_type'] = $sharedFile->file->mime_type;
                 $file['shared_with'] = $sharedFile->user->name;
                 $file['owner'] = '';
@@ -352,7 +352,7 @@ class FileController extends Controller
         }
     }
 
-    public function addRemoveFavourites(Request $request): void
+    public function addRemoveFavorites(Request $request): void
     {
         $fileId = intval($request->input('fileId'));
 
@@ -567,7 +567,7 @@ class FileController extends Controller
                     'files' => $files,
                 ]);
 
-            case '/favourites':
+            case '/favorites':
                 $folders = Folder::query()
                     ->select('folders.*')
                     ->join('starred_folders as sf', 'sf.folder_id', '=', 'folders.id')
@@ -587,7 +587,7 @@ class FileController extends Controller
                 $folders = FolderResource::collection($folders);
                 $files = MediaResource::collection($files);
 
-                return Inertia::render('App/Favourites', [
+                return Inertia::render('App/Favorites', [
                     'folders' => $folders,
                     'files' => $files,
                 ]);
@@ -611,9 +611,9 @@ class FileController extends Controller
                             ->where('user_id', $userId)
                             ->get();
                         if ($starred->isNotEmpty()) {
-                            $folder->is_favourite = true;
+                            $folder->is_favorite = true;
                         } else {
-                            $folder->is_favourite = false;
+                            $folder->is_favorite = false;
                         }
                     });
 
@@ -634,9 +634,9 @@ class FileController extends Controller
                             ->get();
 
                         if ($starred->isNotEmpty()) {
-                            $file->is_favourite = true;
+                            $file->is_favorite = true;
                         } else {
-                            $file->is_favourite = false;
+                            $file->is_favorite = false;
                         }
                     });
 
@@ -662,9 +662,9 @@ class FileController extends Controller
                             ->where('user_id', $userId)
                             ->get();
                         if ($starred->isNotEmpty()) {
-                            $folder->is_favourite = true;
+                            $folder->is_favorite = true;
                         } else {
-                            $folder->is_favourite = false;
+                            $folder->is_favorite = false;
                         }
                     });
 
@@ -684,9 +684,9 @@ class FileController extends Controller
                             ->get();
 
                         if ($starred->isNotEmpty()) {
-                            $file->is_favourite = true;
+                            $file->is_favorite = true;
                         } else {
-                            $file->is_favourite = false;
+                            $file->is_favorite = false;
                         }
                     });
 

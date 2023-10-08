@@ -18,7 +18,7 @@ class SharedResource extends JsonResource
             'id' => $this['id'],
             'name' => $this['name'],
             'is_folder' => $this['is_folder'],
-            'is_favourite' => !!$this['is_favourite'],
+            'is_favorite' => !!$this['is_favorite'],
             'mime_type' => $this['mime_type'],
             'owner' => $this['owner'],
             'shared_with' => $this['shared_with'],
