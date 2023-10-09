@@ -16,7 +16,7 @@ use App\Models\FolderShare;
 use App\Models\StarredFile;
 use App\Models\StarredFolder;
 use App\Models\User;
-use DASPRiD\Enum\Exception\IllegalArgumentException;
+use ErrorException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\Collection;
@@ -313,7 +313,7 @@ class FileController extends Controller
         $fileIds = $request->get('fileIds');
 
         if (empty($fileIds)) {
-            throw new IllegalArgumentException('Please select at least one file to download');
+            throw new ErrorException('Please select at least one file to download');
         }
 
         if (count($fileIds) === 1) {
@@ -324,11 +324,12 @@ class FileController extends Controller
                 $files = $file->files;
 
                 if ($files->isEmpty()) {
-                    throw new IllegalArgumentException('This folder is empty');
+                    throw new ErrorException('This folder is empty');
                 } else {
                     $zipFile = $file->name . '.zip';
+                    $path = array($file->name);
 
-                    $zip = $this->createZip($files, $zipFile);
+                    $zip = $this->createZip($files, $zipFile, $path);
 
                     return response()->download($zip)->deleteFileAfterSend();
                 }
@@ -341,14 +342,15 @@ class FileController extends Controller
             /* ho più file da scaricare */
 
             $zipFile = 'zip.zip';
+            $path = array('zip');
 
-            $files = Media::query()
+            $files = File::query()
                 ->whereIn('id', $fileIds)
                 ->get();
 
-            $zip = $this->createZip($files, $zipFile);
+            $zip = $this->createZip($files, $zipFile, $path);
 
-            return response()->download($zip);
+            return response()->download($zip)->deleteFileAfterSend();
         }
     }
 
@@ -700,21 +702,16 @@ class FileController extends Controller
         }
     }
 
-    private function createZip(Collection $files, string $zipFile): string
+    private function createZip(Collection $files, string $zipFile, array $path): string
     {
         $zipArchive = new ZipArchive();
 
         if ($zipArchive->open($zipFile, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
-            foreach ($files as $subFile) {
-                if ($subFile->is_folder) {
-                    /* path relativo alla cartella corrente */
-                    $path = array($subFile->name);
-
-                    $this->zipFolder($subFile, $zipArchive, $path);
+            foreach ($files as $file) {
+                if ($file->is_folder) {
+                    $this->zipFolder($file, $zipArchive, $path);
                 } else {
-                    $pathToFile = Storage::path($subFile->path);
-
-                    $zipArchive->addFile($pathToFile, $subFile->name);
+                    $this->addFileToZip($file, $zipArchive, $path);
                 }
             }
         }
@@ -737,45 +734,16 @@ class FileController extends Controller
                 if ($subFile->is_folder) {
                     $this->zipFolder($subFile, $zipArchive, $path);
                 } else {
-                    $pathToFile = Storage::path($subFile->path);
-
-                    $zipArchive->addFile($pathToFile, implode('/', $path) . "/$subFile->name");
+                    $this->addFileToZip($subFile, $zipArchive, $path);
                 }
             }
         }
-
-
-
-        //        if ($files->isNotEmpty()) {
-        //            $this->addFilesToZip($files, $zipArchive, $path);
-        //        }
-
-        //        if ($folders->isNotEmpty()) {
-        //            foreach ($folders as $subFolder) {
-        //                // copia locale del path per arrivare al file
-        //                $myPath = $path;
-        //
-        //                // aggiungo la cartella corrente al path
-        //                $myPath[] = $subFolder->name;
-        //
-        //                $this->zipFolder($subFolder, $zipArchive, $myPath);
-        //            }
-        //        }
-        //
-        //        if ($folders->isEmpty() && $files->isEmpty()) {
-        //            // aggiunta di una cartella vuota
-        //            $zipArchive->addEmptyDir(implode('/', $path));
-        //        }
     }
 
-    private function addFilesToZip(Collection $files, ZipArchive $zipArchive, array $path): void
+    private function addFileToZip(File $file, ZipArchive &$zipArchive, array $path): void
     {
-        foreach ($files as $file) {
-            $filePath = $file->getPath();
-            $myPath = implode('/', $path) . '/' . $file->file_name;
-
-            $zipArchive->addFile($filePath, $myPath);
-        }
+        $pathToFile = Storage::path($file->path);
+        $zipArchive->addFile($pathToFile, implode('/', $path) . "/$file->name");
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
