@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use App\Exceptions\FileAlreadyExistsException;
-use App\Helpers\FileManagerHelper;
+use App\Helpers\FileUploaderHelper;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -169,7 +169,7 @@ class File extends Model
         $fileExt = pathinfo($this->name, PATHINFO_EXTENSION);
         $newFileFullName = $newName . '.' . $fileExt;
 
-        $fileAlreadyExists = FileManagerHelper::checkFileExistence($newFileFullName, $parent->id);
+        $fileAlreadyExists = FileUploaderHelper::checkFileExistence($newFileFullName, $parent->id);
 
         if ($fileAlreadyExists) {
             throw new FileAlreadyExistsException('A folder with this name already exists.');
@@ -199,12 +199,12 @@ class File extends Model
                 throw new AuthenticationException('You don\'t have permissions to rename the selected folder');
             }
 
-            $folderAlreadyExists = FileManagerHelper::checkRootFolderExistence($newName);
+            $folderAlreadyExists = FileUploaderHelper::checkRootFolderExistence($newName);
         } else {
             /* altrimenti controllo se esiste già una cartella che ha lo stesso nome del nome inserito
              * all'interno del parent della cartella selezionata */
 
-            $folderAlreadyExists = FileManagerHelper::checkFolderExistence($newName, $parent->id);
+            $folderAlreadyExists = FileUploaderHelper::checkFolderExistence($newName, $parent->id);
         }
 
         if ($folderAlreadyExists) {
