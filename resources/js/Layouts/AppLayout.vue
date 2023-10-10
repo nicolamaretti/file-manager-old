@@ -1,47 +1,47 @@
 <template>
-    <Head :title="title"/>
+    <Head :title="title" />
 
-    <div class="h-screen bg-gray-50 flex w-full gap-2 px-3">
+    <div class="flex w-full h-screen gap-2 px-3 bg-gray-50">
         <!-- Sezione laterale sx -->
-        <Navigation/>
+        <Navigation />
 
         <!-- Sezione centrale -->
         <main :class="dragOver ? 'dropzone' : ''"
               class="flex flex-col flex-1 ml-10 overflow-hidden"
-              @drop.prevent="handleDrop"
+            @drop.prevent="handleDrop"
               @dragover.prevent="onDragOver"
               @dragleave.prevent="onDragLeave">
 
             <!-- Se l'utente sta facendo un drag dentro all'applicazione -->
-            <template v-if="dragOver" class="text-gray-500 text-center py-8 text-sm">
+            <template v-if="dragOver" class="py-8 text-sm text-center text-gray-500">
                 Drop files here to upload
             </template>
 
             <!-- Visualizzazione standard della barra di ricerca, del menu utente e della tabella con file e cartelle -->
             <template v-else>
                 <div class="flex items-center justify-between w-full ml-1">
-                    <SearchForm/>
+                    <SearchForm />
 
-                    <UserSettingsDropdown/>
+                    <UserSettingsDropdown />
                 </div>
 
                 <!-- Slot per la tabella -->
-                <div class="flex-1 flex flex-col overflow-hidden">
-                    <slot/>
+                <div class="flex flex-col flex-1 overflow-hidden">
+                    <slot />
                 </div>
             </template>
         </main>
     </div>
 
-    <ErrorDialog/>
+    <ErrorDialog />
     <!--    <FormProgress :form="fileUploadForm"/>-->
-    <Notification/>
+    <Notification />
 </template>
 
 <script setup>
-import {onMounted, ref} from 'vue';
-import {Head, router, usePage} from '@inertiajs/vue3';
-import {emitter, FILE_UPLOAD_STARTED, showErrorDialog, showSuccessNotification} from "@/event-bus.js";
+import { onMounted, ref } from 'vue';
+import { Head, router, usePage } from '@inertiajs/vue3';
+import { emitter, FILE_UPLOAD_STARTED, showErrorDialog, showSuccessNotification } from "@/event-bus.js";
 import Navigation from "@/Components/MyComponents/Navigation.vue";
 import SearchForm from "@/Components/MyComponents/SearchForm.vue";
 import UserSettingsDropdown from "@/Components/MyComponents/UserSettingsDropdown.vue";
@@ -79,7 +79,7 @@ function handleDrop(ev) {
     }
 }
 
-function uploadFiles(files) {
+async function uploadFiles(files) {
     console.log('Upload');
 
     router.post(route('upload'),
