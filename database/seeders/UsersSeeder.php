@@ -35,7 +35,6 @@ class UsersSeeder extends Seeder
         $folder = File::create([
             'name' => strtolower($user->name),
             'path' => strtolower($user->name),
-//            'storage_path' => 'files/' . strtolower($user->name),
             'is_folder' => true,
             'created_by' => $user->id,
             'uuid' => Str::uuid(),
@@ -56,7 +55,6 @@ class UsersSeeder extends Seeder
         $folder = File::create([
             'name' => strtolower($user->name),
             'path' => strtolower($user->name),
-//            'storage_path' => 'files/' . strtolower($user->name),
             'is_folder' => true,
             'created_by' => $user->id,
             'uuid' => Str::uuid(),
@@ -77,7 +75,6 @@ class UsersSeeder extends Seeder
         $folder = File::create([
             'name' => strtolower($user->name),
             'path' => strtolower($user->name),
-//            'storage_path' => 'files/' . strtolower($user->name),
             'is_folder' => true,
             'created_by' => $user->id,
             'uuid' => Str::uuid(),

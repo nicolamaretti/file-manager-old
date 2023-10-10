@@ -170,6 +170,10 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\FortifyServiceProvider::class,
         App\Providers\JetstreamServiceProvider::class,
+
+        /* Custom service providers */
+        App\Providers\FileImportServiceProvider::class,
+        App\Providers\FileUploaderServiceProvider::class,
     ])->toArray(),
 
     /*
@@ -185,7 +189,6 @@ return [
 
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
-        'FileUploadFacade' => App\Helpers\FileUploadFacade::class,
     ])->toArray(),
 
 ];
