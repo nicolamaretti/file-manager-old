@@ -33,9 +33,9 @@
                         <th class="px-6 py-4 text-sm font-semibold text-left text-gray-900">
                             Owner
                         </th>
-                        <th class="px-6 py-4 text-sm font-semibold text-left text-gray-900">
+                        <!-- <th class="px-6 py-4 text-sm font-semibold text-left text-gray-900">
                             Path
-                        </th>
+                        </th> -->
                         <th class="px-6 py-4 text-sm font-semibold text-left text-gray-900">
                             Last Modified
                         </th>
@@ -76,9 +76,9 @@
                         <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                             {{ file.owner === page.props.auth.user.name ? 'me' : file.owner }}
                         </td>
-                        <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                        <!-- <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                             {{ file.path }}
-                        </td>
+                        </td> -->
                         <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
                             {{ file.updated_at }}
                         </td>
