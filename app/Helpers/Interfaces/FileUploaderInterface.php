@@ -39,5 +39,5 @@ interface FileUploaderInterface
      * @param string $fileName
      * @return UploadedFile
      */
-    public static function fromBase64(string $base64File, string $fileName): UploadedFile;
+    public static function fromBase64(string $base64File, string $fileName, string $fileExtension): UploadedFile;
 }

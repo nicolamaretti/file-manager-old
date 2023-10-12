@@ -172,7 +172,6 @@ return [
         App\Providers\JetstreamServiceProvider::class,
 
         /* Custom service providers */
-        App\Providers\FileImportServiceProvider::class,
         App\Providers\FileUploaderServiceProvider::class,
     ])->toArray(),
 
