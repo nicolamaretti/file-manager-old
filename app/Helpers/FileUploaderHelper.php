@@ -42,25 +42,22 @@ class FileUploaderHelper implements FileUploaderInterface
         return $file->isNotEmpty();
     }
 
-    public static function fromBase64(string $base64File, string $fileName): UploadedFile
+    public static function fromBase64(string $base64File, string $fileName, string $fileExtension): UploadedFile
     {
         // Get file data from base64 string
-        $fileData = base64_decode($base64File);
+        $fileContent = base64_decode($base64File);
 
         // Create temp file and get its absolute path
         $tempFile = tmpfile();
         $tempFilePath = stream_get_meta_data($tempFile)['uri'];
 
         // Save file data in file
-        file_put_contents($tempFilePath, $fileData);
-
-        // Constructs a new file from the given path
-        $tempFileObject = new File($tempFilePath);
+        file_put_contents($tempFilePath, $fileContent);
 
         $uploadedFile = new UploadedFile(
-            $tempFileObject->getPathname(),
+            $tempFilePath,
             $fileName,
-            $tempFileObject->getMimeType(),
+            $fileExtension,
             0,
             true // Mark it as test, since the file isn't from real HTTP POST.
         );
