@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Backend;
 
 use App\Exceptions\FileAlreadyExistsException;
-use App\Helpers\FileManagerHelper;
+use App\Helpers\FileUploaderHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\FileResource;
 use App\Http\Resources\FolderResource;
@@ -31,6 +31,7 @@ use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use ZipArchive;
 
 class FileController extends Controller
@@ -48,7 +49,7 @@ class FileController extends Controller
 
         /* se non è stata selezionata una folder da aprire ritorno la root folder dell'utente */
         $folderToOpen = $folderId
-            ? File::with(['files', 'parent'])->orderBy('name')->find($folderId)
+            ? File::with('parent')->orderBy('name')->find($folderId)
             : $rootFolder;
 
         if ($user->is_admin && !$folderId) {
@@ -79,7 +80,7 @@ class FileController extends Controller
             //            }
         }
 
-        //        dd($currentFolder, $parent, $ancestors);
+        // dd($currentFolder);
 
         return Inertia::render('App/MyFiles', [
             'currentFolder' => $currentFolder,
@@ -174,7 +175,7 @@ class FileController extends Controller
 
         if ($user->is_admin && $currentFolderId === $user->root->id) {
             /* sono admin e voglio creare una root folder */
-            $folderAlreadyExists = FileManagerHelper::checkRootFolderExistence($newFolderName);
+            $folderAlreadyExists = FileUploaderHelper::checkRootFolderExistence($newFolderName);
 
             /* se non esiste, cerco di creare una nuova ROOT folder */
             if (!$folderAlreadyExists) {
@@ -196,7 +197,7 @@ class FileController extends Controller
             }
         } else {
             /* creo una folder normale */
-            $folderAlreadyExists = FileManagerHelper::checkFolderExistence($newFolderName, $currentFolderId);
+            $folderAlreadyExists = FileUploaderHelper::checkFolderExistence($newFolderName, $currentFolderId);
 
             /* se non esiste, creo una nuova folder normale */
             if (!$folderAlreadyExists) {
@@ -235,49 +236,8 @@ class FileController extends Controller
             ->where('is_folder', true)
             ->find($currentFolderId);
 
-        $folderPath = $currentFolder->path;
-
         foreach ($files as $file) {
-            $fileFullName = $file->getClientOriginalName();
-
-            /* verifico se all'interno della cartella esiste già un file con lo stesso nome */
-            $fileAlreadyExists = FileManagerHelper::checkFileExistence($fileFullName, $currentFolderId);
-
-            if (!$fileAlreadyExists) {
-                /* se non esiste, lo aggiungo normalmente alla cartella corrente */
-                $path = $folderPath . "/$fileFullName";
-
-                File::create([
-                    'name' => $fileFullName,
-                    'path' => $path,
-                    'file_id' => $currentFolderId,
-                    'mime_type' => $file->getMimeType(),
-                    'size' => $file->getSize(),
-                    'uuid' => Str::uuid(),
-                    'created_by' => Auth::id(),
-                ]);
-
-                Storage::disk('local')->put($path, file_get_contents($file));
-            }
-            //            else {
-            //                // se esiste già, aggiungo "-copy" al nome del nuovo file e lo aggiungo alla cartella corrente
-            //
-            //                // prendo nome ed estensione del file
-            //                $fileName = pathinfo($fileFullName, PATHINFO_FILENAME);
-            //                $fileExt = pathinfo($fileFullName, PATHINFO_EXTENSION);
-            //
-            //                // aggiungo "-copy" e ricreo il nome del file
-            //                $fileNameCopy = $fileName . '-copy';
-            //                $fileFullNameCopy = $fileNameCopy . '.' . $fileExt;
-            //
-            //                Storage::putFileAs($path, $file, $fileFullNameCopy);
-            //
-            //                $currentFolder->addMedia($file)
-            //                    ->usingFileName($fileFullNameCopy)
-            //                    ->usingName($fileNameCopy)
-            //                    ->withCustomProperties(['path' => $path . '/' . $fileFullNameCopy])
-            //                    ->toMediaCollection('documents');
-            //            }
+            $this->saveFile($file, $currentFolder);
         }
     }
 
@@ -306,7 +266,7 @@ class FileController extends Controller
     }
 
     /**
-     * @throws IllegalArgumentException
+     * @throws ErrorException
      */
     public function download(Request $request)
     {
@@ -441,6 +401,9 @@ class FileController extends Controller
         }
     }
 
+    /**
+     * @throws ErrorException
+     */
     public function rename(Request $request): RedirectResponse
     {
         $fileId = intval($request->input('fileId'));
@@ -458,7 +421,7 @@ class FileController extends Controller
         try {
             $file->rename($newName);
         } catch (AuthenticationException | FileAlreadyExistsException $exception) {
-            dd($exception->getMessage());
+            throw new ErrorException($exception);
         }
 
         return back();
@@ -700,6 +663,44 @@ class FileController extends Controller
             default:
                 return redirect()->back();
         }
+    }
+
+    //////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
+    // PRIVATE FUNCTIONS
+    //////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////
+
+    private function saveFile(UploadedFile $file, File $currentFolder): void
+    {
+        $folderPath = $currentFolder->path;
+        $fileName = $file->getClientOriginalName();
+
+        /* verifico se all'interno della cartella esiste già un file con lo stesso nome */
+        $fileAlreadyExists = FileUploaderHelper::checkFileExistence($fileName, $currentFolder->id);
+
+        if ($fileAlreadyExists) {
+            /* se esiste già, aggiungo un timestamp al nome del file */
+            $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
+            $fileBasename = pathinfo($fileName, PATHINFO_FILENAME);
+
+            $fileName = $fileBasename . '-' . time() . '.' . $fileExtension;
+        }
+
+        /* aggiungo il file alla cartella corrente */
+        $path = $folderPath . "/$fileName";
+
+        File::create([
+            'name' => $fileName,
+            'path' => $path,
+            'file_id' => $currentFolder->id,
+            'mime_type' => $file->getMimeType(),
+            'size' => $file->getSize(),
+            'uuid' => Str::uuid(),
+            'created_by' => Auth::id(),
+        ]);
+
+        Storage::disk('local')->put($path, file_get_contents($file));
     }
 
     private function createZip(Collection $files, string $zipFile, array $path): string
@@ -948,7 +949,7 @@ class FileController extends Controller
         }
 
         // verifico se esiste già una cartella root con lo stesso nome
-        $folderAlreadyExists = FileManagerHelper::checkRootFolderExistence($newRootFolderName);
+        $folderAlreadyExists = FileUploaderHelper::checkRootFolderExistence($newRootFolderName);
 
         // se non esiste creo la cartella normalmente
         if (!$folderAlreadyExists) {
@@ -987,7 +988,7 @@ class FileController extends Controller
     //        if ($user->is_admin) {
     //            // sono admin
     //
-    //            $folderAlreadyExists = FileManagerHelper::checkRootFolderExistence($newFolderName);
+    //            $folderAlreadyExists = FileUploaderHelper::checkRootFolderExistence($newFolderName);
     //
     //            /* se non esiste, cerco di creare una nuova ROOT folder */
     //            if (!$folderAlreadyExists) {
@@ -1009,7 +1010,7 @@ class FileController extends Controller
     //        } else {
     //            /* sono utente normale */
     //
-    //            $folderAlreadyExists = FileManagerHelper::checkFolderExistence($newFolderName, $currentFolderId);
+    //            $folderAlreadyExists = FileUploaderHelper::checkFolderExistence($newFolderName, $currentFolderId);
     //
     //            /* se non esiste, cerco di creare una nuova folder normale */
     //            if (!$folderAlreadyExists) {
@@ -1142,12 +1143,12 @@ class FileController extends Controller
             /* se parent è null significa che si vuole rinominare una root folder,
              * quindi controllo se esiste già una cartella che ha lo stesso nome del nome inserito */
 
-            $folderAlreadyExists = FileManagerHelper::checkRootFolderExistence($newName);
+            $folderAlreadyExists = FileUploaderHelper::checkRootFolderExistence($newName);
         } else {
             /* altrimenti controllo se esiste già una cartella che ha lo stesso nome del nome inserito
              * all'interno del parent della cartella selezionata */
 
-            $folderAlreadyExists = FileManagerHelper::checkFolderExistence($newName, $parent->id);
+            $folderAlreadyExists = FileUploaderHelper::checkFolderExistence($newName, $parent->id);
         }
 
         if ($folderAlreadyExists) {
@@ -1189,7 +1190,7 @@ class FileController extends Controller
         $fileExt = pathinfo($file->file_name, PATHINFO_EXTENSION);
         $fileFullName = $newName . '.' . $fileExt;
 
-        $fileAlreadyExists = FileManagerHelper::checkFileExistence($fileFullName, $fileFolderId);
+        $fileAlreadyExists = FileUploaderHelper::checkFileExistence($fileFullName, $fileFolderId);
 
         if ($fileAlreadyExists) {
             return redirect()->back()->withErrors([
