@@ -55,7 +55,8 @@ class FileController extends Controller
         if ($user->is_admin && !$folderId) {
             /* se sono admin visualizzo tutte le cartelle root */
             $rootFolders = File::query()
-                ->whereNull('file_id')
+                ->whereNotNull('file_id')
+                ->where('is_root', true)
                 ->orderBy('name')
                 ->get();
             //                ->paginate(10);

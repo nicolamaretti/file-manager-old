@@ -149,11 +149,16 @@ class File extends Model
      */
     public function getAncestors(): array
     {
-        $isUserAdmin = Auth::user()->is_admin;
-
+        $user = Auth::user();
         $ancestors = array();
 
-        return $this->getAncestorsRecursive($isUserAdmin, $this, $ancestors);
+        $this->getAncestorsRecursive($user->is_admin, $this, $ancestors);
+
+        /* rimuovo dagli ancestors la cartella home e la cartella root dell'utente */
+        $position = array_search($user->root->name, array_column($ancestors, 'name'));
+        $ancestors = array_slice($ancestors, $position + 1, null, true);
+
+        return $ancestors;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -351,31 +356,31 @@ class File extends Model
         }
     }
 
-    private function getAncestorsRecursive(bool $isUserAdmin, File $folder, array &$ancestors): array
+    private function getAncestorsRecursive(bool $userIsAdmin, File $folder, array &$ancestors): array
     {
-        if ($folder->parent === null) {
+        // aggiungo la folder corrente al path
+        $ancestors[] = [
+            'id' => $folder->id,
+            'name' => $folder->name,
+        ];
+
+        if (!$folder->parent) {
             // sono nella root folder
 
-            if ($isUserAdmin) {
-                // se sono admin aggiungo anche l'ultima folder
-                $ancestors[] = [
-                    'id' => $folder->id,
-                    'name' => $folder->name,
-                ];
-            }
+            // if ($userIsAdmin) {
+            //     // se sono admin aggiungo anche l'ultima folder
+            //     $ancestors[] = [
+            //         'id' => $folder->id,
+            //         'name' => $folder->name,
+            //     ];
+            // }
 
             // gli elementi nell'array vengono memorizzati "a ritroso" dalla cartella corrente fino alla root, quindi li inverto
             $ancestors = array_reverse($ancestors);
 
             return $ancestors;
         } else {
-            // aggiungo la folder corrente al path
-            $ancestors[] = [
-                'id' => $folder->id,
-                'name' => $folder->name,
-            ];
-
-            return $this->getAncestorsRecursive($isUserAdmin, $folder->parent, $ancestors);
+            return $this->getAncestorsRecursive($userIsAdmin, $folder->parent, $ancestors);
         }
     }
 
@@ -397,7 +402,7 @@ class File extends Model
             ->files
             ->where('is_folder', true);
 
-        if($subFolders->isEmpty())
+        if ($subFolders->isEmpty())
             return;
         else {
             foreach ($subFolders as $subFolder) {
