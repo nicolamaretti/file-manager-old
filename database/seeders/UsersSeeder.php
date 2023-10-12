@@ -34,13 +34,15 @@ class UsersSeeder extends Seeder
         /* creazione root folder dell'utente appena creato */
         $folder = File::create([
             'name' => strtolower($user->name),
-            'path' => strtolower($user->name),
+            'path' => '/home/' . strtolower($user->name),
             'is_folder' => true,
+            'file_id' => 1,     // home folder
+            'is_root' => true,
             'created_by' => $user->id,
             'uuid' => Str::uuid(),
         ]);
 
-        Storage::makeDirectory("$folder->name");
+        Storage::makeDirectory("home/$folder->name");
 
         // BetaTester
         $user = User::create([
@@ -54,13 +56,15 @@ class UsersSeeder extends Seeder
         /* creazione root folder dell'utente appena creato */
         $folder = File::create([
             'name' => strtolower($user->name),
-            'path' => strtolower($user->name),
+            'path' => '/home/' . strtolower($user->name),
             'is_folder' => true,
+            'file_id' => 1,     // home folder
+            'is_root' => true,
             'created_by' => $user->id,
             'uuid' => Str::uuid(),
         ]);
 
-        Storage::makeDirectory("$folder->name");
+        Storage::makeDirectory("home/$folder->name");
 
         // Test
         $user = User::create([
@@ -74,12 +78,14 @@ class UsersSeeder extends Seeder
         /* creazione root folder dell'utente appena creato */
         $folder = File::create([
             'name' => strtolower($user->name),
-            'path' => strtolower($user->name),
+            'path' => '/home/' . strtolower($user->name),
             'is_folder' => true,
+            'file_id' => 1,     // home folder
+            'is_root' => true,
             'created_by' => $user->id,
             'uuid' => Str::uuid(),
         ]);
 
-        Storage::makeDirectory("$folder->name");
+        Storage::makeDirectory("home/$folder->name");
     }
 }

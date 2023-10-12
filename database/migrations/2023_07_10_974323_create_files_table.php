@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('path')->nullable();
             $table->boolean('is_folder')->default(false);
             $table->foreignId('file_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->boolean('is_root')->default(false);
             $table->string('mime_type')->nullable();
             $table->unsignedBigInteger('size')->nullable();
             $table->string('disk')->default(config('filesystems.default'));
