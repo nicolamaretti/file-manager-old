@@ -30,13 +30,13 @@ class AdminUserSeeder extends Seeder
         /* creazione root folder */
         $folder = File::create([
             'name' => 'home',
-            'path' => '/home',
+            'path' => 'home',
             'is_folder' => true,
             'is_root' => true,
             'uuid' => Str::uuid(),
             'created_by' => $admin->id,
         ]);
 
-        Storage::makeDirectory("$folder->name");
+        Storage::makeDirectory($folder->path);
     }
 }
