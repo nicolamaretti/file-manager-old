@@ -1,9 +1,9 @@
 <template>
-    <AppLayout title="SharedWithMe">
+    <AppLayout title="Trash">
         <nav class="flex justify-end mt-1 mb-3">
             <div class="flex">
-                <DownloadFilesButton :download-file-ids="selectedFileIds" @download="onRestore" />
-                <!-- <DeleteFilesButton /> -->
+                <RestoreFromTrashButton :file-ids="selectedFileIds" @restore="onRestore"/>
+                <DeleteForeverButton :file-ids="selectedFileIds" @delete="onRestore"/>
             </div>
         </nav>
 
@@ -15,14 +15,23 @@
                         <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left w-[30px] max-w-[30px] pr-0">
                             <Checkbox v-model:checked="allSelected" @change="onSelectAllChange" />
                         </th>
-                        <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left w-[20px] max-w-[20px]">
+                        <th class="text-sm font-medium text-gray-900 px-6 py-4 text-left w-[30px] max-w-[30px]">
 
                         </th>
                         <th class="px-6 py-4 text-sm font-semibold text-left text-gray-900">
                             Name
                         </th>
-                        <th class="px-6 py-4 text-sm font-semibold text-left text-gray-900">
+                        <!-- <th class="px-6 py-4 text-sm font-semibold text-left text-gray-900">
                             Owner
+                        </th> -->
+                        <th class="px-6 py-4 text-sm font-semibold text-left text-gray-900">
+                            Path
+                        </th>
+                        <th class="px-6 py-4 text-sm font-semibold text-left text-gray-900">
+                            Last Modified
+                        </th>
+                        <th class="px-6 py-4 text-sm font-semibold text-left text-gray-900">
+                            Size
                         </th>
                     </tr>
                 </thead>
@@ -30,13 +39,13 @@
                     <tr v-for="file in allFiles.data" :key="file.id"
                         :class="(selectedFiles[file.id] || allSelected) ? 'bg-blue-50' : 'bg-white'"
                         class="transition duration-300 ease-in-out border-b cursor-pointer hover:bg-blue-100"
-                        @click="toggleSelectFile(file.id)" @dblclick.prevent="openFolder(file)">
+                        @dblclick.prevent="openFolder(file)" @click="toggleSelectFile(file.id)">
                         <td
                             class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[30px] max-w-[30px] pr-0">
-                            <Checkbox @change="onSelectCheckboxChange(file.id)" v-model="selectedFiles[file.id]"
-                                :checked="selectedFiles[file.id] || allSelected" class="mr-4" />
+                            <Checkbox v-model="selectedFiles[file.id]" :checked="selectedFiles[file.id] || allSelected"
+                                class="mr-4" @change="onSelectCheckboxChange(file.id)" />
                         </td>
-                        <td class="px-6 py-4 max-w-[20px] text-sm font-medium text-yellow-500"
+                        <td class="px-6 py-4 max-w-[40px] text-sm font-medium text-yellow-500"
                             @click.stop.prevent="addRemoveFavorite(file.id)">
                             <svg v-if="!file.is_favorite" class="w-6 h-6" fill="none" stroke="currentColor"
                                 stroke-width="1.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -55,15 +64,24 @@
                             <FileIcon :file="file" class="mr-3" />
                             {{ file.name }}
                         </td>
+                        <!-- <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                            {{ file.owner === page.props.auth.user.name ? 'me' : file.owner }}
+                        </td> -->
                         <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
-                            {{ file.owner }}
+                            {{ file.path }}
+                        </td>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                            {{ file.updated_at }}
+                        </td>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                            {{ file.size }}
                         </td>
                     </tr>
                 </tbody>
             </table>
 
             <div v-if="allFiles.data.length === 0" class="py-8 text-sm text-center text-gray-400">
-                There is no file shared with you
+                Empty bin
             </div>
         </div>
     </AppLayout>
@@ -72,12 +90,12 @@
 <script setup>
 import { computed, onUpdated, ref } from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
-import DownloadFilesButton from "@/Components/MyComponents/DownloadFilesButton.vue";
-import DeleteFilesButton from "@/Components/MyComponents/DeleteFilesButton.vue";
+import DeleteForeverButton from "@/Components/MyComponents/DeleteForeverButton.vue";
 import FileIcon from "@/Components/Icons/FileIcon.vue";
 import Checkbox from "@/Components/Checkbox.vue";
 import { router } from "@inertiajs/vue3";
 import { showErrorDialog, showSuccessNotification } from "@/event-bus.js";
+import RestoreFromTrashButton from "@/Components/MyComponents/RestoreFromTrashButton.vue";
 
 // Props & Emit
 const props = defineProps({
@@ -91,7 +109,7 @@ const selectedFileIds = computed(() => Object.entries(selectedFiles.value).filte
 const selectedFiles = ref({});
 const allSelected = ref(false);
 const allFiles = ref({
-    data: props.files.data
+    data: props.files ? props.files.data : []
 });
 
 // Methods

@@ -160,6 +160,22 @@ class FileController extends Controller
         ]);
     }
 
+    public function trash(): InertiaResponse
+    {
+        $files = File::query()
+            ->onlyTrashed()
+            ->where('created_by', Auth::id())
+            ->where('deleted_forever', false)
+            ->orderBy('name')
+            ->get();
+
+        $files = FileResource::collection($files);
+
+        return Inertia::render('App/Trash', [
+            'files' => $files,
+        ]);
+    }
+
     public function createFolder(Request $request): RedirectResponse
     {
         $user = Auth::user();
@@ -257,11 +273,48 @@ class FileController extends Controller
                         throw new AuthorizationException('You can\'t delete a file that is not yours');
                     }
 
+                    /*                     $file->is_folder
+                        ? Storage::deleteDirectory($file->path)
+                        : Storage::delete($file->path); */
+
+                    $file->delete();
+                }
+            );
+    }
+
+    public function restore(Request $request): RedirectResponse
+    {
+        $fileIds = $request->input('fileIds');
+
+        File::query()
+            ->onlyTrashed()
+            ->whereIn('id', $fileIds)
+            ->get()
+            ->each(
+                function (File $file) {
+                    $file->restore();
+                }
+            );
+
+        return redirect()->back();
+    }
+
+    public function deleteForever(Request $request): void
+    {
+        $fileIds = $request->input('fileIds');
+
+        File::query()
+            ->onlyTrashed()
+            ->whereIn('id', $fileIds)
+            ->get()
+            ->each(
+                function (File $file) {
                     $file->is_folder
                         ? Storage::deleteDirectory($file->path)
                         : Storage::delete($file->path);
 
-                    $file->delete();
+                    $file->deleted_forever = true;
+                    $file->save();
                 }
             );
     }

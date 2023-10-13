@@ -39,10 +39,13 @@ Route::middleware([
     Route::get('/favorites', [FileController::class, 'favorites'])->name('favorites');
     Route::get('/shared-with-me', [FileController::class, 'sharedWithMe'])->name('shared-with-me');
     Route::get('/shared-by-me', [FileController::class, 'sharedByMe'])->name('shared-by-me');
+    Route::get('/trash', [FileController::class, 'trash'])->name('trash');
     Route::post('/create/folder', [FileController::class, 'createFolder'])->name('create-folder');
-    Route::delete('/delete/', [FileController::class, 'delete'])->name('delete');
     Route::post('/upload/', [FileController::class, 'upload'])->name('upload');
-    Route::get('/download/', [FileController::class, 'download'])->name('download');
+    Route::delete('/delete/', [FileController::class, 'delete'])->name('delete');
+    Route::get('/download/', [FileController::class, 'download'])->name('download');   
+    Route::put('/restore/', [FileController::class, 'restore'])->name('restore');
+    Route::delete('/delete-forever/', [FileController::class, 'deleteForever'])->name('delete-forever');
     Route::post('/add-remove-favorites/', [FileController::class, 'addRemoveFavorites'])->name('add-remove-favorites');
     Route::post('/share/', [FileController::class, 'share'])->name('share');
     Route::delete('/share/stop', [FileController::class, 'stopSharing'])->name('stop-sharing');

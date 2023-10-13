@@ -15,6 +15,7 @@
                 <NavLink :href="route('favorites')" :active="route().current('favorites')">Favorites</NavLink>
                 <NavLink :href="route('shared-with-me')" :active="route().current('shared-with-me')">Shared With Me</NavLink>
                 <NavLink :href="route('shared-by-me')" :active="route().current('shared-by-me')">Shared By Me</NavLink>
+                <NavLink :href="route('trash')" :active="route().current('trash')">Trash</NavLink>
                 <NavLink :href="route('__old-my-files')" :active="route().current('__old-my-files')">__oldVersion</NavLink>
             </div>
         </div>
