@@ -44,12 +44,13 @@ class FileController extends Controller
         $rootFolders = null;
         $parent = null;
         $currentFolder = null;
+        $files = null;
         $ancestors = [];    // array dei nomi delle cartelle per il breadcrumb
         $folderId = intval($request->input('folderId'));
 
         /* se non è stata selezionata una folder da aprire ritorno la root folder dell'utente */
         $folderToOpen = $folderId
-            ? File::with('parent')->orderBy('name')->find($folderId)
+            ? File::with(['parent', 'files'])->orderBy('name')->find($folderId)
             : $rootFolder;
 
         if ($user->is_admin && !$folderId) {
@@ -64,7 +65,7 @@ class FileController extends Controller
             $rootFolders = FileResource::collection($rootFolders);
         } else {
             /* se è utente normale ritorno la folder di root con le sue cartelle e i suoi file */
-            $parent = $folderToOpen->parent;
+            $files = FileResource::collection($folderToOpen->files);
             $ancestors = $folderToOpen->getAncestors();
             $currentFolder = FileResource::make($folderToOpen);
 
@@ -81,28 +82,21 @@ class FileController extends Controller
             //            }
         }
 
-        // dd($currentFolder);
+        // dd($ancestors);
 
         return Inertia::render('App/MyFiles', [
             'currentFolder' => $currentFolder,
+            'files' => $files,
             'userIsAdmin' => (bool)$user->is_admin,
             'rootFolders' => $rootFolders,
-            'parent' => $parent,
             'ancestors' => $ancestors,
         ]);
     }
 
     public function favorites(): InertiaResponse
     {
-        $files = StarredFile::query()
-            ->with('file')
-            ->where('user_id', Auth::id())
-            ->get()
-            ->map(function (StarredFile $starredFile) {
-                return $starredFile->file;
-            });
-
-        $files = FileResource::collection($files->sortBy('name'));
+        $files = StarredFile::getFavorites();
+        $files = FileResource::collection($files);
 
         return Inertia::render('App/Favorites', [
             'files' => $files,
@@ -111,23 +105,7 @@ class FileController extends Controller
 
     public function sharedWithMe(): InertiaResponse
     {
-        $files = FileShare::query()
-            ->where('user_id', Auth::id())
-            ->with(['file', 'file.user'])
-            ->whereRelation('file', 'created_by', '!=', Auth::id())
-            ->get()
-            ->map(function (FileShare $sharedFile) {
-                $file['id'] = $sharedFile->file->id;
-                $file['name'] = $sharedFile->file->name;
-                $file['is_folder'] = $sharedFile->file->is_folder;
-                $file['is_favorite'] = !!$sharedFile->file->starred;
-                $file['mime_type'] = $sharedFile->file->mime_type;
-                $file['owner'] = $sharedFile->file->user->name;
-                $file['shared_with'] = '';
-                return $file;
-            })
-            ->sortBy(['name', 'owner']);
-
+        $files = FileShare::getSharedWithMe();
         $files = SharedResource::collection($files);
 
         return Inertia::render('App/SharedWithMe', [
@@ -137,22 +115,7 @@ class FileController extends Controller
 
     public function sharedByMe(): InertiaResponse
     {
-        $files = FileShare::query()
-            ->with(['user', 'file.user'])
-            ->whereRelation('file.user', 'id', Auth::id())
-            ->get()
-            ->map(function (FileShare $sharedFile) {
-                $file['id'] = $sharedFile->file->id;
-                $file['name'] = $sharedFile->file->name;
-                $file['is_folder'] = $sharedFile->file->is_folder;
-                $file['is_favorite'] = !!$sharedFile->file->starred;
-                $file['mime_type'] = $sharedFile->file->mime_type;
-                $file['shared_with'] = $sharedFile->user->name;
-                $file['owner'] = '';
-                return $file;
-            })
-            ->sortBy(['name', 'shared_with']);
-
+        $files = FileShare::getSharedByMe();
         $files = SharedResource::collection($files);
 
         return Inertia::render('App/SharedByMe', [
@@ -273,16 +236,12 @@ class FileController extends Controller
                         throw new AuthorizationException('You can\'t delete a file that is not yours');
                     }
 
-                    /*                     $file->is_folder
-                        ? Storage::deleteDirectory($file->path)
-                        : Storage::delete($file->path); */
-
                     $file->delete();
                 }
             );
     }
 
-    public function restore(Request $request): RedirectResponse
+    public function restore(Request $request): void
     {
         $fileIds = $request->input('fileIds');
 
@@ -295,8 +254,6 @@ class FileController extends Controller
                     $file->restore();
                 }
             );
-
-        return redirect()->back();
     }
 
     public function deleteForever(Request $request): void
@@ -350,7 +307,7 @@ class FileController extends Controller
             } else {
                 $pathToFile = Storage::path($file->path);
 
-                return response()->download($pathToFile);
+                return response()->download($pathToFile, $file->name);
             }
         } else {
             /* ho più file da scaricare */
@@ -556,161 +513,48 @@ class FileController extends Controller
 
     public function search(Request $request): InertiaResponse|RedirectResponse
     {
-        $userId = $request->user()->id;
         $searchValue = $request->input('searchValue');
         $currentPage = $request->input('currentPage');
 
-        $userFolderIds = Folder::query()
-            ->select('id')
-            ->where('user_id', $userId)
-            ->get()
-            ->toArray();
-
         switch ($currentPage) {
             case '/my-files':
-                $folders = Folder::query()
-                    ->where('user_id', $userId)
+                $files = File::query()
+                    ->where('created_by', Auth::id())
                     ->where('name', 'like', "%$searchValue%")
                     ->get();
 
-                $files = Media::query()
-                    ->whereIn('model_id', $userFolderIds)
-                    ->where('name', 'like', "%$searchValue%")
-                    ->get();
-
-                $folders = FolderResource::collection($folders);
-                $files = MediaResource::collection($files);
+                $files = FileResource::collection($files);
 
                 return Inertia::render('App/MyFiles', [
-                    'folders' => $folders,
                     'files' => $files,
                 ]);
 
             case '/favorites':
-                $folders = Folder::query()
-                    ->select('folders.*')
-                    ->join('starred_folders as sf', 'sf.folder_id', '=', 'folders.id')
-                    ->where('sf.user_id', $userId)
-                    ->where('folders.name', 'like', "%$searchValue%")
-                    ->orderBy('folders.name', 'ASC')
+                $files = File::query()
+                    ->with('starred')
+                    ->whereRelation('starred', 'user_id', Auth::id())
+                    // ->where('created_by', $userId)
                     ->get();
 
-                $files = Media::query()
-                    ->select('media.*')
-                    ->join('starred_files as sf', 'sf.file_id', '=', 'media.id')
-                    ->where('sf.user_id', $userId)
-                    ->where('media.name', 'like', "%$searchValue%")
-                    ->orderBy('media.file_name', 'ASC')
-                    ->get();
-
-                $folders = FolderResource::collection($folders);
-                $files = MediaResource::collection($files);
+                $files = FileResource::collection($files);
 
                 return Inertia::render('App/Favorites', [
-                    'folders' => $folders,
                     'files' => $files,
                 ]);
 
             case '/shared-with-me':
-                $folders = FolderShare::query()
-                    ->from('folder_shares as fs')
-                    ->join('folders', 'fs.folder_id', '=', 'folders.id')
-                    ->join('users', 'fs.user_id', '=', 'users.id')
-                    ->join('users as users_owner', 'fs.owner_id', '=', 'users_owner.id')
-                    ->where('folders.user_id', '!=', $userId)
-                    ->where('fs.user_id', $userId)
-                    ->where('folders.name', 'like', "%$searchValue%")
-                    ->select('folders.id as id', 'folders.name as name', 'users_owner.name as owner')
-                    ->orderBy('name', 'ASC')
-                    ->orderBy('owner', 'ASC')
-                    ->get()
-                    ->each(function ($folder) use ($userId) {
-                        $starred = StarredFolder::query()
-                            ->where('folder_id', $folder->id)
-                            ->where('user_id', $userId)
-                            ->get();
-                        if ($starred->isNotEmpty()) {
-                            $folder->is_favorite = true;
-                        } else {
-                            $folder->is_favorite = false;
-                        }
-                    });
-
-                $files = FileShare::query()
-                    ->from('file_shares as fs')
-                    ->join('media', 'fs.file_id', '=', 'media.id')
-                    ->join('users', 'fs.owner_id', '=', 'users.id')
-                    ->where('fs.user_id', $userId)
-                    ->where('media.name', 'like', "%$searchValue%")
-                    ->select('media.id as id', 'media.file_name as name', 'users.name as owner')
-                    ->orderBy('name', 'ASC')
-                    ->orderBy('owner', 'ASC')
-                    ->get()
-                    ->each(function ($file) use ($userId) {
-                        $starred = StarredFile::query()
-                            ->where('file_id', $file->id)
-                            ->where('user_id', $userId)
-                            ->get();
-
-                        if ($starred->isNotEmpty()) {
-                            $file->is_favorite = true;
-                        } else {
-                            $file->is_favorite = false;
-                        }
-                    });
+                $files = FileShare::getSharedWithMe($searchValue);
+                $files = SharedResource::collection($files);
 
                 return Inertia::render('App/SharedWithMe', [
-                    'folders' => $folders,
                     'files' => $files,
                 ]);
 
             case '/shared-by-me':
-                $folders = FolderShare::query()
-                    ->from('folder_shares as fs')
-                    ->where('fs.owner_id', $userId)
-                    ->join('folders', 'fs.folder_id', '=', 'folders.id')
-                    ->join('users', 'fs.user_id', '=', 'users.id')
-                    ->select('folders.id as id', 'folders.name as name', 'users.name as username')
-                    ->where('folders.name', 'like', "%$searchValue%")
-                    ->orderBy('name', 'ASC')
-                    ->orderBy('username', 'ASC')
-                    ->get()
-                    ->each(function ($folder) use ($userId) {
-                        $starred = StarredFolder::query()
-                            ->where('folder_id', $folder->id)
-                            ->where('user_id', $userId)
-                            ->get();
-                        if ($starred->isNotEmpty()) {
-                            $folder->is_favorite = true;
-                        } else {
-                            $folder->is_favorite = false;
-                        }
-                    });
-
-                $files = FileShare::query()
-                    ->from('file_shares as fs')
-                    ->where('fs.owner_id', $userId)
-                    ->join('media', 'fs.file_id', '=', 'media.id')
-                    ->join('users', 'fs.user_id', '=', 'users.id')
-                    ->select('media.id as id', 'media.file_name as name', 'users.name as username')
-                    ->where('media.name', 'like', "%$searchValue%")
-                    ->orderBy('name', 'ASC')
-                    ->orderBy('username', 'ASC')
-                    ->get()->each(function ($file) use ($userId) {
-                        $starred = StarredFile::query()
-                            ->where('file_id', $file->id)
-                            ->where('user_id', $userId)
-                            ->get();
-
-                        if ($starred->isNotEmpty()) {
-                            $file->is_favorite = true;
-                        } else {
-                            $file->is_favorite = false;
-                        }
-                    });
+                $files = FileShare::getSharedByMe($searchValue);
+                $files = SharedResource::collection($files);
 
                 return Inertia::render('App/SharedByMe', [
-                    'folders' => $folders,
                     'files' => $files,
                 ]);
 

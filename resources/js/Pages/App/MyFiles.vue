@@ -116,6 +116,7 @@ import { showErrorDialog, showSuccessNotification } from "@/event-bus.js";
 // Props & Emit
 const props = defineProps({
     currentFolder: Object,
+    files: Object,
     userIsAdmin: Boolean,
     rootFolders: Object,
     ancestors: Array,
@@ -133,7 +134,7 @@ const allSelected = ref(false);
 const loadMoreIntersect = ref(null);
 
 const allFiles = ref({
-    data: props.currentFolder ? props.currentFolder.data.files : props.rootFolders.data
+    data: props.files ? props.files.data : props.rootFolders.data
 });
 
 // Methods
@@ -148,9 +149,9 @@ function openFolder(file = null) {
         'folderId': file.id,
     }, {
         preserveScroll: true,
-        only: ['currentFolder', 'ancestors'],
+        only: ['currentFolder', 'files', 'ancestors'],
         onSuccess: () => {
-            console.log('openFolderSuccess', props.currentFolder);
+            console.log('openFolderSuccess', props.files);
         },
         onError: (errors) => {
             console.log('openFolderErrors', errors);
@@ -202,7 +203,7 @@ function addRemoveFavorite(id) {
         {
             preserveState: true,
             preserveScroll: true,
-            only: ['currentFolder', 'rootFolders'],
+            only: ['files', 'rootFolders', 'currentFolder'],
             onSuccess: (data) => {
                 console.log('addRemoveFavoriteSuccess', data);
 
@@ -248,7 +249,7 @@ function loadMore() {
 
 onUpdated(() => {
     allFiles.value = {
-        data: props.currentFolder ? props.currentFolder.data.files : props.rootFolders.data
+        data: props.files ? props.files.data : props.rootFolders.data
     };
 
     allSelected.value = false;
@@ -263,5 +264,5 @@ onMounted(() => {
     // observer.observe(loadMoreIntersect.value)
 });
 
-console.log('MyFiles', props)
+console.log('MyFiles', props.files)
 </script>

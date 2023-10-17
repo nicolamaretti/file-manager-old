@@ -23,7 +23,7 @@ class FileResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'parent' => $this->file_id,
-            'files' => FileResource::collection($this->files),
+            // 'files' => FileResource::collection($this->files),
             'path' => $this->path,
             'is_folder' => $this->is_folder,
             'size' => $this->size ? $this->getFileSize() : '-----',

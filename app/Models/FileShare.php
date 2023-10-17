@@ -29,12 +29,17 @@ class FileShare extends Model
         return $this->belongsTo(User::class);
     }
 
-    public static function getSharedByMe(): Collection
+    public static function getSharedByMe(string $searchValue = null): Collection
     {
-        return FileShare::query()
+        $query = FileShare::query()
             ->with(['user', 'file.user'])
-            ->whereRelation('file.user', 'id', Auth::id())
-            ->get()
+            ->whereRelation('file.user', 'id', Auth::id());
+
+        if ($searchValue) {
+            $query->whereRelation('file', 'name', 'like', "%$searchValue%");
+        }
+
+        return $query->get()
             ->map(function (FileShare $sharedFile) {
                 $file['id'] = $sharedFile->file->id;
                 $file['name'] = $sharedFile->file->name;
@@ -48,13 +53,18 @@ class FileShare extends Model
             ->sortBy(['name', 'shared_with']);
     }
 
-    public static function getSharedWithMe(): Collection
+    public static function getSharedWithMe(string $searchValue = null): Collection
     {
-        return FileShare::query()
+        $query = FileShare::query()
             ->where('user_id', Auth::id())
             ->with(['file', 'file.user'])
-            ->whereRelation('file', 'created_by', '!=', Auth::id())
-            ->get()
+            ->whereRelation('file', 'created_by', '!=', Auth::id());
+
+        if ($searchValue) {
+            $query->whereRelation('file', 'name', 'like', "%$searchValue%");
+        }
+
+        return $query->get()
             ->map(function (FileShare $sharedFile) {
                 $file['id'] = $sharedFile->file->id;
                 $file['name'] = $sharedFile->file->name;

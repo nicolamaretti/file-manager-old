@@ -73,7 +73,8 @@ class User extends Authenticatable
     public function root(): HasOne
     {
         return $this->hasOne(File::class, 'created_by')
-            ->where('is_root', true);
+            ->where('is_root', true)
+            ->with('files');
     }
 
     public function files(): HasMany
