@@ -1,5 +1,5 @@
 <template>
-    <a :href="route('download', { fileIds: props.downloadFileIds, folderIds: props.downloadFolderIds })"
+    <a :href="route('download', { fileIds: props.downloadFileIds })"
        class="flex">
         <PrimaryButton>
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"
@@ -20,7 +20,6 @@ import PrimaryButton from "@/Components/PrimaryButton.vue";
 
 // Props & Emit
 const props = defineProps({
-    downloadFolderIds: Array,
     downloadFileIds: Array,
 });
 

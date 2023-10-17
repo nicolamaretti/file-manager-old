@@ -4,29 +4,20 @@
             Rename
         </template>
         <template #content>
-            <InputLabel for="newName" value="New Name" class="sr-only"/>
+            <InputLabel for="newName" value="New Name" class="sr-only" />
 
-            <TextInput type="text"
-                       ref="newNameInput"
-                       id="newName"
-                       v-model="newName"
-                       class="mt-1 block w-full"
-                       :class="errorMessage ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                       placeholder="Name"
-                       autofocus
-                       @keyup.enter="rename"
-                       @keyup.esc="closeModal"
-            />
+            <TextInput type="text" ref="newNameInput" id="newName" v-model="newName" class="block w-full mt-1"
+                :class="errorMessage ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''" placeholder="Name"
+                autofocus @keyup.enter="rename" @keyup.esc="closeModal" />
 
-            <InputError :message="errorMessage" class="mt-2"/>
+            <InputError :message="errorMessage" class="mt-2" />
         </template>
         <template #footer>
             <SecondaryButton @click="closeModal">
                 Cancel
             </SecondaryButton>
 
-            <PrimaryButton class="ml-3"
-                           @click="rename">
+            <PrimaryButton class="ml-3" @click="rename">
                 Submit
             </PrimaryButton>
         </template>
@@ -34,15 +25,15 @@
 </template>
 
 <script setup>
-import {router} from "@inertiajs/vue3";
-import {ref} from "vue";
+import { router } from "@inertiajs/vue3";
+import { ref } from "vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
 import InputError from "@/Components/InputError.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import DialogModal from "@/Components/DialogModal.vue";
-import {showSuccessNotification} from "@/event-bus.js";
+import { showSuccessNotification } from "@/event-bus.js";
 
 // Props & Emit
 const props = defineProps({

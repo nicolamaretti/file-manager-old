@@ -1,14 +1,11 @@
 <template>
-    <transition
-        enter-active-class="ease-out duration-300"
-        enter-from-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-        enter-to-class="opacity-100 translate-y-0 sm:scale-100"
-        leave-active-class="ease-in duration-200"
-        leave-from-class="opacity-100 translate-y-0 sm:scale-100"
-        leave-to-class="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-    >
+    <transition enter-active-class="duration-300 ease-out"
+        enter-from-class="translate-y-4 opacity-0 sm:translate-y-0 sm:scale-95"
+        enter-to-class="translate-y-0 opacity-100 sm:scale-100" leave-active-class="duration-200 ease-in"
+        leave-from-class="translate-y-0 opacity-100 sm:scale-100"
+        leave-to-class="translate-y-4 opacity-0 sm:translate-y-0 sm:scale-95">
         <div v-if="show" class="fixed bottom-12 left-4 text-white py-2 px-4 rounded-lg shadow-md w-[220px] text-center"
-             :class="{
+            :class="{
                 'bg-emerald-500': type === 'success',
                 'bg-red-500': type === 'error'
             }">
@@ -17,8 +14,8 @@
     </transition>
 </template>
 <script setup>
-import {onMounted, ref} from "vue";
-import {emitter, SHOW_NOTIFICATION} from "@/event-bus.js";
+import { onMounted, ref } from "vue";
+import { emitter, SHOW_NOTIFICATION } from "@/event-bus.js";
 
 // Refs
 const show = ref(false);
@@ -35,7 +32,7 @@ function close() {
 // Hooks
 onMounted(() => {
     let timeout;
-    emitter.on(SHOW_NOTIFICATION, ({type: t, message: msg}) => {
+    emitter.on(SHOW_NOTIFICATION, ({ type: t, message: msg }) => {
         show.value = true;
         type.value = t;
         message.value = msg;
@@ -49,6 +46,4 @@ onMounted(() => {
 
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

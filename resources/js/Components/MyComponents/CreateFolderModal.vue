@@ -4,28 +4,20 @@
             Create New Folder
         </template>
         <template #content>
-            <InputLabel for="folderName" value="Folder Name" class="sr-only"/>
+            <InputLabel for="folderName" value="Folder Name" class="sr-only" />
 
-            <TextInput type="text"
-                       ref="folderNameInput"
-                       v-model="folderName"
-                       id="folderName"
-                       class="mt-1 block w-full"
-                       :class="errorMessage ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                       placeholder="Folder Name"
-                       @keyup.enter.prevent="createFolder"
-                       @keyup.esc="closeModal"
-            />
+            <TextInput type="text" ref="folderNameInput" v-model="folderName" id="folderName" class="block w-full mt-1"
+                :class="errorMessage ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
+                placeholder="Folder Name" @keyup.enter.prevent="createFolder" @keyup.esc="closeModal" />
 
-            <InputError :message="errorMessage" class="mt-2"/>
+            <InputError :message="errorMessage" class="mt-2" />
         </template>
         <template #footer>
             <SecondaryButton @click="closeModal">
                 Cancel
             </SecondaryButton>
 
-            <PrimaryButton class="ml-3"
-                           @click="createFolder">
+            <PrimaryButton class="ml-3" @click="createFolder">
                 Submit
             </PrimaryButton>
         </template>
@@ -33,15 +25,15 @@
 </template>
 
 <script setup>
-import {router, usePage} from "@inertiajs/vue3";
-import {computed, ref} from "vue";
+import { router, usePage } from "@inertiajs/vue3";
+import { computed, ref } from "vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
 import InputError from "@/Components/InputError.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
 import DialogModal from "@/Components/DialogModal.vue";
-import {showSuccessNotification} from "@/event-bus.js";
+import { showSuccessNotification } from "@/event-bus.js";
 
 // Props & Emit
 const props = defineProps({

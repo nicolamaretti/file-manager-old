@@ -81,7 +81,7 @@
             </table>
 
             <div v-if="allFiles.data.length === 0" class="py-8 text-sm text-center text-gray-400">
-                Empty bin
+                Trash is empty
             </div>
         </div>
     </AppLayout>

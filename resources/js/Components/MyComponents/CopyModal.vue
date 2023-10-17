@@ -4,28 +4,20 @@
             Copy File
         </template>
         <template #content>
-            <InputLabel for="newFolderName" value="Folder Name" class="sr-only"/>
+            <InputLabel for="newFolderName" value="Folder Name" class="sr-only" />
 
-            <TextInput type="text"
-                       ref="folderNameInput"
-                       id="newFolderName" v-model="folderName"
-                       class="mt-1 block w-full"
-                       :class="errorMessage ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''"
-                       placeholder="Name"
-                       autofocus
-                       @keyup.enter="copy"
-                       @keyup.esc="closeModal"
-            />
+            <TextInput type="text" ref="folderNameInput" id="newFolderName" v-model="folderName" class="block w-full mt-1"
+                :class="errorMessage ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''" placeholder="Name"
+                autofocus @keyup.enter="copy" @keyup.esc="closeModal" />
 
-            <InputError :message="errorMessage" class="mt-2"/>
+            <InputError :message="errorMessage" class="mt-2" />
         </template>
         <template #footer>
             <SecondaryButton @click="closeModal">
                 Cancel
             </SecondaryButton>
 
-            <PrimaryButton class="ml-3"
-                           @click="copy">
+            <PrimaryButton class="ml-3" @click="copy">
                 Submit
             </PrimaryButton>
         </template>
@@ -33,8 +25,8 @@
 </template>
 
 <script setup>
-import {router, usePage} from "@inertiajs/vue3";
-import {ref} from "vue";
+import { router, usePage } from "@inertiajs/vue3";
+import { ref } from "vue";
 import InputLabel from "@/Components/InputLabel.vue";
 import TextInput from "@/Components/TextInput.vue";
 import InputError from "@/Components/InputError.vue";
