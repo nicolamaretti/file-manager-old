@@ -6,11 +6,8 @@
         <Navigation />
 
         <!-- Sezione centrale -->
-        <main :class="dragOver ? 'dropzone' : ''"
-              class="flex flex-col flex-1 ml-10 overflow-hidden"
-            @drop.prevent="handleDrop"
-              @dragover.prevent="onDragOver"
-              @dragleave.prevent="onDragLeave">
+        <main :class="dragOver ? 'dropzone' : ''" class="flex flex-col flex-1 ml-10 overflow-hidden"
+            @drop.prevent="handleDrop" @dragover.prevent="onDragOver" @dragleave.prevent="onDragLeave">
 
             <!-- Se l'utente sta facendo un drag dentro all'applicazione -->
             <template v-if="dragOver" class="py-8 text-sm text-center text-gray-500">

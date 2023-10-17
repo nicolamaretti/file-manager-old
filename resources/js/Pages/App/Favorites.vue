@@ -12,7 +12,7 @@
                 <!--                <MoveFilesButton v-if="selectedFileIds.length > 0"-->
                 <!--                                 :file-ids="selectedFileIds"/>-->
                 <ShareFilesButton :file-ids="selectedFileIds" @restore="onRestore" />
-                <DownloadFilesButton :download-file-ids="selectedFileIds" @download="onRestore" />
+                <DownloadFilesButton :file-ids="selectedFileIds" @download="onRestore" />
                 <DeleteFilesButton :file-ids="selectedFileIds" @delete="onRestore" />
             </div>
         </nav>

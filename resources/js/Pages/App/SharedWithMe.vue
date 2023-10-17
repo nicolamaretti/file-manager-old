@@ -2,7 +2,7 @@
     <AppLayout title="SharedWithMe">
         <nav class="flex justify-end mt-1 mb-3">
             <div class="flex">
-                <DownloadFilesButton :download-file-ids="selectedFileIds" @download="onRestore" />
+                <DownloadFilesButton :file-ids="selectedFileIds" @download="onRestore" />
                 <!-- <DeleteFilesButton /> -->
             </div>
         </nav>
@@ -73,7 +73,6 @@
 import { computed, onUpdated, ref } from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
 import DownloadFilesButton from "@/Components/MyComponents/DownloadFilesButton.vue";
-import DeleteFilesButton from "@/Components/MyComponents/DeleteFilesButton.vue";
 import FileIcon from "@/Components/Icons/FileIcon.vue";
 import Checkbox from "@/Components/Checkbox.vue";
 import { router } from "@inertiajs/vue3";

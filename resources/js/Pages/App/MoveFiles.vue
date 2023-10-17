@@ -1,59 +1,53 @@
 <template>
     <AppLayout title="Move">
-        <nav class="flex items-center justify-between mb-3 mt-2 border-b">
+        <nav class="flex items-center justify-between mt-2 mb-3 border-b">
             <h2 class="mt-1 mb-1">
                 Move into...
             </h2>
-<!--            <Breadcrumb :ancestors="ancestors"/>-->
         </nav>
 
         <!-- Tabella -->
         <div class="flex-1 overflow-auto">
-            <table class="min-w-full shadow ring-1 ring-black ring-opacity-5 border sm:rounded-lg">
+            <table class="min-w-full border shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
                 <thead class="bg-gray-100 border-b sm:rounded-lg">
-                <tr>
-                    <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left w-[40px] max-w-[40px] pr-0">
+                    <tr>
+                        <th class="text-sm font-semibold text-gray-900 px-6 py-4 text-left w-[40px] max-w-[40px] pr-0">
 
-                    </th>
-                    <th class="text-sm font-medium text-gray-900 px-6 py-4 text-left">
-                        Name
-                    </th>
-                    <th class="text-sm font-medium text-gray-900 px-6 py-4 text-left">
-                        Path
-                    </th>
-                </tr>
+                        </th>
+                        <th class="px-6 py-4 text-sm font-medium text-left text-gray-900">
+                            Name
+                        </th>
+                        <th class="px-6 py-4 text-sm font-medium text-left text-gray-900">
+                            Path
+                        </th>
+                    </tr>
                 </thead>
                 <tbody>
-                <tr v-for="folder in folders"
-                    :class="(selectedFolder[folder.id]) ? 'bg-blue-50' : 'bg-white'"
-                    class="border-b transition duration-300 ease-in-out hover:bg-blue-100 cursor-pointer"
-                    @click="toggleSelect(folder.id)">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[40px] max-w-[40px] pr-0">
-                        <Checkbox v-model="selectedFolder[folder.id]"
-                                  :checked="selectedFolder[folder.id]"
-                                  class="mr-4"
-                                  @change="onSelectCheckboxChange(folder.id)"/>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 flex items-center">
-                        <FileIcon :file="folder" class="mr-3"/>
-                        {{ folder.name }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-400 items-center">
-                        {{ folder.path }}
-                    </td>
-                </tr>
+                    <tr v-for="folder in folders" :class="(selectedFolder[folder.id]) ? 'bg-blue-50' : 'bg-white'"
+                        class="transition duration-300 ease-in-out border-b cursor-pointer hover:bg-blue-100"
+                        @click="toggleSelect(folder.id)">
+                        <td
+                            class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 w-[40px] max-w-[40px] pr-0">
+                            <Checkbox v-model="selectedFolder[folder.id]" :checked="selectedFolder[folder.id]" class="mr-4"
+                                @change="onSelectCheckboxChange(folder.id)" />
+                        </td>
+                        <td class="flex items-center px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap">
+                            <FileIcon :file="folder" class="mr-3" />
+                            {{ folder.name }}
+                        </td>
+                        <td class="items-center px-6 py-4 text-sm font-medium text-gray-400 whitespace-nowrap">
+                            {{ folder.path }}
+                        </td>
+                    </tr>
                 </tbody>
             </table>
 
-            <div class="mt-6 mb-6 flex justify-center space-x-10">
+            <div class="flex justify-center mt-6 mb-6 space-x-10">
                 <SecondaryButton @click.prevent="goBack">
                     Cancel
                 </SecondaryButton>
 
-                <PrimaryButton :class="{ 'opacity-25': !selected }"
-                               :disable="!selected"
-                               class="ml-3"
-                               @click="move">
+                <PrimaryButton :class="{ 'opacity-25': !selected }" :disable="!selected" class="ml-3" @click="move">
                     Move
                 </PrimaryButton>
             </div>
@@ -63,14 +57,13 @@
 
 <script setup>
 // Imports
-import {router, usePage} from "@inertiajs/vue3";
-import {computed, ref} from "vue";
+import { router, usePage } from "@inertiajs/vue3";
+import { computed, ref } from "vue";
 import AppLayout from "@/Layouts/AppLayout.vue";
-import Breadcrumb from "@/Components/MyComponents/Breadcrumb.vue";
 import Checkbox from "@/Components/Checkbox.vue";
 import SecondaryButton from "@/Components/SecondaryButton.vue";
 import PrimaryButton from "@/Components/PrimaryButton.vue";
-import {showErrorNotification, showSuccessNotification} from "@/event-bus.js";
+import { showErrorNotification, showSuccessNotification } from "@/event-bus.js";
 import FileIcon from "@/Components/Icons/FileIcon.vue";
 
 // Props & Emit
@@ -135,8 +128,8 @@ function move() {
 
 function goBack() {
     router.get(route('my-files'), {
-            'folderId': props.currentFolderId,
-        });
+        'folderId': props.currentFolderId,
+    });
 }
 
 console.log('MoveFiles', props);
