@@ -516,6 +516,9 @@ class FileController extends Controller
         $searchValue = $request->input('searchValue');
         $currentPage = $request->input('currentPage');
 
+        if (!$searchValue)
+            return redirect($currentPage);
+
         switch ($currentPage) {
             case '/my-files':
                 $files = File::query()
@@ -530,11 +533,10 @@ class FileController extends Controller
                 ]);
 
             case '/favorites':
-                $files = File::query()
-                    ->with('starred')
-                    ->whereRelation('starred', 'user_id', Auth::id())
-                    // ->where('created_by', $userId)
-                    ->get();
+                $files = $files = StarredFile::getFavorites();
+
+                // ! NON FUNZIONA
+                $files->where('name', 'like', "%$searchValue%");
 
                 $files = FileResource::collection($files);
 
