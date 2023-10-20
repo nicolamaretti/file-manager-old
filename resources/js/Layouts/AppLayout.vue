@@ -86,7 +86,7 @@ async function uploadFiles(files) {
         },
         {
             preserveState: true,
-            only: ['currentFolder'],
+            only: ['files'],
             onSuccess: (data) => {
                 console.log('uploadSuccess', data);
 

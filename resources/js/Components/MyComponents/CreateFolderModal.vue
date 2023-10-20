@@ -66,7 +66,7 @@ function createFolder() {
         },
         {
             preserveState: true,
-            only: ['currentFolder', 'rootFolders', 'ancestors'],
+            only: ['files', 'rootFolders'],
             onSuccess: (data) => {
                 console.log('createFolderSuccess', data);
 
