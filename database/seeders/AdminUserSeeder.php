@@ -25,7 +25,7 @@ class AdminUserSeeder extends Seeder
         ]);
 
         $admin->markEmailAsVerified();
-        $admin->assignRole('super_administrator');
+//        $admin->assignRole('super_administrator');
 
         /* creazione root folder */
         $folder = File::create([

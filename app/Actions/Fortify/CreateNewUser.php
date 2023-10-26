@@ -3,9 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\File;
-use App\Models\Folder;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
