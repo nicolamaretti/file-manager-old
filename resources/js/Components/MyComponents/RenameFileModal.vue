@@ -60,7 +60,7 @@ function rename() {
         {
             preserveState: true,
             preserveScroll: true,
-            only: ['currentFolder', 'rootFolders'],
+            only: ['files', 'rootFolders'],
             onSuccess: (data) => {
                 console.log('renameSuccess', data);
 
