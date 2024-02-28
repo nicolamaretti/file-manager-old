@@ -4,7 +4,6 @@
             <li>
                 <NavLink :href="route('my-files')" class="text-gray-400 hover:text-gray-500">
                     <HomeIcon class="flex-shrink-0 w-5 h-5" aria-hidden="true" />
-                    <!-- <span class="ml-2">My Files</span> -->
                 </NavLink>
             </li>
             <li v-for="ancestor in ancestors" :key="ancestor.id">
